@@ -33,8 +33,12 @@ Ext.define('Admin.view.users.Users',{
                     dataIndex:'username'
                 },
                 {
-                    text:"Usuario",
-                    dataIndex:'username'
+                    text:"Email",
+                    dataIndex:'email'
+                },
+                {
+                    text:"Rol",
+                    dataIndex:'{usergroup.name}'
                 },
                 {
                     xtype: 'actioncolumn',
