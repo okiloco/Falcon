@@ -12,13 +12,14 @@ Ext.define('Falcon.view.ptz.PTZ',{
         type: 'ptz'
     },
     flex:1,
-    height:400,
+    height:600,
     layout: {
         type:'border',
     },
-    margin:5,
+    margin:20,
     scrollable:false,
     autoScroll:false,
+    cls: 'shadow',
     defaults:{
         scrollable:false,
         autoScroll:false
@@ -135,14 +136,14 @@ Ext.define('Falcon.view.ptz.PTZ',{
                             enableToggle: true,
                             iconAlign: 'top',
                             name: '8segundos'
-                        },
-                        '->',
+                        }
+                        /*,'->',
                         {
                             xtype: 'button',
                             tooltip: 'Salir',
                             iconCls: 'fa fa-sign-out',
                             name: 'logout'
-                        },
+                        },*/
 
                     ]
                 },

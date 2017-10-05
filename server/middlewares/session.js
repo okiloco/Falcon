@@ -5,6 +5,7 @@ module.exports = function(req,res,next){
 			msg:"No existe usuario en la sessión."
 		}));
 	}else{
+		console.log("No existe usuario en sesion.")
 		next();
 	}
 }

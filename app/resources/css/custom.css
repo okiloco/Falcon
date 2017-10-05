@@ -1,6 +1,6 @@
-body{
-    cursor: default;
-}
+html, body {cursor: default;}
+
+/*PTZ*/
 .viewer{
 	background-color: #212121;	
 }
@@ -128,4 +128,9 @@ span#timer{
     100% {
         opacity: 0.8
     }
+}
+
+
+.auth-locked-window .image{
+  background: red;
 }

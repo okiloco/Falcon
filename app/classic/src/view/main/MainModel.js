@@ -3,6 +3,9 @@ Ext.define('Admin.view.main.MainModel', {
     alias: 'viewmodel.main',
 
     data: {
-        currentView: null
+        currentView: null,
+        picture:'resources/images/user-profile/2.png',
+        user:localStorage.user,
+        username:localStorage.getItem("username") 
     }
 });

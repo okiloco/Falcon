@@ -10,7 +10,7 @@ Ext.define('Admin.view.authentication.Login', {
         'Ext.button.Button'
     ],
 
-    title: 'Let\'s Log In',
+    title: 'Inciar - Falcon System',
     defaultFocus: 'authdialog', // Focus the Auth Form to force field focus as well
 
     items: [
@@ -34,17 +34,17 @@ Ext.define('Admin.view.authentication.Login', {
             items: [
                 {
                     xtype: 'label',
-                    text: 'Sign into your account'
+                    text: 'Inciar Sesion'
                 },
                 {
                     xtype: 'textfield',
                     cls: 'auth-textbox',
-                    name: 'userid',
+                    name: 'username',
                     bind: '{userid}',
                     height: 55,
                     hideLabel: true,
                     allowBlank : false,
-                    emptyText: 'user id',
+                    emptyText: 'Usuario',
                     triggers: {
                         glyphed: {
                             cls: 'trigger-glyph-noop auth-email-trigger'
@@ -56,7 +56,7 @@ Ext.define('Admin.view.authentication.Login', {
                     cls: 'auth-textbox',
                     height: 55,
                     hideLabel: true,
-                    emptyText: 'Password',
+                    emptyText: 'Contraseña',
                     inputType: 'password',
                     name: 'password',
                     bind: '{password}',
@@ -67,7 +67,7 @@ Ext.define('Admin.view.authentication.Login', {
                         }
                     }
                 },
-                {
+                /*{
                     xtype: 'container',
                     layout: 'hbox',
                     items: [
@@ -84,7 +84,7 @@ Ext.define('Admin.view.authentication.Login', {
                             html: '<a href="#passwordreset" class="link-forgot-password"> Forgot Password ?</a>'
                         }
                     ]
-                },
+                },*/
                 {
                     xtype: 'button',
                     reference: 'loginButton',
@@ -92,13 +92,13 @@ Ext.define('Admin.view.authentication.Login', {
                     ui: 'soft-green',
                     iconAlign: 'right',
                     iconCls: 'x-fa fa-angle-right',
-                    text: 'Login',
+                    text: 'Acceder',
                     formBind: true,
                     listeners: {
                         click: 'onLoginButton'
                     }
                 },
-                {
+                /*{
                     xtype: 'box',
                     html: '<div class="outer-div"><div class="seperator">OR</div></div>',
                     margin: '10 0'
@@ -129,7 +129,7 @@ Ext.define('Admin.view.authentication.Login', {
                     listeners: {
                         click: 'onNewAccount'
                     }
-                }
+                }*/
             ]
         }
     ],

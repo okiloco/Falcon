@@ -9,7 +9,7 @@ Ext.define('Admin.view.authentication.PasswordReset', {
         'Ext.button.Button'
     ],
 
-    title: 'Reset Password',
+    title: 'Solicitar Cambio de Contraseña',
 
     defaultFocus : 'authdialog',  // Focus the Auth Form to force field focus as well
 
@@ -34,7 +34,7 @@ Ext.define('Admin.view.authentication.PasswordReset', {
                 {
                     xtype: 'label',
                     cls: 'lock-screen-top-label',
-                    text: 'Enter your email address for further reset instructions'
+                    text: 'Ingrese su correo para recibir instrucciones de cambio de clave.'
                 },
                 {
                     xtype: 'textfield',
@@ -59,7 +59,7 @@ Ext.define('Admin.view.authentication.PasswordReset', {
                     formBind: true,
                     iconAlign: 'right',
                     iconCls: 'x-fa fa-angle-right',
-                    text: 'Reset Password',
+                    text: 'Solicitar cambio Contraseña',
                     listeners: {
                         click: 'onResetClick'
                     }
@@ -67,9 +67,14 @@ Ext.define('Admin.view.authentication.PasswordReset', {
                 {
                     xtype: 'component',
                     html: '<div style="text-align:right">' +
-                        '<a href="#login" class="link-forgot-password">'+
-                            'Back to Log In</a>' +
-                        '</div>'
+                        '<a href="#'+((!localStorage.user_id)?'login':'ptz')+'" class="link-forgot-password">'+
+                            'Atrás</a>' +
+                        '</div>',
+                    /*listeners:{
+                        el:{
+                            click:'onGoBack'
+                        }
+                    }   */ 
                 }
             ]
         }

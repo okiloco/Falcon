@@ -3,12 +3,11 @@ var md5 = require("md5");
 module.exports.controller = function(name,app,db){
 	
 	app.get("/schemas",function(req,res){
-		console.log(db.schema.getFields());
 		db.schema.search(req.query,function(err,docs){
 			res.send(JSON.stringify(docs));
 		});
 	});
-	app.post("/schema", function(req,res){
+	app.post("/schemas", function(req,res){
 		var params = req.body;
 		
 		if(params.id){
@@ -35,7 +34,7 @@ module.exports.controller = function(name,app,db){
 				});
 			});
 		}else{
-			db.register(params.name,params.config,function(err,doc){
+			db.register(params.name,params.config,params.lang,function(err,doc){
 				res.send(JSON.stringify({
 					success:err,
 					msg:(err)?doc:'el esquema ya existe.'

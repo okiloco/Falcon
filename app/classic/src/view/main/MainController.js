@@ -15,10 +15,130 @@ Ext.define('Admin.view.main.MainController', {
     },
 
     lastView: null,
+    onClickUser:function(self,el){
+       var mainCardPanel=this.lookupReference('mainCardPanel');
 
+       Ext.create('Ext.menu.Menu', {
+           width: 200,
+           margin: '10px 10px 10px 0px',
+           cls:'x-menu',
+           padding:'0',
+           bodyStyle:'border-radius:7px;',
+           frame:false,
+           plain:true,
+           defaults:{
+               pakcage:'center',
+               cls:'item-menu',
+               xtype:'menuitem'
+           },
+           items: [
+           /*{
+               text: 'Mi Perfil',
+               iconCls:'fa fa-user',
+               selector:el,
+               handler:'onProfile'
+           },*/
+           Ext.create('Admin.view.profile.Social',{
+               autoScroll:true
+           }),
+           {
+               text: 'Cambiar Contraseña',
+               iconCls:'fa fa-key',
+               handler:'onChangePass'
+           },{
+               text: 'Salir',
+               iconCls:'fa fa-sign-out',
+               handler:'onLogout'
+           }]
+       }).showBy(Ext.get(el),'c-bl',[-40,140]);
+    },
+    onChangePass:function(self){
+        var me=this;
+        me.redirectTo('passwordreset',true);
+         // Ext.create('Admin.view.authentication.PasswordReset').show();
+        /*Ext.create('Ext.window.Window', {
+            title: 'Cambiar Contraseña',
+            height: 200,
+            width: 400,
+            layout: 'fit',
+            modal: true,
+            constrainHeader: true,
+            resizable: false,
+            items: [
+                Ext.create('Admin.view.authentication.PasswordReset')
+            ]
+        }).show();*/
+    },
+    onProfile:function(self){
+
+        Ext.create('Ext.menu.Menu', {
+            width: 250,
+            margin: '10px 10px 10px 0px',
+            cls:'x-menu',
+            padding:'0',
+            bodyStyle:'border-radius:7px;',
+            frame:false,
+            plain:true,
+            defaults:{
+                pakcage:'center',
+                cls:'item-menu',
+                xtype:'menuitem'
+            },
+            items: [
+                Ext.create('Admin.view.profile.Social',{
+                    autoScroll:true
+                }) 
+            ]
+        }).showBy(Ext.get(self.selector),'c-bl',[-70,0]);
+    },
+    onViewPerfil:function(self){
+        var mainCardPanel=this.lookupReference('mainCardPanel');
+
+        Ext.create('Ext.window.Window', {
+            title: 'Editar Perfil',
+            width: 550,
+            layout: 'fit',
+            modal: true,
+            constrainHeader: true,
+            resizable: false,
+            items: [
+                {
+                    html:'Usuario profile'
+                }
+                // Ext.create('Admin.view.usuario.Perfil')
+            ]
+        }).show();
+    },
+    onLogout:function(self){
+        var me=this;
+        Ext.Msg.confirm('Cerrar Sesión?', 'Desea cerrar la sesión?', function(buttonId, text, v) {
+            if(buttonId == 'yes') {
+                Ext.Ajax.request({
+                    scope: this,
+                    url: Constants.URL_LOGOUT_APP,
+                    success: function(response) {
+                        var responseObject = Ext.decode(response.responseText);
+                        localStorage.clear();
+                        me.redirectTo('login', true);      
+                    },
+                    failure: function(response) {
+                        Ext.Msg.show({
+                            title: 'Error',
+                            msg: 'Error al procesar la petición.',
+                            buttons: Ext.Msg.OK,
+                            icon: Ext.Msg.ERROR,
+                            fn:function(){
+                                localStorage.clear();
+                                me.redirectTo('login', true);
+                            }
+                        });
+                    }
+                });
+            }
+        }, this);
+    },
     setCurrentView: function(hashTag) {
         hashTag = (hashTag || '').toLowerCase();
-
         var me = this,
             refs = me.getReferences(),
             mainCard = refs.mainCardPanel,
@@ -27,7 +147,8 @@ Ext.define('Admin.view.main.MainController', {
             store = navigationList.getStore(),
             node = store.findNode('routeId', hashTag) ||
                    store.findNode('viewType', hashTag),
-            view = (node && node.get('viewType')) || 'page404',
+            view = (node && node.get('viewType')) || ((hashTag=='passwordreset')?"passwordreset":"login") || ((!localStorage.user_id)?'login':'page404'),
+            // view = (node && node.get('viewType')) || ((hashTag=='login' || hashTag=='passwordreset') || 'page404'),
             lastView = me.lastView,
             existingItem = mainCard.child('component[routeId=' + hashTag + ']'),
             newView;
@@ -137,11 +258,24 @@ Ext.define('Admin.view.main.MainController', {
         }
     },
 
+    //@fvargs: Renderizar Vista.
     onMainViewRender:function() {
         if (!window.location.hash) {
-            this.redirectTo("ptz");
+            console.log(localStorage.user_id);
+            if(localStorage.user_id!=undefined){
+                this.redirectTo("ptz");
+            }else{
+                this.redirectTo("login");
+            }
+            
         }
     },
+    onMainViewBeforeRender:function() {
+        if(!localStorage.user_id){
+            this.redirectTo("login");
+        }
+    },
+    //@fvargs: Renderizar Vista.
 
     onRouteChange:function(id){
         this.setCurrentView(id);

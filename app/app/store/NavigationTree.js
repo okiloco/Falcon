@@ -18,7 +18,14 @@ Ext.define('Admin.store.NavigationTree', {
                 routeId: 'ptz', // routeId defaults to viewType
                 leaf: true
             },
-           /* {
+            {
+                text: 'Usuarios',
+                iconCls: 'x-fa fa-user',
+                viewType: 'users',
+                routeId: 'users',
+                leaf: true
+            },
+            /*,{
                 text: 'Email',
                 iconCls: 'x-fa fa-send',
                 rowCls: 'nav-tree-badge nav-tree-badge-hot',
@@ -30,7 +37,7 @@ Ext.define('Admin.store.NavigationTree', {
                 iconCls: 'x-fa fa-user',
                 viewType: 'profile',
                 leaf: true
-            },
+            }, 
             {
                 text: 'Search results',
                 iconCls: 'x-fa fa-search',

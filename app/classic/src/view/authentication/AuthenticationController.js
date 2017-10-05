@@ -8,8 +8,33 @@ Ext.define('Admin.view.authentication.AuthenticationController', {
         this.redirectTo('dashboard', true);
     },
 
-    onLoginButton: function() {
-        this.redirectTo('dashboard', true);
+    onLoginButton: function(self) {
+        var me = this;
+        var form = self.up('form');
+        if (form.isValid()) {
+            form.submit({
+                method:"GET",
+                url:Constants.URL_LOGIN,
+                waitMsg: 'Procesando solicitud...',
+                success: function(f, action) {
+                    var res = action.result;
+                    console.log(res.user.username);
+                    localStorage.user_id =res.user._id;
+                    localStorage.username =res.user.username;
+
+                    me.redirectTo('ptz', true);
+                },
+                failure: function(f, action) {
+                    Ext.Msg.show({
+                        title: 'Error',
+                        msg: action.result.msg,
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.Msg.ERROR                    
+                    });
+                }
+            });
+        }
+        
     },
 
     onLoginAsButton: function() {
@@ -25,6 +50,6 @@ Ext.define('Admin.view.authentication.AuthenticationController', {
     },
 
     onResetClick:  function() {
-        this.redirectTo('dashboard', true);
+        this.redirectTo(((!localStorage.user_id)?'login':'ptz'), true);
     }
 });

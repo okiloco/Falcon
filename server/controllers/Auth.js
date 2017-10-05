@@ -33,13 +33,5 @@ module.exports.controller = function(name,app,db){
 		};		
 	});
 
-	app.get("/logout",function(req,res){
-		req.session.destroy(function(err){
-			if(err) res.send(err);
-			res.send(JSON.stringify({
-				success:true,
-				msg:"Session finalizada."
-			}));
-		});
-	});
+	
 }

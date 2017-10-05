@@ -25,6 +25,30 @@ Ext.define('Admin.view.authentication.LockingWindow', {
         align: 'center',
         pack: 'center'
     },
+    flex:1,
+    initComponent: function() {
+        var me = this;
 
+        console.log(me.height)
+        Ext.apply(me, {
+            listeners:{
+                show:function(self){
+                    self.setHtml('<img class="image" style="background-color:red; height:'+me.height+'px;" src="'+ Constants.URL_VIEWER+'">')
+                }
+            },
+            html:[
+            // '<div style="background-size:100% 100%; background-image: url(http://192.168.1.155/mjpg/video.mjpg) , url(http://192.168.1.155/mjpg/video.mjpg); width: 100%; height: 100px; " title="Carga primer y segundo background. Muestra primero." ></div>', 
+            // '<div class="image" style="background-color:red; height:'+me.height+'px;">',
+            // '<div style="background-size:100% 100%; background-image: url(http://192.168.1.155/mjpg/video.mjpg) , url(http://192.168.1.155/mjpg/video.mjpg); width: 100%; height: 100%; " title="Carga primer y segundo background. Muestra primero." ></div>',
+
+                /*'style="background-image:url('+Constants.URL_VIEWER+'), url(./resources/images/lock-screen-background.jpg); width:100%; height:auto;"
+                '<img src="'+ Constants.URL_VIEWER+'" style="width:100%; height:100%;" frameborder="0"/>',
+                '<img src="./resources/images/lock-screen-background.jpg" style="width:100%; height:100%;" frameborder="0"/>',*/
+            // '</div>'
+            ].join("")
+        });
+        me.callParent(arguments);
+    },
     controller: 'authentication'
 });
+ 

@@ -3,6 +3,7 @@ var router = express.Router();
 var dateFormat = require('dateformat');
 var streaming = require("./js/videoStreaming");
 var pluralize = require("./helpers/helper").pluralize;
+var path = require('path');
 var md5 = require('md5');
 
 module.exports = function(app,db){
@@ -26,71 +27,65 @@ module.exports = function(app,db){
 		audio:0,
 		fps:25,
 	});
-
-	router.get("/",(req,res)=>{
-		res.send("app root. "+req.session.user_id );
+	//DESPLIEGUE
+	router.route("/logout")
+	.get(function(req,res){
+		req.session.destroy(function(err){
+			if(err) res.send(err);
+			res.send(JSON.stringify({
+				success:true,
+				msg:"Session finalizada."
+			}));
+		});
 	});
-	router.get("/app",(req,res)=>{
-		res.send("Imagen nueva.");
+	router.get("/image/new",(req,res)=>{
+		camera.requestImage({
+			resolution: '1920x1080',
+			compression: 30,
+			rotation: 0,
+			folder:'/public/images/'
+		}, function(err, data) {
+			if (err) throw err;
+			res.send(JSON.stringify({
+				success:true,
+				msg:'Imagen capturada!'
+			}));
+		});
 	});
-
-	//RECURSOS
-	router.route("/test").get(function(req,res){
-		var group = db.getModel("group");
+	router.get("/video",(req,res)=>{
+		var action = req.query.action;
 		var params = req.query;
-		var id_modules = params.modules;
 		
-		var modules = [];
+	 	video.record(params,function(){
+			console.log("end.");
+			res.send(JSON.stringify({
+				success:true,
+				msg:'Video creado con éxito',
+				url:video.filename
+			}));
+			video.stop();
+	 	});
+	});
+	router.route("/video/:action")
+	.get(function(req,res){
+		var params = req.params,
+		action = params.action;
 
-
-		if(typeof(id_modules)=='object'){
-			id_modules.forEach(function(module_id,index){
-				modules.push({"module":db.ObjectId(module_id)});
-			});
-		}else if(typeof(id_modules)=='string'){
-			modules.push({"module":db.ObjectId(id_modules)});
-		}
-		params.modules = modules;
-
-		if(params.id){
-
-			db.group.findById(params.id,function(err,group){
-				
-				group.name = params.name;
-				group.modules = params.modules;
-
-
-				//59cd6b6e2a312ffac85fac88
-
-				group.save(function(err,doc){
+		switch(action){
+			case 'stop':
+				var rec = video.stop(function(record){
 					res.send(JSON.stringify({
 						success:true,
-						msg:'Grupo actualizado con éxito. '
+						msg:'Video detenido.'
 					}));
 				});
-			});
-		}else{
-			var model = db.group;
-			
-			console.log(params.modules);
-			var group = new model(params);
-			group.save(function(err,doc){
-				res.send(JSON.stringify({
-					success:true,
-					msg:'Grupo creado con éxito. '
-				}));
-			});
+			break;
 		}
-
-		/*group.findOneById({"name":"user"},function(err,user_schema){
-			console.log("USER:: ",user_schema);
-			res.send(JSON.stringify(user_schema));
-		});*/
 	});
 	//Schemas
 	db.on("schema",function(schema){
 
-		router.route("/schema").post(function(req,res){
+		router.route("/schemas").post(function(req,res){
 			
 			var params = req.body;
 			
@@ -131,7 +126,7 @@ module.exports = function(app,db){
 				res.send(JSON.stringify(docs));
 			});
 		});
-		router.route("/schema/delete").get(function(req,res){
+		router.route("/schemas/delete").get(function(req,res){
 			var model = db.getModel("schema");
 
 			console.log("Se va a eliminar ",req.query);
@@ -149,20 +144,6 @@ module.exports = function(app,db){
 	});
 	//Videos
 	db.on("video",function(schema){
-		/*router.route("/video").post(function(req,res){
-			var params = req.body;
-			
-			db.video.create(params,function(err,doc){
-				if(!doc){
-					res.send(JSON.stringify({"success":false,"msg":err}));
-				}else{
-					res.send(JSON.stringify({
-						"success":true,
-						"msg":(!params.id)?"Registro creado con éxito.":"Registro actualizado con éxito."
-					}));
-				}
-			});
-		});*/
 		router.route("/videos").get(function(req,res){
 			var params = req.query;
 			db.video.query(req.query,function(err,query){
@@ -192,13 +173,13 @@ module.exports = function(app,db){
 		router.route("/users").get(function(req,res){
 			db.user.query(req.query,function(err,query){
 				query.populate('usergroup')
-				.select('username usergroup modules')
+				.select('username email usergroup modules')
 				.exec(function(err,data){
-					res.send(JSON.stringify(data));
+					res.send(JSON.stringify({data:data}));
 				});
 			});
 		});
-		router.route("/user").post(function(req,res){
+		router.route("/users").post(function(req,res){
 			var params = req.body;
 			
 			if(params.password!=undefined){
@@ -220,7 +201,6 @@ module.exports = function(app,db){
 	db.on("group",function(schema){
 
 		router.route("/groups").get(function(req,res){
-			
 			db.group.query(req.query,function(err,query){
 				
 				query.populate('modules')
@@ -230,86 +210,8 @@ module.exports = function(app,db){
 				});
 			});
 		});
-
-		router.route("/group/new").post(function(req,res){
-			
-			db.group.create(req.body,function(err,doc){
-				console.log("Creación callback.")
-				res.send(JSON.stringify({
-					success:true,
-					msg:"Created testing"
-				}));
-			});
-		});
-	});
-	/*
-	* Recurso para crear y editar modelos dinamicamente
-	* @params
-	* model (nombre del modelo)
-	* Campos dinamicos del modelo
-	*/
-	router.route("/create/model").post(function(req,res){
-		var params = req.body;
-
-		db[req.body.model].create(params,function(err,doc){
-			console.log("Creación callback.")
-			res.send(JSON.stringify({
-				success:true,
-				msg:"Created testing"
-			}));
-		});
 	});
 
-	
-	
-
-	//DESPLIEGUE
-	router.get("/image/new",(req,res)=>{
-		camera.requestImage({
-			resolution: '1920x1080',
-			compression: 30,
-			rotation: 0,
-			folder:'/public/images/'
-		}, function(err, data) {
-			if (err) throw err;
-			res.send(JSON.stringify({
-				success:true,
-				msg:'Imagen capturada!'
-			}));
-		});
-	});
-
-
-	router.get("/video",(req,res)=>{
-		var action = req.query.action;
-		var params = req.query;
-		
-	 	video.record(params,function(){
-			console.log("end.");
-			res.send(JSON.stringify({
-				success:true,
-				msg:'Video creado con éxito',
-				url:video.filename
-			}));
-			video.stop();
-	 	});
-	});
-	router.route("/video/:action")
-	.get(function(req,res){
-		var params = req.params,
-		action = params.action;
-
-		switch(action){
-			case 'stop':
-				var rec = video.stop(function(record){
-					res.send(JSON.stringify({
-						success:true,
-						msg:'Video detenido.'
-					}));
-				});
-			break;
-		}
-	});
 
 	/**
 	* @params: name, schema
@@ -319,39 +221,64 @@ module.exports = function(app,db){
 	* o crear rutas personalizadas, los esquemas estan disponibles
 	* En el evento on("NOMBRE_SCHEMA",callback);
 	*/
+
+	var Schema;
 	db.on("define",function(name,schema){
 		
-		//Ceate / Update
-		router.route("/"+name).post(function(req,res){
-			var params = req.body;
+		if(name == "schema") schema.lang="es";
+		var route_name = pluralize(schema.lang || "es",name);
+		route_name = path.join('/',route_name);
+		console.log("route: ",name,route_name);
+
+		setSchema = function(name,schema){
 			
-			db[name].create(params,function(err,doc){
-				if(!doc){
-					res.send(JSON.stringify({"success":false,"msg":err}));
-				}else{
-					res.send(JSON.stringify({
-						"success":true,
-						"msg":(!params.id)?"Registro creado con éxito.":"Registro actualizado con éxito."
-					}));
-				}
-			});
-		});
-		if(name!="schema"){
-			router.route("/"+name+"/delete/:id").get(function(req,res){
+			Schema = schema;
+
+			list = function(req,res){
+				var params = req.query || {};
+				console.log(params);
+				db[name].search(params,function(err,docs){
+					console.log("GET: list "+route_name,docs);			
+					res.send(JSON.stringify({data:docs}));
+				});
+			}
+			update = function(req,res){
+				res.send(JSON.stringify({"success":true,"msg":"update"}));
+			}
+			findById = function(req,res){
+				res.send(JSON.stringify({"success":true,"msg":"findById"}));
+			}
+			save = function(req,res){
+				var params = req.body;
+				db[name].create(params,function(err,doc){
+					console.log("GET: save "+route_name);
+					if(!doc){
+						res.send(JSON.stringify({"success":false,"msg":err}));
+					}else{
+						res.send(JSON.stringify({
+							"success":true,
+							"msg":(!params.id)?"Registro creado con éxito.":"Registro actualizado con éxito."
+						}));
+					}
+				});
+			}
+			remove = function(req,res){
 				db[name].removeById(req.params.id,function(msg,doc){
+					console.log("GET: remove "+route_name);
 					res.send(JSON.stringify({
 						success:true,
 						msg:msg
 					}));
 				});
-			});
+			}	
+			
+			router.route(route_name).get(list);//Listar y Buscar
+			router.route(route_name).post(save);//crear registro nuevo y actualizar
+			router.route(route+':id').get(findById);//busca un registro por Id
+			router.route(route+'/delete/:id').post(remove);//Eliminar registro por Id
 		}
-		//List
-		router.route("/"+pluralize(schema.lang || "es",name)).get(function(req,res){
-			db[name].find(req.query,function(err,docs){
-				res.send(JSON.stringify(docs));
-			});
-		});
+		setSchema(name,schema);
+		
 	});
 
 	return router;

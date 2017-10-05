@@ -32,9 +32,9 @@ app.use(session({
 const ManagerDB = require("./database/ManagerDB");
 const db = ManagerDB.createManagerDB();
 
-app.get("/seting",function(req,res){
+app.get("/view",function(req,res){
 
-	send("vea")
+	// res.redirect("http://192.168.1.155");
 
 });
 

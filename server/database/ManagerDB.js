@@ -221,7 +221,7 @@ ManagerDB.prototype.setFields = function(options,callback){
 * Ejemplo:
 * on("NOMBRE_SCHEMA",callback);
 */
-ManagerDB.prototype.createSchema = function(name, options,callback){
+ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 	var self = this;
 	var fields = {};
 	self["fields"] = {};
@@ -268,6 +268,24 @@ ManagerDB.prototype.createSchema = function(name, options,callback){
 	}
 	schema.statics.get = function(name){
 		return this[name];
+	}
+	schema.statics.fields = function(params){
+		var fields = this.getFields();
+		var out_fields = (!params)?[]:{};
+		
+		if(params!=undefined){
+			for(var key in fields){
+				if(params[key]!=undefined){
+					out_fields[key]=params[key];
+				}
+			}
+		}else{
+			for(var key in fields){
+				out_fields.push(key);
+			}
+		}
+		console.log(out_fields);
+		return out_fields;
 	}
 	/**
 	* @map: params,model,callback
@@ -329,25 +347,32 @@ ManagerDB.prototype.createSchema = function(name, options,callback){
 			if(params.id){
 				this.findById(params.id,function(err,doc){
 					if(!doc){ if(callback!=undefined) callback("No existe registro.",doc);};
-					model.update(doc, { _id: params.id }, params, function(model){
+					/*model.update(doc, { _id: params.id }, params, function(model){
 						if(callback!=undefined) callback(err,doc);
-					});
-					/*model.map(params,doc,function(model){
+					});*/
+					model.map(params,doc,function(model){
 						model.save(function(err,doc){
 							if(err) throw err;
 							if(callback!=undefined) callback(err,doc);
 						});
-					});*/
+					});
 
 				});
 			}else{
-				model = new model({});
-				this.map(params,model,function(model){
+				
+
+				params = this.fields(params);
+				model = new model(params);
+				model.save(function(err,doc){
+					if(err) throw err;
+					if(callback!=undefined) callback(err,doc);
+				});
+				/*this.map(params,model,function(model){
 					model.save(function(err,doc){
 						if(err) throw err;
 						if(callback!=undefined) callback(err,doc);
 					});
-				});
+				});*/
 			}
 		}else{
 			if(callback!=undefined) callback("No se encontraron parametros de entrada."); 
@@ -361,6 +386,7 @@ ManagerDB.prototype.createSchema = function(name, options,callback){
 				return query;
 			});
 		}else{
+			params = this.fields(params);
 			query = this.find(params,function(err,docs){
 				if(callback!=undefined) callback(err,query);
 				return query;
@@ -378,6 +404,7 @@ ManagerDB.prototype.createSchema = function(name, options,callback){
 				return doc;
 			});
 		}else{
+			params = this.fields(params);
 			this.find(params,function(err,docs){
 				if(callback!=undefined) callback(err,docs);
 				return docs;
@@ -422,6 +449,7 @@ ManagerDB.prototype.createSchema = function(name, options,callback){
 	this.schemas[name] = schema;
 	this.schemas[name]["name"] = name;
 	
+	schema["lang"] = (lang!=undefined)?lang:"es";
 
 	self.emit(name,schema);
 	self.emit("define",name,schema);
@@ -484,7 +512,7 @@ ManagerDB.prototype.load =  function(callback) {
 		if(typeof(callback)!=undefined) callback();
 	});
 }
-ManagerDB.prototype.register = function(name,config,callback){
+ManagerDB.prototype.register = function(name,config,lang,callback){
 	var self = this;
 	//Registra esquema en la collection schema
 	if(name!="schema"){
@@ -497,7 +525,7 @@ ManagerDB.prototype.register = function(name,config,callback){
 				//Crear Schema en base de datos
 				self.create({
 					name:"schema",
-					lang:config.lang || "es", 
+					lang:lang, 
 					options:{"name":name,"config":config}
 				},function(){
 					//Actualizar los esquemas de la base de datos
@@ -512,7 +540,7 @@ ManagerDB.prototype.register = function(name,config,callback){
 				
 			}else{
 				//Establecer el lenguaje del Schema
-				//schema["lang"] = (doc.lang!=undefined)?doc.lang:undefined;
+				
 				console.log(name,"registrado.")
 				if(callback!=undefined){
 					callback((!doc))
@@ -535,7 +563,7 @@ ManagerDB.prototype.define =  function(callback) {
 
 	var self = this;
 	//Crear el Esquema principal de la base de datos, que contiene todos los esquemas.
-	self.createSchema("schema",{name:"String",lang:{"type":"String","default":"es"}, config:"String"},function(err,schema){
+	self.createSchema("schema",{name:"String",lang:{"type":"String","default":"es"}, config:"String"},"en",function(err,schema){
 		//Instancia modelo Schema
 		var model = self.createModel(schema.name,schema);
 		if(err) throw err;
@@ -544,11 +572,10 @@ ManagerDB.prototype.define =  function(callback) {
 			if(docs.length>0)
 			{
 				docs.forEach(function (doc,index) {
-					console.log(doc.name)
 					//Registrar los esquemas en collection Schemas
-					self.register(doc.name,doc.config,function(){
+					self.register(doc.name,doc.config,doc.lang,function(){
 						//Crear Esquema con la configuración registrada.
-						self.createSchema(doc.name,doc.config,function(msg,sch){
+						self.createSchema(doc.name,doc.config,doc.lang,function(msg,sch){
 							//Crea nueva instancia de modelo
 							self.createModel(doc.name,sch,function(m){
 								if(index==docs.length - 1){

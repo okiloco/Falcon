@@ -9,6 +9,7 @@
      */
     "version": "1.0.0.0",
 
+   
     /**
      * The relative path to the application's markup file (html, jsp, asp, etc.).
      */
@@ -52,9 +53,15 @@
     "requires": [
         "charts",
         "font-awesome",
-        "ux"
+        "ux",
+        "ext-locale"
     ],
+    /*
+    * @fvargas Poner el lenguaje en español
+    * Para ello se debe agergar el siguente atributo y requerir "ext-locale"  
+    */
 
+    "locale": "es", 
     /**
      * Sass configuration properties.
      */

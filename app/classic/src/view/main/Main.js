@@ -18,7 +18,8 @@ Ext.define('Admin.view.main.Main', {
     },
 
     listeners: {
-        render: 'onMainViewRender'
+        render: 'onMainViewRender',
+        beforerender:'onMainViewBeforeRender'
     },
 
     items: [
@@ -32,7 +33,7 @@ Ext.define('Admin.view.main.Main', {
                     xtype: 'component',
                     reference: 'senchaLogo',
                     cls: 'sencha-logo',
-                    html: '<div class="main-logo"><img src="resources/images/company-logo.png">Sencha</div>',
+                    html: '<div class="main-logo"><img src="resources/images/company-logo.png">Falcon System</div>',
                     width: 250
                 },
                 {
@@ -43,7 +44,7 @@ Ext.define('Admin.view.main.Main', {
                     handler: 'onToggleNavigationSize'
                 },
                 '->',
-                {
+                /*{
                     xtype: 'segmentedbutton',
                     margin: '0 16 0 0',
 
@@ -89,10 +90,12 @@ Ext.define('Admin.view.main.Main', {
                     href: '#profile',
                     hrefTarget: '_self',
                     tooltip: 'See your profile'
-                },
+                },*/
                 {
                     xtype: 'tbtext',
-                    text: 'Goff Smith',
+                    bind:{
+                        text: '{username}',
+                    },
                     cls: 'top-user-name'
                 },
                 {
@@ -101,7 +104,15 @@ Ext.define('Admin.view.main.Main', {
                     height: 35,
                     width: 35,
                     alt:'current user image',
-                    src: 'resources/images/user-profile/2.png'
+                    bind:{
+                        src:'{picture}'
+                    },
+                    listeners: {
+                        scope:this,
+                        el: {
+                            click:'onClickUser'
+                        }
+                    }
                 }
             ]
         },
