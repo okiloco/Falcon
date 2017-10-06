@@ -43,6 +43,7 @@ $include-admin-model-faq-question: dynamic(true);;
 $include-admin-model-search-attachment: dynamic(true);;
 $include-admin-model-search-result: dynamic(true);;
 $include-admin-model-search-user: dynamic(true);;
+$include-admin-model-user-user: dynamic(true);;
 $include-admin-override-menu-item: dynamic(true);;
 $include-admin-proxy-api: dynamic(true);;
 $include-admin-store-navigationtree: dynamic(true);;
@@ -1320,10 +1321,13 @@ $include-ext-view-view: dynamic(true);;
 $include-ext-window-messagebox: dynamic(true);;
 $include-ext-window-toast: dynamic(true);;
 $include-ext-window-window: dynamic(true);;
-$include-falcon-model-user-user: dynamic(true);;
 $include-falcon-view-ptz-ptz: dynamic(true);;
 $include-falcon-view-ptz-ptzcontroller: dynamic(true);;
 $include-falcon-view-ptz-ptzmodel: dynamic(true);;
+$include-falcon-view-wizard-wizardform: dynamic(true);;
+$include-falcon-view-wizard-wizardformcontroller: dynamic(true);;
+$include-falcon-view-wizard-wizardformmodel: dynamic(true);;
+$include-falcon-view-wizard-wizards: dynamic(true);;
 $include-tecnotasks-grilla: dynamic(true);;
 
 

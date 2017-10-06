@@ -25,14 +25,16 @@ Ext.define('Admin.store.NavigationTree', {
                 routeId: 'users',
                 leaf: true
             },
-            /*,{
-                text: 'Email',
-                iconCls: 'x-fa fa-send',
-                rowCls: 'nav-tree-badge nav-tree-badge-hot',
-                viewType: 'email',
+            {
+                text: 'Wizard',
+                iconCls: 'x-fa fa-user',
+                viewType: 'wiz',
+                routeId: 'wiz',
                 leaf: true
             },
-            {
+
+            /*,
+                {
                 text: 'Profile',
                 iconCls: 'x-fa fa-user',
                 viewType: 'profile',
@@ -87,19 +89,6 @@ Ext.define('Admin.store.NavigationTree', {
 
                     {
                         text: 'Login',
-                        iconCls: 'x-fa fa-check',
-                        viewType: 'login',
-                        leaf: true
-                    },
-                    {
-                        text: 'Register',
-                        iconCls: 'x-fa fa-pencil-square-o',
-                        viewType: 'register',
-                        leaf: true
-                    },
-                    {
-                        text: 'Password Reset',
-                        iconCls: 'x-fa fa-lightbulb-o',
                         viewType: 'passwordreset',
                         leaf: true
                     }
