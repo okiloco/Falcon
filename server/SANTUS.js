@@ -325,8 +325,8 @@ module.exports = function(app,db){
 			
 			router.route(route_name).get(list);//Listar y Buscar
 			router.route(route_name).post(save);//crear registro nuevo y actualizar
-			router.route(route_name+':id').get(findById);//busca un registro por Id
-			router.route(route_name+'/delete/:id').post(remove);//Eliminar registro por Id
+			router.route(route+':id').get(findById);//busca un registro por Id
+			router.route(route+'/delete/:id').post(remove);//Eliminar registro por Id
 		}
 		setSchema(name,schema);
 		

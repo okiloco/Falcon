@@ -33,7 +33,7 @@ Ext.define('Admin.view.authentication.LockingWindow', {
         Ext.apply(me, {
             listeners:{
                 show:function(self){
-                    self.setHtml('<img class="image" style="background-color:red; height:'+me.height+'px;" src="'+ Constants.URL_VIEWER+'">')
+                    self.setHtml('<img style="height:'+me.height+'px;" src="'+ Constants.URL_VIEWER+'">')
                 }
             },
             html:[

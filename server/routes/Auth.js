@@ -1,10 +1,24 @@
 var md5 = require("md5");
 
-module.exports.controller = function(name,app,db){
+module.exports = function(app,router,db,schema){
 
-
+	app.get("/logout",function(req,res){
+		if(req.session.user_id){
+			req.session.destroy(function(err){
+				if(err) res.send(err);
+				res.send(JSON.stringify({
+					success:true,
+					msg:"Session finalizada."
+				}));
+			});
+		}else{
+			res.send(JSON.stringify({
+				success:false,
+				msg:"No existe sisión de usaurio."
+			}));
+		}
+	});
 	app.get("/login",function(req,res){
-
 		if(!db.user){
 			res.send(JSON.stringify({
 				success:false,
@@ -33,5 +47,5 @@ module.exports.controller = function(name,app,db){
 		};		
 	});
 
-	
+	return router;
 }

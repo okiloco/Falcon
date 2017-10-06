@@ -32,42 +32,17 @@ app.use(session({
 const ManagerDB = require("./database/ManagerDB");
 const db = ManagerDB.createManagerDB();
 
-app.get("/view",function(req,res){
-
-	// res.redirect("http://192.168.1.155");
-
-});
-
-app.get("/refresh",function(req,res){
-	db.refresh(function(err,schema){
-		res.send("Aplicaión actualizada.");
-	});
-});
-
-
-
 app.use("/public",express.static("public"));
 app.use("/config",express.static("config"));
-app.use("/controllers",express.static("controllers"));
+app.use("/routes",express.static("routes"));
 // app.use("/app",session_middleware);
 app.use("/app",routes(app,db));
 
 var port = process.env.PORT || 3000;
+
 db.connect((err,schema)=>{
 	app.listen(port,function(){
-		//Cargar Controladores 
-		var dir = './server/controllers';
-		fs.readdirSync(dir).forEach(function(file){
-			route = require('./controllers/'+file);
-			var name = path.parse(file).name.toLowerCase();;
-			var controllerName=Helper.capitalize(name);
-
-			var controller = new route.controller(name,app,db);
-			// controller.prototype = new events.EventEmitter;		
-		});
-		//Define los Esquemas de la base de datos
-		db.define();
-	  	console.log("Arranco el Server localhost:"+port);
+	  	// console.log("Arranco el Server localhost:"+port);
     });
 });
 
