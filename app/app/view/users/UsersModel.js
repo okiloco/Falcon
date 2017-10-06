@@ -1,12 +1,12 @@
 Ext.define('Admin.view.users.UsersModel', {
     extend: 'Ext.app.ViewModel',
     alias: 'viewmodel.users-users',
-    data: {
-        name: 'Admin'
+    data:{
+
     },
     stores:{
     	userstore: {
-    		model: 'Base',
+    		model: 'Admin.model.user.User',
     		autoLoad: true,
     		pageSize: 20,
     		proxy: {

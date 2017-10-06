@@ -1,7 +1,6 @@
-Ext.define('Falcon.model.user.User', {
-    extend: 'Falcon.model.Base',
+Ext.define('Admin.model.user.User', {
+    extend: 'Admin.model.Base',
     fields:[
-        'id',
         'username',
         'email',
         'cedula',
@@ -11,7 +10,9 @@ Ext.define('Falcon.model.user.User', {
         'nombres',
         'apellidos',
         'rol_id',
-        'rol',
+        {name:'id',mapping:"_id"},
+        { name: 'rol', mapping:'usergroup.name'},
+        { name: 'usergroup', mapping:'usergroup._id'},
         'estado'
     ]
 });

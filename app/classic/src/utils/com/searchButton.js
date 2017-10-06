@@ -9,29 +9,54 @@ Ext.define('Admin.utils.com.searchButton', {
   cls:'search-field',
 	constructor: function(config) {
 		var me = this;
-		Ext.applyIf(config, {
-            triggers: {
-                search: {
-                   cls: 'x-form-search-trigger',
-                   tabIndex :1,
-                    handler: (typeof(config.listeners.search)!='undefined'?config.listeners.search:function(){
-                    	console.info('Debe definir una funcion en el listener, llamada search, para realizar una acción.');
-                    })
-                },
-                clear: {
-                  cls:"x-form-clear-trigger",
-                  tabIndex :2,
-                   hidden:true,
-                   handler: (typeof(config.listeners.clear)!='undefined'?config.listeners.clear:function(self){
-                      el.setHidden(true);
-                      self.setValue('');    
-                    })
-               }
+		Ext.apply(config, {
+      triggers: {
+          search: {
+            scope:me,
+            cls: 'x-form-search-trigger',
+            tabIndex :1,
+            listeners: {
+              scope:me,
+              click:function(self){
+                if(config.listeners!=undefined){
+                  if(config.listeners.hasOwnProperty("search")){config.listeners.search(self);}
+                }else{
+                  console.info('Debe definir una funcion en el listener, llamada search, para realizar una acción.');  
+                }
+              }
             }
+          },
+          clear: {
+            scope:me,
+            cls:"x-form-clear-trigger",
+            tabIndex :2,
+            hidden:true,
+            handler:function(self){
+              if(config.listeners!=undefined){
+                if(config.listeners.hasOwnProperty("clear")){
+                  config.listeners.clear(me);
+                }else{
+                  self.reset(); 
+                }
+              }else{
+                self.reset();
+              }
+            } 
+         }
+      }
 		});
 		
 		me.callParent([config]);
 		me.on('change',me.onChange);
+    me.on("specialkey",function (nf, evt) {
+      if(evt.ENTER==evt.getKey()){
+        if(config.listeners!=undefined){
+          if(config.listeners.hasOwnProperty("search")){config.listeners.search(self);}
+        }else{
+          console.info('Debe definir una funcion en el listener, llamada search, para realizar una acción.');  
+        }
+      }
+    });
 	},
 	onChange:function(){
 		var btn_clear=this.getTrigger('clear');

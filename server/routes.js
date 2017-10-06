@@ -1,4 +1,6 @@
 var express = require("express");
+const mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
 var router = express.Router();
 var dateFormat = require('dateformat');
 var streaming = require("./js/videoStreaming");
@@ -170,13 +172,62 @@ module.exports = function(app,db){
 	});
 	//Users
 	db.on("user",function(schema){
-		router.route("/users").get(function(req,res){
+		//Ejemplo de Virtual
+		schema.virtual("alias").get(function(){
+			return this.username+"-lord";
+		});
+
+		schema.statics.listar = function(params,callback){
+			var result=[];
+			db.user.query(params,function(err,query){
+				
+				var cursor = query.populate('usergroup')
+				.select('username email usergroup modules')
+				.cursor()
+				.eachAsync(function(user) {
+					result.push(user);
+			        user.usergroup.modules.forEach(function(docs,index,arr){
+			        	db.module.findOne(docs.module,(err,doc)=>{
+			        		user.usergroup.modules[index]=doc;
+			        	});
+			        });
+		      	})
+		    	.then(res => {
+		    		callback(result);
+		    	});				
+			});
+		}
+
+		router.route("/user").get(function(req,res){
 			db.user.query(req.query,function(err,query){
+				
 				query.populate('usergroup')
 				.select('username email usergroup modules')
 				.exec(function(err,data){
-					res.send(JSON.stringify({data:data}));
+
+					var modules = [];
+					data.forEach(function(user){
+
+						user.usergroup.modules.forEach(function(docs,index,arr){
+							console.log(docs.module)
+							db.module.find(docs.module,(err,doc)=>{
+								console.log("encotrado",doc)
+								user.usergroup.modules[index]=doc;
+								console.log("doc: "+index)
+
+								res.send(JSON.stringify({data:data}));
+							});
+						});						
+					});
+					console.log("cierre")	
+					
 				});
+			});
+		});
+
+		router.route("/users").get(function(req,res){
+			db.user.listar(req.query,function(docs){
+				res.send(JSON.stringify({data:docs,success:true}));
 			});
 		});
 		router.route("/users").post(function(req,res){

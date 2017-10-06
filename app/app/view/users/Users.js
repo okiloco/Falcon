@@ -38,7 +38,7 @@ Ext.define('Admin.view.users.Users',{
                 },
                 {
                     text:"Rol",
-                    dataIndex:'{usergroup.name}'
+                    dataIndex:'rol'
                 },
                 {
                     xtype: 'actioncolumn',
@@ -61,6 +61,23 @@ Ext.define('Admin.view.users.Users',{
                     cls: 'content-column',
                     // dataIndex: 'bool',
                     text: 'Acciones'                   
+                }
+            ],
+            dockedItems:[
+                {
+                    xtype:"toolbar",
+                    items:[
+                        {
+                            xtype: 'searchbutton',
+                            name: 'username',
+                            emptyText: 'Usuario',
+                            listeners:{
+                                search:function(self){
+                                    console.log(self);
+                                }
+                            }
+                        }
+                    ]
                 }
             ]
         }

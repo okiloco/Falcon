@@ -169,7 +169,7 @@ ManagerDB.prototype.parseObject = function(obj){
 	}
 	return obj;
 }
-ManagerDB.prototype.setFields = function(options,callback){
+ManagerDB.prototype.setFieldsMap = function(options,callback){
 	var self = this;
 	if(!self["fields"]) self["fields"]={};
 	for(var s in options){
@@ -183,7 +183,7 @@ ManagerDB.prototype.setFields = function(options,callback){
 				// console.log(s+" es array.")
 				self["fields"][s] = {type:"Array"};
 				field.forEach(function(item,index){
-					//var fieldChild = self.setFields(item);
+					//var fieldChild = self.setFieldsMap(item);
 					var fieldChild = item;
 
 					for(var key in item){
@@ -242,7 +242,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
     };
 
     /*Mapping de campos del eschema*/
-    var tmp_fields = this.setFields(options);
+    var tmp_fields = this.setFieldsMap(options);
 	fields = self["fields"];
 	/*Objeto convertido con parametros de Schema validos para mongoose*/
 	if(name!="schema"){
@@ -258,7 +258,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 	var schema = this.getSchema(name) || Schema(name,options,self.virtuals);
 	if(!schema) throw "No se pudo crear el Schema.";
 
-	schema.statics.getFields = function(){
+	schema.statics.getFieldsMap = function(){
 		return fields;
 	};
 	
@@ -270,7 +270,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 		return this[name];
 	}
 	schema.statics.fields = function(params){
-		var fields = this.getFields();
+		var fields = this.getFieldsMap();
 		var out_fields = (!params)?[]:{};
 		
 		if(params!=undefined){
@@ -288,13 +288,13 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 		return out_fields;
 	}
 	/**
-	* @map: params,model,callback
+	* @fieldsMap: params,model,callback
 	* Se encarga de mapear los parametros de entrada
 	* relacionandolos con los campos del esquema.
 	* Devuelve el modelo con los datos pasados.
 	*/
-	schema.statics.map = function(params,model,callback){
-		var fields = this.getFields();
+	schema.statics.fieldsMap = function(params,model,callback){
+		var fields = this.getFieldsMap();
 		console.log("fields::",fields);
 		console.log("Params:",params);
 
@@ -350,7 +350,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 					/*model.update(doc, { _id: params.id }, params, function(model){
 						if(callback!=undefined) callback(err,doc);
 					});*/
-					model.map(params,doc,function(model){
+					model.fieldsMap(params,doc,function(model){
 						model.save(function(err,doc){
 							if(err) throw err;
 							if(callback!=undefined) callback(err,doc);
@@ -367,7 +367,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 					if(err) throw err;
 					if(callback!=undefined) callback(err,doc);
 				});
-				/*this.map(params,model,function(model){
+				/*this.fieldsMap(params,model,function(model){
 					model.save(function(err,doc){
 						if(err) throw err;
 						if(callback!=undefined) callback(err,doc);
@@ -452,7 +452,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 	schema["lang"] = (lang!=undefined)?lang:"es";
 
 	self.emit(name,schema);
-	self.emit("define",name,schema);
+	
 
 	//register Schema
 	if(callback!=undefined){
@@ -578,6 +578,7 @@ ManagerDB.prototype.define =  function(callback) {
 						self.createSchema(doc.name,doc.config,doc.lang,function(msg,sch){
 							//Crea nueva instancia de modelo
 							self.createModel(doc.name,sch,function(m){
+								self.emit("define",doc.name,schema);
 								if(index==docs.length - 1){
 									self.emit("ready",err,schema);
 									if(callback!=undefined){

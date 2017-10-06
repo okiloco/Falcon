@@ -257,7 +257,9 @@ Ext.define('Admin.view.main.MainController', {
             }
         }
     },
-
+    onKeyUp:function(key,event){
+        console.log(event.getKey());
+    },
     //@fvargs: Renderizar Vista.
     onMainViewRender:function() {
         if (!window.location.hash) {
@@ -278,6 +280,7 @@ Ext.define('Admin.view.main.MainController', {
     //@fvargs: Renderizar Vista.
 
     onRouteChange:function(id){
+        console.log("change: ",id)
         this.setCurrentView(id);
     },
 
