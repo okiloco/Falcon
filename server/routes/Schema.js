@@ -10,8 +10,8 @@ module.exports = function(app,io,db,schema){
 	app.post("/schemas",function(req,res){
 		var params = req.body;
 		
-		if(params.id){
-			db.schema.findById(params.id,function(err,schema){
+		if(params._id){
+			db.schema.findById(params._id,function(err,schema){
 				
 				if(!schema){
 					res.send(JSON.stringify({

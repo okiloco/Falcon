@@ -676,7 +676,10 @@ ManagerDB.prototype.define =  function() {
 ManagerDB.prototype.refresh =  function(callback) {
 	var self = this;
 	//Registrar los schemas de la base de datos
-	self.define.then(callback);
+	self.define()
+	.then(callback,function(err){
+		console.log(err)
+	});
 	console.log("refresh.");
 }
 
