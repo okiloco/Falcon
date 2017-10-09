@@ -1321,6 +1321,7 @@ $include-ext-view-view: dynamic(true);;
 $include-ext-window-messagebox: dynamic(true);;
 $include-ext-window-toast: dynamic(true);;
 $include-ext-window-window: dynamic(true);;
+$include-falcon-socket-socket: dynamic(true);;
 $include-falcon-view-ptz-ptz: dynamic(true);;
 $include-falcon-view-ptz-ptzcontroller: dynamic(true);;
 $include-falcon-view-ptz-ptzmodel: dynamic(true);;
@@ -1328,6 +1329,8 @@ $include-falcon-view-wizard-wizardform: dynamic(true);;
 $include-falcon-view-wizard-wizardformcontroller: dynamic(true);;
 $include-falcon-view-wizard-wizardformmodel: dynamic(true);;
 $include-falcon-view-wizard-wizards: dynamic(true);;
+$include-falcon-view-wizard-formwizard: dynamic(true);;
+$include-socket: dynamic(true);;
 $include-tecnotasks-grilla: dynamic(true);;
 
 

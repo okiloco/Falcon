@@ -35,16 +35,14 @@ function ManagerDB(options){
 
 	var self = this;
 	this.url = './server/database/config.json';
+	self.models = {};
+	self.schemas = {};
 	//"mongodb://localhost:27017/canguro-app"
 	this.setConfig = function(config){
 		self.active_group = config[config.active_group];
-		self.models = {};
-		self.schemas = {};
 		self.dbname = self.active_group.dbname;
-
 		self.host = self.active_group.host;
 		self.port = self.active_group.port;
-
 		self.linkconex = "mongodb://"+self.host+':'+self.port+'/'+self.dbname;
 		self.conn = mongoose.connection;
 	}
@@ -112,7 +110,6 @@ function Schema(name,config,virtuals){
 
 /*Permite emitir Eventos personalizados*/
 ManagerDB.prototype = new events.EventEmitter;
-
 
 /*
 * @ObjectId:_id
@@ -227,6 +224,7 @@ ManagerDB.prototype.setFieldsMap = function(options,callback){
 ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 	var self = this;
 	var fields = {};
+	self["name"] = name;
 	self["fields"] = {};
 	if(typeof(options)=='string'){
 		options=options.replace("\n","");
@@ -251,190 +249,219 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 	if(name!="schema"){
 		options=this.parseObject(options);
 	}
+	return new Promise(function(resolve,reject){
 
-	/**
-	* Emitir evento previo a la creación de Schema.
-	*/
-	self.emit("pre-"+name,options);
-	
-	var schema = this.getSchema(name) || Schema(name,options,self.virtuals);
-	if(!schema) throw "No se pudo crear el Schema.";
-
-	schema.statics.getFieldsMap = function(){
-		return fields;
-	};
-	
-	
-	schema.statics.set = function(name,value){
-		this[name] = value;
-	}
-	schema.statics.get = function(name){
-		return this[name];
-	}
-	schema.statics.fields = function(params){
-		var fields = this.getFieldsMap();
-		var out_fields = (!params)?[]:{};
+		/**
+		* Emitir evento previo a la creación de Schema.
+		*/
+		self.emit("pre-"+name,options);
 		
-		if(params!=undefined){
-			for(var key in fields){
-				if(params[key]!=undefined){
-					out_fields[key]=params[key];
-				}
-			}
-		}else{
-			for(var key in fields){
-				out_fields.push(key);
-			}
+		var schema = self.getSchema(name) || Schema(name,options,self.virtuals);
+		if(!schema) throw "No se pudo crear el Schema.";
+
+		self.schemas[name] = schema;
+		self.schemas[name]["name"] = name;
+		schema["lang"] = lang;
+		schema["name"] = name;
+
+		schema.statics.getFieldsMap = function(){
+			return fields;
+		};
+		
+		
+		schema.statics.set = function(name,value){
+			this[name] = value;
 		}
-		// console.log(out_fields);
-		return out_fields;
-	}
-	/**
-	* @fieldsMap: params,model,callback
-	* Se encarga de mapear los parametros de entrada
-	* relacionandolos con los campos del esquema.
-	* Devuelve el modelo con los datos pasados.
-	*/
-	schema.statics.fieldsMap = function(params,model,callback){
-		var fields = this.getFieldsMap();
-		console.log("fields::",fields);
-		console.log("Params:",params);
-
-		if(!Helper.isEmpty(fields)){
-			for(var key in params){
-				var field = fields[key];
-				var val = params[key];
-				if(field!=undefined){
-					var item = {};
-					if(field.type == 'Array' || field.type=='Object'){
-
-						if(field.ref!=undefined){
-							model[field.ref] = (field.type == 'Array')?[]:{};
-							if(typeof(val)=='string'){
-								if(field.type=='Array'){
-									model[key] = [];
-									item[field.ref] = ObjectId(val);
-									model[key].push(item)
-								}else{
-									model[key]=ObjectId(val);
-								}
-							}else if(typeof(val)=='object'){
-								model[key] = (field.type == 'Array')?[]:{};
-								val.forEach(function(record,index){
-									item = {};
-									item[field.ref] = ObjectId(record);
-									if(field.type=='Array'){
-										model[key].push(item)
-									}else{
-										model[key]=item;
-									}
-								});
-							}
-						}
-					}else if(field.type=='String'){
-						model[key] = val;
+		schema.statics.get = function(name){
+			return this[name];
+		}
+		schema.statics.fields = function(params){
+			var fields = this.getFieldsMap();
+			var out_fields = (!params)?[]:{};
+			
+			if(params!=undefined){
+				for(var key in fields){
+					if(params[key]!=undefined){
+						out_fields[key]=params[key];
 					}
 				}
+			}else{
+				for(var key in fields){
+					out_fields.push(key);
+				}
 			}
-			if(callback!=undefined) callback(model);
-		}else{
-			throw "Debe especificar los parametros de entrada."; 
-			if(callback!=undefined) callback(model);
+			// console.log(out_fields);
+			return out_fields;
 		}
-		return model;
-	}
-	schema.statics.create = function(params,callback){
-		var model = this;
-		if(!Helper.isEmpty(params)){
-			if(params.id){
-				this.findById(params.id,function(err,doc){
-					if(!doc){ if(callback!=undefined) callback("No existe registro.",doc);};
-					/*model.update(doc, { _id: params.id }, params, function(model){
-						if(callback!=undefined) callback(err,doc);
-					});*/
-					model.fieldsMap(params,doc,function(model){
-						model.save(function(err,doc){
-							if(err) throw err;
-							if(callback!=undefined) callback(err,doc);
+		/**
+		* @fieldsMap: params,model
+		* Se encarga de mapear los parametros de entrada
+		* relacionandolos con los campos del esquema.
+		* Devuelve el modelo con los datos pasados.
+		*/
+		schema.statics.fieldsMap = function(params,model){
+			var fields = this.getFieldsMap();
+
+			console.log("fields::",fields);
+			console.log("Params:",params);
+
+			return new Promise(function(resolve,reject){
+				if(!Helper.isEmpty(fields)){
+					for(var key in params){
+						var field = fields[key];
+						var val = params[key];
+
+						if(field!=undefined){
+							
+							if(field.type == 'Array' || field.type=='Object'){
+
+								model[key] = (field.type == 'Array')?[]:{};
+								if(field.ref!=undefined){
+									// model[field.ref] = (field.type == 'Array')?[]:{};
+									if(typeof(val)=='string'){
+										if(field.type=='Array'){
+											var item = {};
+											item[field.ref] = ObjectId(val);
+											model[key].push(item)
+										}else{
+											model[key]=ObjectId(val);
+										}
+									}else if(typeof(val)=='object'){
+										
+										val.forEach(function(record,index){
+											var item = {};
+											item[field.ref] = ObjectId(record);
+											if(field.type=='Array'){
+												model[key].push(item)
+											}else{
+												model[key]=item;
+											}
+										});
+										
+									}
+								}else{
+									if(typeof(val)=='string'){
+										model[key].push(val);
+									}else if(typeof(val)=='object'){
+										val.forEach(function(record){
+											model[key].push(record);
+										});
+									}	
+								}
+							}else{
+								if(field.type=='Date'){
+									if(field.default!=undefined){
+										if(field.default=='now'){
+											model[key] = new Date();
+										}
+									}
+								}else{
+									model[key] = val;
+								}
+							}
+						}
+					}
+					//Objeto resultante
+					var output ={}; 
+					for(var s in fields){
+						output[s] = model[s];
+						//console.log("\t"+s,model[s])
+					}
+					resolve(output);
+				}else{
+					reject(model);
+				}
+			});
+		}
+		schema.statics.create = function(params,callback){
+			var self = this;
+			if(!Helper.isEmpty(params)){
+				if(params.id){
+					this.findById(params.id,function(err,doc){
+						//doc - Representa una instancia del mondelo mongoose.
+						if(!doc){ if(callback!=undefined) callback("No existe registro.",doc);};
+						
+						params = self.fields(params)
+						self.fieldsMap(params,doc)
+						.then(function(obj_map){
+
+							console.log("Objeto resultante.")
+							console.log(name,obj_map);
+
+							doc.update(function(err,obj_map){
+								if(err) throw err;
+								if(callback!=undefined) callback(err,obj_map);
+							});
 						});
 					});
+				}else{
+					var model = this;
+					params = this.fields(params)
+					this.fieldsMap(params,model)
+					.then(function(obj_map){
 
+						console.log("Objeto resultante.")
+						console.log(name,obj_map)
+
+					 	var instance = new model(obj_map);//Instancia del Modelo
+					 	instance.save(function(){
+						 	if(callback!=undefined){
+							 	if(callback!=undefined) callback("Documento creado.",obj_map);
+						 	}
+						 	console.log("Creado!");
+					 	});
+					});
+				}
+			}else{
+				if(callback!=undefined) callback("No se encontraron parametros de entrada."); 
+			}
+		}	
+		schema.statics.query = function(params,callback){
+			var query = null;
+			if(params.id){
+				query = this.findById(params.id,function(err,doc){
+					if(callback!=undefined) callback(err,query);
+					return query;
 				});
 			}else{
-				
-
 				params = this.fields(params);
-				model = new model(params);
-				model.save(function(err,doc){
-					if(err) throw err;
+				query = this.find(params,function(err,docs){
+					if(callback!=undefined) callback(err,query);
+					return query;
+				});
+			}
+		}
+		schema.statics.search = function(params,callback){
+			if(params.id){
+				this.findById(params.id,function(err,doc){
+					if(!doc){
+						if(callback!=undefined) callback(err,doc);
+					
+					}
+					if(callback!=undefined) callback(err,doc);
+					return doc;
+				});
+			}else{
+				params = this.fields(params);
+				this.find(params,function(err,docs){
+					if(callback!=undefined) callback(err,docs);
+					return docs;
+				});
+			}
+		}
+		schema.statics.findOneById = function(id,callback){
+			if(!id){
+				if(callback!=undefined) callback();
+			}else{
+				this.findById(id,function(err,doc){
 					if(callback!=undefined) callback(err,doc);
 				});
-				/*this.fieldsMap(params,model,function(model){
-					model.save(function(err,doc){
-						if(err) throw err;
-						if(callback!=undefined) callback(err,doc);
-					});
-				});*/
 			}
-		}else{
-			if(callback!=undefined) callback("No se encontraron parametros de entrada."); 
 		}
-	}	
-	schema.statics.query = function(params,callback){
-		var query = null;
-		if(params.id){
-			query = this.findById(params.id,function(err,doc){
-				if(callback!=undefined) callback(err,query);
-				return query;
-			});
-		}else{
-			params = this.fields(params);
-			query = this.find(params,function(err,docs){
-				if(callback!=undefined) callback(err,query);
-				return query;
-			});
-		}
-	}
-	schema.statics.search = function(params,callback){
-		if(params.id){
-			this.findById(params.id,function(err,doc){
-				if(!doc){
-					if(callback!=undefined) callback(err,doc);
-				
-				}
-				if(callback!=undefined) callback(err,doc);
-				return doc;
-			});
-		}else{
-			params = this.fields(params);
-			this.find(params,function(err,docs){
-				if(callback!=undefined) callback(err,docs);
-				return docs;
-			});
-		}
-	}
-	schema.statics.findOneById = function(id,callback){
-		if(!id){
-			if(callback!=undefined) callback();
-		}else{
-			this.findById(id,function(err,doc){
-				if(callback!=undefined) callback(err,doc);
-			});
-		}
-	}
-	schema.statics.removeById = function(id,callback){
+		schema.statics.removeById = function(id,callback){
 
-		if(id){
-			this.findByIdAndRemove(id,function(err,doc){
-				if(!doc){
-					if(callback!=undefined) callback("No existe registro."); 
-				}else{
-					if(callback!=undefined) callback("Registro eliminado.",doc);
-				}
-			});
-		}else{
-			/*if(!Helper.isEmpty(params)){
-				this.remove(params,function(err,doc){
+			if(id){
+				this.findByIdAndRemove(id,function(err,doc){
 					if(!doc){
 						if(callback!=undefined) callback("No existe registro."); 
 					}else{
@@ -442,24 +469,30 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 					}
 				});
 			}else{
-			}*/
-			if(callback!=undefined) callback("No se encontraron parametros de entrada."); 
+				/*if(!Helper.isEmpty(params)){
+					this.remove(params,function(err,doc){
+						if(!doc){
+							if(callback!=undefined) callback("No existe registro."); 
+						}else{
+							if(callback!=undefined) callback("Registro eliminado.",doc);
+						}
+					});
+				}else{
+				}*/
+				if(callback!=undefined) callback("No se encontraron parametros de entrada."); 
+			}
 		}
-	}
+			
 		
-	this.schemas[name] = schema;
-	this.schemas[name]["name"] = name;
-	schema["lang"] = lang;
-	
-	/**
-	* Emitir evento de Schema creado.
-	*/
-	self.emit(name,schema);
-	//register Schema
-	if(callback!=undefined){
-		callback(false,schema)
-	}
-	return schema;
+		
+		/**
+		* Emitir evento de Schema creado.
+		+ #on
+		*/
+		self.emit(name,schema);
+		//register Schema
+		resolve(schema)
+	});
 }
 
 /**
@@ -483,7 +516,7 @@ ManagerDB.prototype.createModel = function(name,schema,callback){
 	* y para el Schema, ambos reciben como parametro el modelo instanciado.
 	*/
 	if(name=="schema"){
-		self.emit("define",model);
+		self.emit("define",name,model);
 		schema.emit("define",model);
 	}	
 
@@ -521,9 +554,12 @@ ManagerDB.prototype.create = function({name,options},callback){
 */
 ManagerDB.prototype.load =  function(callback) {
 	var self = this;
-	jsonfile.readFile(self.url,function(err,config){
-		self.setConfig(config);
-		if(typeof(callback)!=undefined) callback();
+	return new Promise(function(resolve,reject){
+		jsonfile.readFile(self.url,function(err,config){
+			self.setConfig(config);
+			resolve();
+			// if(typeof(callback)!=undefined) callback();
+		});	
 	});
 }
 /**
@@ -578,57 +614,59 @@ ManagerDB.prototype.register = function(name,config,lang,callback){
 * Crea nuevas instancias de Modelos 
 * con su respectivo Schema registrado en collection Schemas
 */
-ManagerDB.prototype.define =  function(callback) {
+ManagerDB.prototype.define =  function() {
 
 	var self = this;
-	//Crear el Esquema principal de la base de datos, que contiene todos los esquemas.
-	self.createSchema("schema",{name:"String",lang:{"type":"String","default":"es"}, config:"String"},"es",function(err,schema){
-		//Instancia modelo Schema
-		var model = self.createModel(schema.name,schema);
-		if(err) throw err;
-		//Cargar Schemas de la base de Datos y generar Modelos
-		model.find(function(e,docs){
-			if(docs.length>0)
-			{
-				docs.forEach(function (doc,index) {
-					//Registrar los esquemas en collection Schemas
-					self.register(doc.name,doc.config,doc.lang,function(){
-						//Crear Esquema con la configuración registrada.
-						self.createSchema(doc.name,doc.config,doc.lang,function(msg,sch){
-							//Crea nueva instancia de modelo
-							self.createModel(doc.name,sch,function(m){
-								
-								/**
-								* Emitir eventos para el manejador de la base de datos
-								* y para el Schema, ambos reciben como parametro el modelo instanciado.
-								*/
-								self.emit("define",m);
-								sch.emit("define",m);
-								
-								if(index==docs.length - 1){
-									console.log("ManagerDB Ready.")
-									self.emit("ready",err,schema);
-									if(callback!=undefined){
-										callback(err,schema);
+	return new Promise(function(resolve,reject){
+		//Crear el Esquema principal de la base de datos, que contiene todos los esquemas.
+		self.createSchema("schema",{name:"String",lang:{"type":"String","default":"es"}, config:"String"},"es")
+		.then(function(schema){
+			//Instancia modelo Schema
+			var model = self.createModel(schema.name,schema);
+			//Cargar Schemas de la base de Datos y generar Modelos
+			//////////////////////////////////////////////////
+			// 	 CALLBACK HELL - mejorar con Promises.      //
+			//////////////////////////////////////////////////
+			console.log("Cargando Schemas...");
+			model.find(function(e,docs){
+				if(docs.length>0)
+				{
+					docs.forEach(function (doc,index) {
+						//Registrar los esquemas en collection Schemas
+						self.register(doc.name,doc.config,doc.lang,function(){
+							//Crear Esquema con la configuración registrada.
+							self.createSchema(doc.name,doc.config,doc.lang)
+							.then(function(sch){
+								//Crea nueva instancia de modelo
+								self.createModel(doc.name,sch,function(m){
+									
+									/**
+									* Emitir eventos para el manejador de la base de datos
+									* y para el Schema, ambos reciben como parametro el modelo instanciado.
+									*/
+									self.emit("define",doc.name,m);
+									sch.emit("define",m);
+									
+									if(index==docs.length - 1){
+										resolve(schema);
 									}
-								}
+								});
 							});
 						});
 					});
-				});
-			}else{
-				if(callback!=undefined){
-					callback(e,schema);
+				}else{
+					if(callback!=undefined){
+						callback(e,schema);
+					}
 				}
-			}
+			});
 		});
-
 	});
 }
 ManagerDB.prototype.refresh =  function(callback) {
 	var self = this;
 	//Registrar los schemas de la base de datos
-	self.define(callback);
+	self.define.then(callback);
 	console.log("refresh.");
 }
 
@@ -650,19 +688,25 @@ ManagerDB.prototype.refresh =  function(callback) {
 ManagerDB.prototype.connect =  function(callback) {
 	var self = this;
 
-	self.load(function(){
-		mongoose.connect(self.linkconex,(err,res)=>{
-			if(err){
-				console.log('Error al conectarse a la base de datos.',err);
-			}
-			/**
-			* Definir los schemas de la base de datos
-			*/
-			self.define();
-			if(callback!=undefined){
-				callback(err,res);
-			}
-			return self;
+	return new Promise(function(resolve,reject){
+		self.load()
+		.then(function(data){
+			mongoose.connect(self.linkconex,(err,res)=>{
+				if(err){
+					console.log('Error al conectarse a la base de datos.',err);
+					return;
+				}
+				/**
+				* Definir los schemas de la base de datos
+				*/
+				self.define()
+				.then(function(){
+					console.log("ManagerDB Ready.")
+					self.emit("ready");
+					resolve();
+				});
+			});
+			console.log("--------------------------")
 		});
 	});
 	
@@ -686,22 +730,39 @@ ManagerDB.prototype.connect =  function(callback) {
 	});
 }
 /**
-*@params: callback
+*@disconnect: callback
 * Desconecta de la base de datos
 */
 ManagerDB.prototype.disconnect = function(callback) {
 	mongoose.disconnect(callback);
 }
 /**
-* @params: name
+* @getSchema: name
 * Devuelve un Schema registrado en la colección schemas de ManagerDB.
 */ 
 ManagerDB.prototype.getSchema = function(name){
-	var schema = this.schemas[name];
-	return schema;
+	return this.schemas[name];
 }
 /**
-* @params: name
+* @getSchemasMaps
+* Devuelve un objeto que contiene todos los Schemas registrados en el objeto schemas de ManagerDB.
+*/ 
+ManagerDB.prototype.getSchemasMaps = function(){
+ 	return this.schemas;
+}
+/**
+* @getSchemas
+* Devuelve un array con todos los Schemas registrados en el objeto schemas de ManagerDB.
+*/ 
+ManagerDB.prototype.getSchemas = function(){
+	var schemas = [];
+	for(var key in this.schemas){
+		schemas.push(this.schemas[key]);
+	}
+ 	return schemas;
+}
+/**
+* @getModel: name
 * Devuelve un Modelo registrado en la colección models de ManagerDB.
 */ 
 ManagerDB.prototype.getModel = function(name){

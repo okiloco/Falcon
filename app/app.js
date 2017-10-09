@@ -13,7 +13,12 @@ Ext.application({
     // explicitly.
     //
     requires: [
+        'Falcon.socket.Socket',
         'Admin.*'
-    ]
+    ],
+    launch:function(){
+        var socket = global.socket = new Falcon.socket.Socket();
+        socket.connect();
+    }
 
 });

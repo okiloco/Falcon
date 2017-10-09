@@ -258,12 +258,12 @@ Ext.define('Admin.view.main.MainController', {
         }
     },
     onKeyUp:function(key,event){
-        console.log(event.getKey());
+        //console.log(event.getKey());
     },
     //@fvargs: Renderizar Vista.
     onMainViewRender:function() {
         if (!window.location.hash) {
-            console.log(localStorage.user_id);
+            //console.log(localStorage.user_id);
             if(localStorage.user_id!=undefined){
                 this.redirectTo("ptz");
             }else{
@@ -280,7 +280,7 @@ Ext.define('Admin.view.main.MainController', {
     //@fvargs: Renderizar Vista.
 
     onRouteChange:function(id){
-        console.log("change: ",id)
+        //console.log("change: ",id)
         this.setCurrentView(id);
     },
 

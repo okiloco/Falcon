@@ -25,34 +25,27 @@ module.exports = function(app,router,db,schema){
 	    	});				
 		});
 	}
-	//Rutas Personalizadas Modelo - User
-	schema.on("define",function(user){
-		
-		var name = user.modelName;
-		var schema = user.getSchema();
-
-		// console.log("USER::: ",user.fields());
-		router.route("/users").get(function(req,res){
-			user.listar(req.query,function(docs){
-				res.send(JSON.stringify({data:docs,success:true}));
-			});
+	// console.log("USER::: ",user.fields());
+	router.route("/users").get(function(req,res){
+		db.user.listar(req.query,function(docs){
+			res.send(JSON.stringify({data:docs,success:true}));
 		});
-		router.route("/users").post(function(req,res){
-			var params = req.body;
-			
-			if(params.password!=undefined){
-				params.password=md5(params.password)
-			};
-			user.create(params,function(err,doc){
-				if(!doc){
-					res.send(JSON.stringify({"success":false,"msg":err}));
-				}else{
-					res.send(JSON.stringify({
-						"success":true,
-						"msg":(!params.id)?"Usuario creado con éxito.":"Usuario actualizado con éxito."
-					}));
-				}
-			});
+	});
+	router.route("/users").post(function(req,res){
+		var params = req.body;
+		console.log("Actualizar usuario");
+		if(params.password!=undefined){
+			params.password=md5(params.password)
+		};
+		db.user.create(params,function(err,doc){
+			if(!doc){
+				res.send(JSON.stringify({"success":false,"msg":err}));
+			}else{
+				res.send(JSON.stringify({
+					"success":true,
+					"msg":(!params.id)?"Usuario creado con éxito.":"Usuario actualizado con éxito."
+				}));
+			}
 		});
 	});
 	return router;

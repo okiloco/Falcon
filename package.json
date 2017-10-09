@@ -5,7 +5,8 @@
   "devDependencies": {
     "electron": "latest",
     "electron-builder": "^19.27.3",
-    "electron-rebuild": "^1.6.0"
+    "electron-rebuild": "^1.6.0",
+    "nodemon": "^1.12.1"
   },
   "homepage": "./index.html",
   "dependencies": {
@@ -28,6 +29,7 @@
     "remote": "^0.2.6",
     "request": "^2.81.0",
     "rtsp-recorder": "0.0.3",
+    "socket.io": "^2.0.3",
     "string-capitalize": "^1.0.1",
     "videoshow": "^0.1.11"
   },
