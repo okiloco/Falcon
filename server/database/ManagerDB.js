@@ -306,7 +306,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 			console.log("Params:",params);
 
 			return new Promise(function(resolve,reject){
-				if(!Helper.isEmpty(fields)){
+				if(!Helper.isEmpty(params)){
 					for(var key in params){
 						var field = fields[key];
 						var val = params[key];
@@ -359,6 +359,8 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 									model[key] = val;
 								}
 							}
+						}else{
+							console.log("no definido.",field);
 						}
 					}
 					//Objeto resultante
@@ -369,17 +371,23 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 					}
 					resolve(output);
 				}else{
-					reject(model);
+					reject("Se requieren parametros de entrada.");
 				}
 			});
 		}
 		schema.statics.create = function(params,callback){
 			var self = this;
+			console.log("esta vacio? ",Helper.isEmpty(params),params)
 			if(!Helper.isEmpty(params)){
-				if(params.id){
-					this.findById(params.id,function(err,doc){
+				if(params._id){
+					this.findById(params._id,function(err,doc){
 						//doc - Representa una instancia del mondelo mongoose.
-						if(!doc){ if(callback!=undefined) callback("No existe registro.",doc);};
+						if(!doc){ 
+							if(callback!=undefined){
+							 	callback("No existe registro.",doc);
+							 	return;
+							}
+						};
 						
 						params = self.fields(params)
 						self.fieldsMap(params,doc)
@@ -388,7 +396,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 							console.log("Objeto resultante.")
 							console.log(name,obj_map);
 
-							doc.update(function(err,obj_map){
+							doc.save(function(err,obj_map){
 								if(err) throw err;
 								if(callback!=undefined) callback(err,obj_map);
 							});
@@ -410,6 +418,10 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 						 	}
 						 	console.log("Creado!");
 					 	});
+					},function(err){
+					 	if(callback!=undefined){
+						 	if(callback!=undefined) callback(err);
+					 	}
 					});
 				}
 			}else{
@@ -418,8 +430,8 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 		}	
 		schema.statics.query = function(params,callback){
 			var query = null;
-			if(params.id){
-				query = this.findById(params.id,function(err,doc){
+			if(params._id){
+				query = this.findById(params._id,function(err,doc){
 					if(callback!=undefined) callback(err,query);
 					return query;
 				});
@@ -432,8 +444,8 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 			}
 		}
 		schema.statics.search = function(params,callback){
-			if(params.id){
-				this.findById(params.id,function(err,doc){
+			if(params._id){
+				this.findById(params._id,function(err,doc){
 					if(!doc){
 						if(callback!=undefined) callback(err,doc);
 					
@@ -655,9 +667,7 @@ ManagerDB.prototype.define =  function() {
 						});
 					});
 				}else{
-					if(callback!=undefined){
-						callback(e,schema);
-					}
+					reject(e,schema);
 				}
 			});
 		});
@@ -691,19 +701,24 @@ ManagerDB.prototype.connect =  function(callback) {
 	return new Promise(function(resolve,reject){
 		self.load()
 		.then(function(data){
+
 			mongoose.connect(self.linkconex,(err,res)=>{
 				if(err){
 					console.log('Error al conectarse a la base de datos.',err);
+					reject();
 					return;
 				}
 				/**
 				* Definir los schemas de la base de datos
 				*/
+				// return;
 				self.define()
 				.then(function(){
 					console.log("ManagerDB Ready.")
 					self.emit("ready");
-					resolve();
+					resolve("Conectado a la base de datos.");
+				},function(){
+					reject("Conectado a la base de datos. No hay esquemas para definir.");
 				});
 			});
 			console.log("--------------------------")

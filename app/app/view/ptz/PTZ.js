@@ -111,7 +111,8 @@ Ext.define('Falcon.view.ptz.PTZ',{
                             text: 'Nueva <br> Infracción',
                             iconCls:'fa fa-hand-paper-o',
                             iconAlign: 'top',
-                            name: 'infraccion'
+                            name: 'infraccion',
+                            handler:'newInfraccion'
                         },
                         {
                             xtype: 'button',

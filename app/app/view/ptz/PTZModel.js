@@ -34,6 +34,7 @@ Ext.define('Falcon.view.ptz.PTZModel', {
     		model: 'Base',
     		autoLoad: false,
     		pageSize: 4,
+            infraccion:null,
 			data:'{images}',
     		/*proxy: {
     			type: 'ajax',

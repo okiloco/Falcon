@@ -182,5 +182,25 @@ Ext.define('Falcon.view.ptz.PTZController', {
 		 		}
 		 	}
 	    });
+    },
+    newInfraccion:function(self){
+    	var vm = this.getViewModel();
+    	var infraccion = vm.get("infraccion") || Ext.create('Admin.model.infraccion.Infraccion',{});
+
+    	infraccion.save({
+		    callback: function(record, operation, success) {
+		    	var responseObject = Ext.decode(operation.getResponse().responseText);
+		        // do something whether the save succeeded or failed
+		        if(!success){
+		        	Ext.Msg.show({
+		        	    title: 'Atención',
+		        	    msg: responseObject.msg,
+		        	    buttons: Ext.Msg.OK,
+		        	    icon: Ext.Msg.ERROR                    
+		        	});
+		        }
+		    }
+		});
+    	console.log(infraccion);
     }
 });

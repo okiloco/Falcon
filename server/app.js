@@ -48,12 +48,13 @@ app.use("/config",express.static("config"));
 var routes = require("./routes");
 app.use("/app",routes(app,db));
 var port = process.env.PORT || 3000;
-db.connect()
-.then(function(){
-	
-	server.listen(port,function(){
-		//Cargar routes de aplicación
-  		console.log("Arranco el Server localhost:"+port);
-    });
+
+server.listen(port,function(){
+	db.connect()
+	.then(function(msg){
+		console.log(msg)	
+	},function(err){
+		console.log(err)
+	});
 });
 

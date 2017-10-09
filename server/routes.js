@@ -133,14 +133,14 @@ module.exports = function(app,db,io){
 						}else{
 							res.send(JSON.stringify({
 								"success":true,
-								"msg":(!params.id)?"Registro creado con éxito.":"Registro actualizado con éxito."
+								"msg":(!params._id)?"Registro creado con éxito.":"Registro actualizado con éxito."
 							}));
 						}
 					});
 					console.log(router.route)
 				}
 				remove = function(req,res,next){
-					db[name].removeById(req.params.id,function(msg,doc){
+					db[name].removeById(req.params._id,function(msg,doc){
 						console.log("GET: remove "+route_name);
 						res.send(JSON.stringify({
 							success:true,
@@ -152,8 +152,8 @@ module.exports = function(app,db,io){
 				console.log(">define route: ",name,"/app"+route_name);
 				router.route(route_name).get(list);//Listar y Buscar
 				router.route(route_name).post(save);//crear registro nuevo y actualizar
-				router.route(route_name+':id').get(findById);//busca un registro por Id
-				router.route(route_name+'/delete/:id').post(remove);//Eliminar registro por Id
+				router.route(route_name+':_id').get(findById);//busca un registro por Id
+				router.route(route_name+'/delete/:_id').post(remove);//Eliminar registro por Id
 			}
 
 			console.log("Rutas dinámicas");

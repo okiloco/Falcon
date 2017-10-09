@@ -17,5 +17,8 @@ Ext.define('Admin.helpers.Constants', {
 	URL_DETENER_VIDEO:BASE_PATH+'app/video/stop',
 	URL_CAPTURAR_IMAGEN:BASE_PATH+'app/image/new',
 
-	URL_USUARIOS:BASE_PATH+'app/users'
+	URL_USUARIOS:BASE_PATH+'app/users',
+
+	//Infracciones
+	URL_INFRACCIONES:BASE_PATH+'app/infracciones',
 });
