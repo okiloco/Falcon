@@ -743,8 +743,15 @@ ManagerDB.prototype.refresh =  function(refresh, callback) {
 	refresh = refresh || self.autoRefesh;
 	if(refresh){
 		//Registrar los schemas de la base de datos
+
 		self.define()
 		.then(function(){
+			console.log("ManagerDB Ready.")
+			self.emit("ready");
+			if(callback!=undefined){
+				callback();
+			}
+		},function(){
 			if(callback!=undefined){
 				callback();
 			}
@@ -774,7 +781,6 @@ ManagerDB.prototype.refresh =  function(refresh, callback) {
 */
 ManagerDB.prototype.connect =  function(callback) {
 	var self = this;
-	var ready = false;
 	return new Promise(function(resolve,reject){
 		self.load()
 		.then(function(data){
@@ -791,11 +797,8 @@ ManagerDB.prototype.connect =  function(callback) {
 				// return;
 				self.define()
 				.then(function(){
-					if(!ready){
-						console.log("ManagerDB Ready.")
-						self.emit("ready");
-						ready = true;
-					}
+					console.log("ManagerDB Ready.")
+					self.emit("ready");
 					resolve("Conectado a la base de datos.");
 				},function(){
 					reject("Conectado a la base de datos. No hay esquemas para definir.");
