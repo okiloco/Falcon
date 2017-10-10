@@ -46,11 +46,32 @@ Ext.define('Admin.view.main.MainController', {
                iconCls:'fa fa-key',
                handler:'onChangePass'
            },{
+               text: 'Instalar',
+               iconCls:'fa fa-key',
+               handler:'onWizard'
+           },{
                text: 'Salir',
                iconCls:'fa fa-sign-out',
                handler:'onLogout'
            }]
        }).showBy(Ext.get(el),'c-bl',[-40,140]);
+    },
+    onWizard:function(self){
+        var me=this;
+        me.redirectTo('wizard',true);
+         // Ext.create('Admin.view.authentication.PasswordReset').show();
+        /*Ext.create('Ext.window.Window', {
+            title: 'Cambiar Contraseña',
+            height: 200,
+            width: 400,
+            layout: 'fit',
+            modal: true,
+            constrainHeader: true,
+            resizable: false,
+            items: [
+                Ext.create('Admin.view.authentication.PasswordReset')
+            ]
+        }).show();*/
     },
     onChangePass:function(self){
         var me=this;
@@ -147,7 +168,8 @@ Ext.define('Admin.view.main.MainController', {
             store = navigationList.getStore(),
             node = store.findNode('routeId', hashTag) ||
                    store.findNode('viewType', hashTag),
-            view = (node && node.get('viewType')) || ((hashTag=='passwordreset')?"passwordreset":"login") || ((!localStorage.user_id)?'login':'page404'),
+            view = (node && node.get('viewType')) || 
+            ((hashTag=='passwordreset')?"passwordreset":((hashTag=='wizard')?"wizard":"login")) || ((!localStorage.user_id)?'login':'page404'),
             // view = (node && node.get('viewType')) || ((hashTag=='login' || hashTag=='passwordreset') || 'page404'),
             lastView = me.lastView,
             existingItem = mainCard.child('component[routeId=' + hashTag + ']'),

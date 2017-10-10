@@ -1,6 +1,7 @@
 var md5 = require("md5");
 var Helper = require("../helpers/helper");
 var app_config = './server/app.json';
+var app_config = './server/app.json';
 module.exports = function(app,io,db){
 	//Evento Constructor User - Se dispara cuando el Schema user ha sido instanciado.
 	db.on("user",function(schema){
@@ -102,9 +103,18 @@ module.exports = function(app,io,db){
 									"email":params.email || ''
 								},function(user){
 									Helper.readFile(app_config,function(obj){
-										obj["author"] ={
-											"name":params.username,
+										obj["user"] = {
+											"username":params.username,
 											"email":params.email || ''
+										}
+										obj["camera"] ={
+											"camera_ip":params.camera_ip,
+											"camera_user":params.camera_user,
+											"camera_password":params.camera_password
+										}
+										obj["movil"] ={
+											"movil_plate":params.movil_plate,
+											"movil_name":params.movil_name
 										}
 										delete params.password;
 										delete params.email;
@@ -113,7 +123,6 @@ module.exports = function(app,io,db){
 											obj[key] = params[key];
 										}
 										Helper.writeFile(app_config,obj,function(err){
-
 										});
 									})
 									res.send(JSON.stringify({

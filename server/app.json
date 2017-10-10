@@ -1,1 +1,18 @@
-{"name":"Falcon"}
+{
+
+	"name":"Falcon",
+	"user":{
+		"username":"fvagas",
+		"email":"okiloco2@gmail.com"
+	},
+	"camera":{
+		"camera_ip":"http://192.168.1.155",
+		"camera_user":"root",
+		"camera_password":"root"
+	},
+	"movil":{
+		"movil_plate":"",
+		"movil_name":""
+	}
+
+}

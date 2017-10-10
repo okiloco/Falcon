@@ -6,6 +6,8 @@ var pluralizeEN = require('pluralize');
 var capitalize = require('string-capitalize');
 var jsonfile = require('jsonfile')
 module.exports = {
+	CONFIG_DB:"./database/ManagerDB",
+	APP_CONFIG:'./server/app.json',
 	isEmpty:function(obj){
 	  var empty=true;
 	  if(obj!=undefined){

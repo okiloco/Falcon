@@ -19,6 +19,9 @@ Ext.application({
     launch:function(){
         var socket = global.socket = new Falcon.socket.Socket();
         socket.connect();
+        socket.on("message",function(msg){
+            console.log("msg:",msg); 
+        })        
     }
 
 });
