@@ -37,8 +37,14 @@ function ManagerDB(options){
 	this.url = './server/database/config.json';
 	self.models = {};
 	self.schemas = {};
+	self.autoRefesh = true;
 	//"mongodb://localhost:27017/canguro-app"
 	this.setConfig = function(config){
+
+		if(config.collections!=undefined){
+			self["collections"] = config.collections;
+		}
+
 		self.active_group = config[config.active_group];
 		self.dbname = self.active_group.dbname;
 		self.host = self.active_group.host;
@@ -111,6 +117,9 @@ function Schema(name,config,virtuals){
 /*Permite emitir Eventos personalizados*/
 ManagerDB.prototype = new events.EventEmitter;
 
+ManagerDB.prototype.getCollections = function(){
+	return this.collections;
+}
 /*
 * @ObjectId:_id
 * Util para utilizar en los documentos como primary key o
@@ -171,46 +180,49 @@ ManagerDB.prototype.parseObject = function(obj){
 }
 ManagerDB.prototype.setFieldsMap = function(options,callback){
 	var self = this;
-	if(!self["fields"]) self["fields"]={};
-	for(var s in options){
-		var field = options[s];
-		if(typeof(field)=='string'){
-			// console.log(s+" es un string simple.");
-			self["fields"][s] = {type: "String"};
-		}else if(typeof(field)=='object'){
+	var fields = {};
+	return new Promise(function(resolve,reject){
+		if(!fields) fields={};
+		for(var s in options){
+			var field = options[s];
+			if(typeof(field)=='string'){
+				// console.log(s+" es un string simple.");
+				fields[s] = {type: "String"};
+			}else if(typeof(field)=='object'){
 
-			if(Array.isArray(field)){
-				// console.log(s+" es array.")
-				self["fields"][s] = {type:"Array"};
-				field.forEach(function(item,index){
-					//var fieldChild = self.setFieldsMap(item);
-					var fieldChild = item;
+				if(Array.isArray(field)){
+					// console.log(s+" es array.")
+					fields[s] = {type:"Array"};
+					field.forEach(function(item,index){
+						//var fieldChild = self.setFieldsMap(item);
+						var fieldChild = item;
 
-					for(var key in item){
-						var subitem = item[key];
+						for(var key in item){
+							var subitem = item[key];
 
-						if(subitem.hasOwnProperty("ref")){
-							self["fields"][s]["ref"] = subitem.ref;
-							// console.log("\tsubitem:",subitem)
+							if(subitem.hasOwnProperty("ref")){
+								fields[s]["ref"] = subitem.ref;
+								// console.log("\tsubitem:",subitem)
+							}
 						}
-					}
-					if(fieldChild.hasOwnProperty("ref")){
-						self["fields"][s]["ref"] = fieldChild.ref;
-						// console.log("\titem:",fieldChild)
-					}
-				});
-			}else{
-				if(field.hasOwnProperty("ref")){
-					// console.log(s+" es object secundario",s)
-					self["fields"][s] = {type:'Object',ref:field["ref"]};
+						if(fieldChild.hasOwnProperty("ref")){
+							fields[s]["ref"] = fieldChild.ref;
+							// console.log("\titem:",fieldChild)
+						}
+					});
 				}else{
-					self["fields"][s] = {type:(field.type!=undefined)?field.type:'Object'};
-					// console.log(s+" es object principal",s)
+					if(field.hasOwnProperty("ref")){
+						// console.log(s+" es object secundario",s)
+						fields[s] = {type:'Object',ref:field["ref"]};
+					}else{
+						fields[s] = {type:(field.type!=undefined)?field.type:'Object'};
+						// console.log(s+" es object principal",s)
+					}
 				}
 			}
 		}
-	}
-	return field;
+		resolve(fields);
+	});
 }
 /**
 * @createSchema: name,options,callback
@@ -223,49 +235,54 @@ ManagerDB.prototype.setFieldsMap = function(options,callback){
 */
 ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 	var self = this;
-	var fields = {};
-	self["name"] = name;
-	self["fields"] = {};
-	if(typeof(options)=='string'){
-		options=options.replace("\n","");
-		options = options.replace(/\\/g, "");
-		try{
-			options = JSON.parse(options);
-		}catch(e){
-			throw "Error al transformar JSON en: "+name+'\n'+e+'\n'+options;
-		}
-	}
-	var raw_config = options;
-
-	options.timestamps ={
-        createdAt: 'Date',
-        updatedAt: 'Date'
-    };
-
-    /*Mapping de campos del eschema*/
-    var tmp_fields = this.setFieldsMap(options);
-	fields = self["fields"];
-	/*Objeto convertido con parametros de Schema validos para mongoose*/
-	if(name!="schema"){
-		options=this.parseObject(options);
-	}
+	
+	
 	return new Promise(function(resolve,reject){
+		var fields = {};
+		self["name"] = name;
+		
+		if(typeof(options)=='string'){
+			options=options.replace("\n","");
+			options = options.replace(/\\/g, "");
+			try{
+				options = JSON.parse(options);
+			}catch(e){
+				throw "Error al transformar JSON en: "+name+'\n'+e+'\n'+options;
+			}
+		}
+		var raw_config = options;
+
+		options.timestamps ={
+	        createdAt: 'Date',
+	        updatedAt: 'Date'
+	    };
+
+
+		
+		/*Objeto convertido con parametros de Schema validos para mongoose*/
+		if(name!="schema"){
+			options=self.parseObject(options);
+		}
 
 		/**
 		* Emitir evento previo a la creación de Schema.
 		*/
-		self.emit("pre-"+name,options);
 		
+		self.emit("pre-"+name,options);
 		var schema = self.getSchema(name) || Schema(name,options,self.virtuals);
-		if(!schema) throw "No se pudo crear el Schema.";
-
+		 /*Mapping de campos del eschema*/
+		self.setFieldsMap(options)
+		.then(function(fields){
+			schema.statics.fields = fields;
+		});
+		console.log("\t----------->",name)
 		self.schemas[name] = schema;
 		self.schemas[name]["name"] = name;
 		schema["lang"] = lang;
-		schema["name"] = name;
+		// schema["name"] = name;
 
-		schema.statics.getFieldsMap = function(){
-			return fields;
+		schema.statics.getFields = function(){
+			return this.fields;
 		};
 		
 		
@@ -275,8 +292,8 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 		schema.statics.get = function(name){
 			return this[name];
 		}
-		schema.statics.fields = function(params){
-			var fields = this.getFieldsMap();
+		schema.statics.getFieldsMap = function(params){
+			var fields = this.getFields();
 			var out_fields = (!params)?[]:{};
 			
 			if(params!=undefined){
@@ -299,11 +316,12 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 		* relacionandolos con los campos del esquema.
 		* Devuelve el modelo con los datos pasados.
 		*/
-		schema.statics.fieldsMap = function(params,model){
-			var fields = this.getFieldsMap();
-
+		schema.statics.fieldsMap = function(params){
+			var fields = this.getFields();
+			var output ={}; 
 			console.log("fields::",fields);
 			console.log("Params:",params);
+
 
 			return new Promise(function(resolve,reject){
 				if(!Helper.isEmpty(params)){
@@ -315,16 +333,16 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 							
 							if(field.type == 'Array' || field.type=='Object'){
 
-								model[key] = (field.type == 'Array')?[]:{};
+								output[key] = (field.type == 'Array')?[]:{};
 								if(field.ref!=undefined){
-									// model[field.ref] = (field.type == 'Array')?[]:{};
+									// output[field.ref] = (field.type == 'Array')?[]:{};
 									if(typeof(val)=='string'){
 										if(field.type=='Array'){
 											var item = {};
 											item[field.ref] = ObjectId(val);
-											model[key].push(item)
+											output[key].push(item)
 										}else{
-											model[key]=ObjectId(val);
+											output[key]=ObjectId(val);
 										}
 									}else if(typeof(val)=='object'){
 										
@@ -332,19 +350,19 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 											var item = {};
 											item[field.ref] = ObjectId(record);
 											if(field.type=='Array'){
-												model[key].push(item)
+												output[key].push(item)
 											}else{
-												model[key]=item;
+												output[key]=item;
 											}
 										});
 										
 									}
 								}else{
 									if(typeof(val)=='string'){
-										model[key].push(val);
+										output[key].push(val);
 									}else if(typeof(val)=='object'){
 										val.forEach(function(record){
-											model[key].push(record);
+											output[key].push(record);
 										});
 									}	
 								}
@@ -352,11 +370,11 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 								if(field.type=='Date'){
 									if(field.default!=undefined){
 										if(field.default=='now'){
-											model[key] = new Date();
+											output[key] = new Date();
 										}
 									}
 								}else{
-									model[key] = val;
+									output[key] = val;
 								}
 							}
 						}else{
@@ -364,10 +382,10 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 						}
 					}
 					//Objeto resultante
-					var output ={}; 
+					
 					for(var s in fields){
-						output[s] = model[s];
-						//console.log("\t"+s,model[s])
+						//output[s] = model[s];
+						// console.log("\t"+s,model[s])
 					}
 					resolve(output);
 				}else{
@@ -375,9 +393,9 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 				}
 			});
 		}
+
 		schema.statics.create = function(params,callback){
-			var self = this;
-			console.log("esta vacio? ",Helper.isEmpty(params),params)
+			var me = this;
 			if(!Helper.isEmpty(params)){
 				if(params._id){
 					this.findById(params._id,function(err,doc){
@@ -388,14 +406,9 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 							 	return;
 							}
 						};
-						
-						params = self.fields(params)
-						self.fieldsMap(params,doc)
+						params = me.getFieldsMap(params)
+						me.fieldsMap(params)
 						.then(function(obj_map){
-
-							console.log("Objeto resultante.")
-							console.log(name,obj_map);
-
 							doc.save(function(err,obj_map){
 								if(err) throw err;
 								if(callback!=undefined) callback(err,obj_map);
@@ -404,19 +417,22 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 					});
 				}else{
 					var model = this;
-					params = this.fields(params)
-					this.fieldsMap(params,model)
+					params = this.getFieldsMap(params);
+					//El crear de Schemas es diferente 
+					this.fieldsMap(params)
 					.then(function(obj_map){
-
-						console.log("Objeto resultante.")
-						console.log(name,obj_map)
-
 					 	var instance = new model(obj_map);//Instancia del Modelo
-					 	instance.save(function(){
+					 	instance.save()
+					 	.then(function(err){
 						 	if(callback!=undefined){
-							 	if(callback!=undefined) callback("Documento creado.",obj_map);
+							 	if(callback!=undefined) callback(instance);
 						 	}
-						 	console.log("Creado!");
+						 	console.log("Documento Creado con éxito!");
+					 	},function(err){
+						 	console.log("No se pudo crear el documento!",err);
+				 		 	if(callback!=undefined){
+				 			 	if(callback!=undefined) callback();
+				 		 	}
 					 	});
 					},function(err){
 					 	if(callback!=undefined){
@@ -436,7 +452,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 					return query;
 				});
 			}else{
-				params = this.fields(params);
+				params = this.getFieldsMap(params);
 				query = this.find(params,function(err,docs){
 					if(callback!=undefined) callback(err,query);
 					return query;
@@ -454,7 +470,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 					return doc;
 				});
 			}else{
-				params = this.fields(params);
+				params = this.getFieldsMap(params);
 				this.find(params,function(err,docs){
 					if(callback!=undefined) callback(err,docs);
 					return docs;
@@ -494,8 +510,6 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 				if(callback!=undefined) callback("No se encontraron parametros de entrada."); 
 			}
 		}
-			
-		
 		
 		/**
 		* Emitir evento de Schema creado.
@@ -540,7 +554,7 @@ ManagerDB.prototype.createModel = function(name,schema,callback){
 + options:object Parametros del Modelo
 + callback:function Funcion de Devolución
 * Crea una instancia de un modelo y guarda sus valores.
-* Devuelve la instancia creada del modelo.
+* [Devuelve] la instancia creada y el modelo.
 * Útil par crear un Schema inexistente en la base de datos.
 **/
 ManagerDB.prototype.create = function({name,options},callback){
@@ -569,8 +583,11 @@ ManagerDB.prototype.load =  function(callback) {
 	return new Promise(function(resolve,reject){
 		jsonfile.readFile(self.url,function(err,config){
 			self.setConfig(config);
+		
 			resolve();
+			
 			// if(typeof(callback)!=undefined) callback();
+
 		});	
 	});
 }
@@ -593,16 +610,18 @@ ManagerDB.prototype.register = function(name,config,lang,callback){
 				self.create({
 					name:"schema",
 					lang:lang, 
-					options:{"name":name,"config":config}
+					options:{"name":name,"lang":lang,"config":config}
 				},function(){
-					//Actualizar los esquemas de la base de datos
-					self.refresh(function(){
 
+					//Actualizar los esquemas de la base de datos
+					
+					self.refresh(function(){
 						console.log("Se registró el esquema: ",name+".")
 						if(callback!=undefined){
 							callback((!doc))
 						}
 					});
+					
 				});
 				
 			}else{
@@ -635,52 +654,94 @@ ManagerDB.prototype.define =  function() {
 		.then(function(schema){
 			//Instancia modelo Schema
 			var model = self.createModel(schema.name,schema);
+			
 			//Cargar Schemas de la base de Datos y generar Modelos
-			//////////////////////////////////////////////////
-			// 	 CALLBACK HELL - mejorar con Promises.      //
-			//////////////////////////////////////////////////
 			console.log("Cargando Schemas...");
 			model.find(function(e,docs){
 				if(docs.length>0)
 				{
-					docs.forEach(function (doc,index) {
-						//Registrar los esquemas en collection Schemas
-						self.register(doc.name,doc.config,doc.lang,function(){
-							//Crear Esquema con la configuración registrada.
-							self.createSchema(doc.name,doc.config,doc.lang)
-							.then(function(sch){
-								//Crea nueva instancia de modelo
-								self.createModel(doc.name,sch,function(m){
-									
-									/**
-									* Emitir eventos para el manejador de la base de datos
-									* y para el Schema, ambos reciben como parametro el modelo instanciado.
-									*/
-									self.emit("define",doc.name,m);
-									sch.emit("define",m);
-									
-									if(index==docs.length - 1){
-										resolve(schema);
-									}
-								});
-							});
-						});
+					self.defineSchemas(docs)
+					.then(function(){
+						resolve();
 					});
 				}else{
-					reject(e,schema);
+					self.defineCoreSchemas()
+					.then(function(){
+						resolve();
+					});
 				}
 			});
 		});
 	});
 }
+ManagerDB.prototype.defineCoreSchemas = function(callback){
+	
+	var self = this;
+	self.autoRefesh = false;
+	var schemas = self.getCollections();
+	var model = self.getModel("schema");
+		
+	return new Promise(function(resolve,reject){
+		self.defineSchemas(schemas)
+		.then(function(){
+			console.log("Se crearon los esquemas del core.");
+			resolve();
+		});
+	});
+}
+ManagerDB.prototype.defineSchemas =  function(schemas) {
+
+	var self = this;
+	var count =1;
+	return new Promise(function(resolve,reject){
+
+		schemas.forEach(function (doc,index) {
+
+			//Registrar los esquemas en collection Schemas
+			self.register(doc.name,doc.config,doc.lang,function(){
+				//Crear Esquema con la configuración registrada.
+				self.createSchema(doc.name,doc.config,doc.lang)
+				.then(function(sch){
+					//Crea nueva instancia de modelo
+					self.createModel(doc.name,sch,function(m){
+						
+						/**
+						* Emitir eventos para el manejador de la base de datos
+						* y para el Schema, ambos reciben como parametro el modelo instanciado.
+						*/
+
+						if(doc.name!="schema"){
+							self.emit("define",doc.name,m);
+							sch.emit("define",m);
+						}
+
+						if(count==(schemas.length)){
+							resolve();
+						}
+						count++;
+					});
+				});
+			});
+		});	
+	});
+}
 ManagerDB.prototype.refresh =  function(callback) {
 	var self = this;
-	//Registrar los schemas de la base de datos
-	self.define()
-	.then(callback,function(err){
-		console.log(err)
-	});
-	console.log("refresh.");
+
+	if(self.autoRefesh){
+		//Registrar los schemas de la base de datos
+		self.define()
+		.then(function(){
+			if(callback!=undefined){
+				callback();
+			}
+		});
+		console.log("refresh.");
+	}else{
+		if(callback!=undefined){
+			callback();
+		}
+	}
 }
 
 /**
@@ -700,7 +761,7 @@ ManagerDB.prototype.refresh =  function(callback) {
 */
 ManagerDB.prototype.connect =  function(callback) {
 	var self = this;
-
+	var ready = false;
 	return new Promise(function(resolve,reject){
 		self.load()
 		.then(function(data){
@@ -717,8 +778,11 @@ ManagerDB.prototype.connect =  function(callback) {
 				// return;
 				self.define()
 				.then(function(){
-					console.log("ManagerDB Ready.")
-					self.emit("ready");
+					if(!ready){
+						console.log("ManagerDB Ready.")
+						self.emit("ready");
+						ready = true;
+					}
 					resolve("Conectado a la base de datos.");
 				},function(){
 					reject("Conectado a la base de datos. No hay esquemas para definir.");

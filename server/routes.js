@@ -69,9 +69,9 @@ module.exports = function(app,db,io){
 									* Instanciar ruta: privada: 
 									* La aplicación empieza a usar el nuevo middlewares route.
 									*/
+									console.log("route: ",name,route_name);
 									app.use(route_name,route(app,router,db,schema));
 								});
-								console.log("route: ",name,route_name);
 							}
 						}catch(err){
 							reject(err);

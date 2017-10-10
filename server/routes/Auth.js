@@ -1,5 +1,9 @@
 var md5 = require("md5");
 module.exports = function(app,io,db){
+
+
+
+
 	//Evento Constructor User - Se dispara cuando el Schema user ha sido instanciado.
 	db.on("user",function(schema){
 		//Extendemos la funcionalidad del Schema para usar en el Modelo User.
@@ -26,6 +30,7 @@ module.exports = function(app,io,db){
 			});
 		}
 		schema.on("define",function(model){
+
 			app.get("/logout",function(req,res){
 				if(req.session.user_id){
 					req.session.destroy(function(err){
@@ -66,8 +71,54 @@ module.exports = function(app,io,db){
 			        });
 				};
 			});
+			
+		});
+
+	});
+
+	
+	app.post("/install",function(req,res){
+		var params = req.body;
+		console.log("Crear usuario Super User");
+		if(!params.password || !params.username){
+			res.send(JSON.stringify({
+				"success":false,
+				"msg":"No se definió un usuario."
+			}));
+			return;
+		};
+
+		db.group.findOne({name:"Super User"},function(err,doc){
+			if(!doc){
+				console.log("No existe el grupo.")
+				db.module.create({
+					config:"{\"title\": \"Usuarios\",\"config\": {\"className\":\"Admin.view.users.Users\",\"alias\":\"users\",\"iconCls\":\"fa fa-folder\"}}",
+					name:"Usuarios"
+				},function(module){
+					db.group.create({
+						name:"Super User",
+						modules:module.id
+					},function(group){
+						db.user.create({
+							"username":params.username,
+							"password":md5(params.password),
+							"usergroup":group.id,
+							"email":params.email || ''
+						},function(user){
+							res.send(JSON.stringify({
+								"success":true,
+								"msg":"Usuario creado con éxito.",
+								user
+							}));
+						});
+					});
+				});
+			}else{
+				res.send(JSON.stringify({
+					"success":true,
+					"msg":"Acceda como Super Administrador al Sistema.",
+				}));
+			}
 		});
 	});
-	
-	// });
 }
