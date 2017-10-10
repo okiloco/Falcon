@@ -275,7 +275,6 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 		.then(function(fields){
 			schema.statics.fields = fields;
 		});
-		console.log("\t----------->",name)
 		self.schemas[name] = schema;
 		self.schemas[name]["name"] = name;
 		schema["lang"] = lang;
@@ -424,10 +423,19 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 					 	var instance = new model(obj_map);//Instancia del Modelo
 					 	instance.save()
 					 	.then(function(err){
-						 	if(callback!=undefined){
-							 	if(callback!=undefined) callback(instance);
-						 	}
 						 	console.log("Documento Creado con éxito!");
+						 	if(name=='schema'){
+						 		self.autoRefesh = true;
+						 		self.refresh(function(){
+	 								if(callback!=undefined){
+	 									callback(instance)
+	 								}
+	 							});
+						 	}else{
+					 		 	if(callback!=undefined){
+					 			 	if(callback!=undefined) callback(instance);
+					 		 	}
+						 	}
 					 	},function(err){
 						 	console.log("No se pudo crear el documento!",err);
 				 		 	if(callback!=undefined){
@@ -569,7 +577,6 @@ ManagerDB.prototype.create = function({name,options},callback){
 	 	if(callback!=undefined){
 		 	callback(instance,model);
 	 	}
-	 	console.log("Guadado!");
  	});
 	return instance;
 }
@@ -650,7 +657,7 @@ ManagerDB.prototype.define =  function() {
 	var self = this;
 	return new Promise(function(resolve,reject){
 		//Crear el Esquema principal de la base de datos, que contiene todos los esquemas.
-		self.createSchema("schema",{name:"String",lang:{"type":"String","default":"es"}, config:"String"},"es")
+		self.createSchema("schema",{name:{type:"String","unique":true},lang:{"type":"String","default":"es"}, config:"String"},"es")
 		.then(function(schema){
 			//Instancia modelo Schema
 			var model = self.createModel(schema.name,schema);
@@ -662,11 +669,13 @@ ManagerDB.prototype.define =  function() {
 				{
 					self.defineSchemas(docs)
 					.then(function(){
+						self.autoRefesh = true;
 						resolve();
 					});
 				}else{
 					self.defineCoreSchemas()
 					.then(function(){
+						self.autoRefesh = true;
 						resolve();
 					});
 				}
@@ -725,10 +734,14 @@ ManagerDB.prototype.defineSchemas =  function(schemas) {
 		});	
 	});
 }
-ManagerDB.prototype.refresh =  function(callback) {
+ManagerDB.prototype.refresh =  function(refresh, callback) {
 	var self = this;
-
-	if(self.autoRefesh){
+	if(typeof(refresh)=='function'){
+		callback = refresh;
+		refresh = self.autoRefesh;
+	}
+	refresh = refresh || self.autoRefesh;
+	if(refresh){
 		//Registrar los schemas de la base de datos
 		self.define()
 		.then(function(){
@@ -788,7 +801,6 @@ ManagerDB.prototype.connect =  function(callback) {
 					reject("Conectado a la base de datos. No hay esquemas para definir.");
 				});
 			});
-			console.log("--------------------------")
 		});
 	});
 	

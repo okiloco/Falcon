@@ -36,6 +36,7 @@ module.exports = function(app,db,io){
 	const public_routes ='./server/routes';
 	const app_routes = './server/routes/app';
 	var routes_map = {};
+	
 	/**
 	* @loadRoutes: base_path, prefix
 	* Carga los archivos de las rutas especializadas.
@@ -69,7 +70,7 @@ module.exports = function(app,db,io){
 									* Instanciar ruta: privada: 
 									* La aplicación empieza a usar el nuevo middlewares route.
 									*/
-									console.log("route: ",name,route_name);
+									// console.log("route: ",name,route_name);
 									app.use(route_name,route(app,router,db,schema));
 								});
 							}
@@ -84,84 +85,89 @@ module.exports = function(app,db,io){
 			resolve();
 		});
 	}
+
+	function routeExist(name){
+		var paths = routes_map["paths"];
+		var exist = false;
+		paths.forEach(function(route){
+			if(route.name==name){
+				exist = true;
+			}
+		});
+		return exist;
+	}
+
+	//Define Recursos dinamicos de router
+	function routePath(route_map){
+		var route_name = route_map.path;
+		var name = route_map.name;
+		list = function(req,res,next){
+			var params = req.query || {};
+			console.log(params);
+			db[name].search(params,function(err,docs){
+				console.log("GET: list "+route_name,docs);			
+				res.send(JSON.stringify({data:docs}));
+			});
+		}
+		update = function(req,res,next){
+			res.send(JSON.stringify({"success":true,"msg":"update"}));
+		}
+		findById = function(req,res,next){
+			res.send(JSON.stringify({"success":true,"msg":"findById"}));
+		}
+		save = function(req,res,next){
+			var params = req.body;
+			db[name].create(params,function(err,doc){
+				console.log("GET: save "+route_name);
+				if(!doc){
+					res.send(JSON.stringify({"success":false,"msg":err}));
+				}else{
+					res.send(JSON.stringify({
+						"success":true,
+						"msg":(!params._id)?"Registro creado con éxito.":"Registro actualizado con éxito."
+					}));
+				}
+			});
+			console.log(router.route)
+		}
+		remove = function(req,res,next){
+			db[name].removeById(req.params._id,function(msg,doc){
+				console.log("GET: remove "+route_name);
+				res.send(JSON.stringify({
+					success:true,
+					msg:msg
+				}));
+			});
+		}
+		console.log(">define route: ",name,"/app"+route_name);
+		router.route(route_name).get(list);//Listar y Buscar
+		router.route(route_name).post(save);//crear registro nuevo y actualizar
+		router.route(route_name+':_id').get(findById);//busca un registro por Id
+		router.route(route_name+'/delete/:_id').post(remove);//Eliminar registro por Id
+	}
 	/**
 	* on:define name, schema
 	* Crea rutas predeterminadas para
 	* los modelos definidos.
 	*/
-	function defaultsRoutes(){
-		db.on("define",function(name,model){
-			// var name = model.modelName;
-			var schema = model.getSchema();
-			var lang = schema.lang;
-			var route_name = pluralize(lang || "es",name);
-			route_name = path.join('/',route_name);
 
-			
-			routes_map["paths"] = routes_map["paths"] || [];
+	db.on("define",function(name,model){
+		// var name = model.modelName;
+		var schema = model.getSchema();
+		var lang = schema.lang;
+		var route_name = pluralize(lang || "es",name);
+		route_name = path.join('/',route_name);
+		routes_map["paths"] = routes_map["paths"] || [];
+		if(!routeExist(name)){
 			routes_map["paths"].push({"name":name,"path":route_name});
-
-				
-							// });
+		}
+	});
+	db.on("ready",function(){
+		console.log("Rutas dinámicas");
+		routes_map["paths"].forEach(function(route_map){
+			routePath(route_map)
 		});
-		db.on("ready",function(){
-			
-			//Define Recursos dinamicos de router
-			function routePath(route_map){
-				var route_name = route_map.path;
-				var name = route_map.name;
-				list = function(req,res,next){
-					var params = req.query || {};
-					console.log(params);
-					db[name].search(params,function(err,docs){
-						console.log("GET: list "+route_name,docs);			
-						res.send(JSON.stringify({data:docs}));
-					});
-				}
-				update = function(req,res,next){
-					res.send(JSON.stringify({"success":true,"msg":"update"}));
-				}
-				findById = function(req,res,next){
-					res.send(JSON.stringify({"success":true,"msg":"findById"}));
-				}
-				save = function(req,res,next){
-					var params = req.body;
-					db[name].create(params,function(err,doc){
-						console.log("GET: save "+route_name);
-						if(!doc){
-							res.send(JSON.stringify({"success":false,"msg":err}));
-						}else{
-							res.send(JSON.stringify({
-								"success":true,
-								"msg":(!params._id)?"Registro creado con éxito.":"Registro actualizado con éxito."
-							}));
-						}
-					});
-					console.log(router.route)
-				}
-				remove = function(req,res,next){
-					db[name].removeById(req.params._id,function(msg,doc){
-						console.log("GET: remove "+route_name);
-						res.send(JSON.stringify({
-							success:true,
-							msg:msg
-						}));
-					});
-				}
-
-				console.log(">define route: ",name,"/app"+route_name);
-				router.route(route_name).get(list);//Listar y Buscar
-				router.route(route_name).post(save);//crear registro nuevo y actualizar
-				router.route(route_name+':_id').get(findById);//busca un registro por Id
-				router.route(route_name+'/delete/:_id').post(remove);//Eliminar registro por Id
-			}
-
-			console.log("Rutas dinámicas");
-			routes_map["paths"].forEach(function(route_map){
-				routePath(route_map)
-			});
-		});
-	}
+	});
 
 	console.log("Cargando rutas...");
 	//Cargar routes de aplicación
@@ -171,8 +177,6 @@ module.exports = function(app,db,io){
 		loadRoutes(app_routes,"/app")
 		.then(function(){
 			console.log("routes privadas cargadas.");
-			console.log("Creando rutas dinámicas.")
-			defaultsRoutes();
 		});
 	});
 	
