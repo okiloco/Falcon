@@ -4,7 +4,7 @@
 var pluralizeES= require('pluralize-es');
 var pluralizeEN = require('pluralize');
 var capitalize = require('string-capitalize');
-
+var jsonfile = require('jsonfile')
 module.exports = {
 	isEmpty:function(obj){
 	  var empty=true;
@@ -29,5 +29,21 @@ module.exports = {
 	},
 	capitalize:function(str){
 		return capitalize(str);
+	},
+	readFile:function(file){
+		return new Promise(function(resolve,reject){
+			var app_config = jsonfile.readFile(file,function(err,obj){
+				if(err){ reject(err); return;}
+				resolve(obj);
+			});
+		});
+	},
+	writeFile:function(file,obj){
+		return new Promise(function(resolve,reject){
+			var app_config = jsonfile.writeFile(file,obj,function(err){
+				if(err){ reject(err); return;}
+				resolve();
+			});
+		});
 	} 
 }

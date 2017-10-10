@@ -1,9 +1,5 @@
 var md5 = require("md5");
 module.exports = function(app,io,db){
-
-
-
-
 	//Evento Constructor User - Se dispara cuando el Schema user ha sido instanciado.
 	db.on("user",function(schema){
 		//Extendemos la funcionalidad del Schema para usar en el Modelo User.
@@ -73,10 +69,7 @@ module.exports = function(app,io,db){
 			});
 			
 		});
-
 	});
-
-	
 	app.post("/install",function(req,res){
 		var params = req.body;
 		console.log("Crear usuario Super User");

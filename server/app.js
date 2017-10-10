@@ -2,7 +2,6 @@ const express =require('express');
 var md5 = require("md5");
 var fs = require("fs");
 var path = require("path");
-
 var bodyParser = require("body-parser");
 var session = require("express-session");
 
@@ -41,18 +40,29 @@ const ManagerDB = require("./database/ManagerDB");
 const db = ManagerDB.createManagerDB();
 
 app.use("/public",express.static("public"));
-app.use("/config",express.static("config"));
-// app.use("/routes",express.static("routes"));
-// app.use("/app",session_middleware);
-// app.use("/app",routes(app,db));
+app.use("/app",session_middleware);
 var routes = require("./routes");
 app.use("/app",routes(app,db));
-var port = process.env.PORT || 3000;
 
+
+var app_config = './server/app.json';
+function loadConfig(callback){
+	Helper.readFile(app_config)
+	.then(function(obj){
+		Helper.writeFile(app_config,{"name":"Falcon"});
+		if(callback!=undefined){
+			callback(obj);
+		}
+	});
+}
+
+var port = process.env.PORT || 3000;
 server.listen(port,function(){
 	db.connect()
 	.then(function(msg){
-		console.log(msg)	
+		loadConfig(function(obj){
+			console.log("msg",msg);
+		});	
 	},function(err){
 		console.log(err)
 	});
