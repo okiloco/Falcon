@@ -103,9 +103,8 @@ module.exports = function(app,db,io){
 		var name = route_map.name;
 		list = function(req,res,next){
 			var params = req.query || {};
-			console.log(params);
 			db[name].search(params,function(err,docs){
-				console.log("GET: list "+route_name,docs);			
+				console.log("GET: list "+route_name);			
 				res.send(JSON.stringify({data:docs}));
 			});
 		}

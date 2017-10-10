@@ -318,9 +318,6 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 		schema.statics.fieldsMap = function(params){
 			var fields = this.getFields();
 			var output ={}; 
-			console.log("fields::",fields);
-			console.log("Params:",params);
-
 
 			return new Promise(function(resolve,reject){
 				if(!Helper.isEmpty(params)){
@@ -392,7 +389,6 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 				}
 			});
 		}
-
 		schema.statics.create = function(params,callback){
 			var me = this;
 			if(!Helper.isEmpty(params)){
