@@ -1,4 +1,6 @@
 var md5 = require("md5");
+var Helper = require("./helpers/helper");
+var app_config = './server/app.json';
 module.exports = function(app,io,db){
 	//Evento Constructor User - Se dispara cuando el Schema user ha sido instanciado.
 	db.on("user",function(schema){
@@ -72,46 +74,69 @@ module.exports = function(app,io,db){
 	});
 	app.post("/install",function(req,res){
 		var params = req.body;
-		console.log("Crear usuario Super User");
-		if(!params.password || !params.username){
-			res.send(JSON.stringify({
-				"success":false,
-				"msg":"No se definió un usuario."
-			}));
-			return;
-		};
+		function install(params){
+			return new Promise(function(resolve,reject){
+				console.log("Crear usuario Super User");
+				if(!params.password || !params.username){
+					res.send(JSON.stringify({
+						"success":false,
+						"msg":"No se definió un usuario."
+					}));
+					return;
+				};
+				db.group.findOne({name:"Super User"},function(err,doc){
+					if(!doc){
+						console.log("No existe el grupo.")
+						db.module.create({
+							config:"{\"title\": \"Usuarios\",\"config\": {\"className\":\"Admin.view.users.Users\",\"alias\":\"users\",\"iconCls\":\"fa fa-folder\"}}",
+							name:"Usuarios"
+						},function(module){
+							db.group.create({
+								name:"Super User",
+								modules:module.id
+							},function(group){
+								db.user.create({
+									"username":params.username,
+									"password":md5(params.password),
+									"usergroup":group.id,
+									"email":params.email || ''
+								},function(user){
+									Helper.readFile(app_config,function(obj){
+										obj["author"] ={
+											"name":params.username,
+											"email":params.email || ''
+										}
+										delete params.password;
+										delete params.email;
+										delete params.username;
+										for(var key in params){
+											obj[key] = params[key];
+										}
+										Helper.writeFile(app_config,obj,function(err){
 
-		db.group.findOne({name:"Super User"},function(err,doc){
-			if(!doc){
-				console.log("No existe el grupo.")
-				db.module.create({
-					config:"{\"title\": \"Usuarios\",\"config\": {\"className\":\"Admin.view.users.Users\",\"alias\":\"users\",\"iconCls\":\"fa fa-folder\"}}",
-					name:"Usuarios"
-				},function(module){
-					db.group.create({
-						name:"Super User",
-						modules:module.id
-					},function(group){
-						db.user.create({
-							"username":params.username,
-							"password":md5(params.password),
-							"usergroup":group.id,
-							"email":params.email || ''
-						},function(user){
-							res.send(JSON.stringify({
-								"success":true,
-								"msg":"Usuario creado con éxito.",
-								user
-							}));
+										});
+									})
+									res.send(JSON.stringify({
+										"success":true,
+										"msg":"Usuario creado con éxito.",
+										user
+									}));
+								});
+							});
 						});
-					});
+					}else{
+						res.send(JSON.stringify({
+							"success":true,
+							"msg":"Acceda como Super Administrador al Sistema.",
+						}));
+					}
 				});
-			}else{
-				res.send(JSON.stringify({
-					"success":true,
-					"msg":"Acceda como Super Administrador al Sistema.",
-				}));
-			}
+			});
+		}
+
+		install(params)
+		.then(function(){
+			console.log("Instalación completada.")
 		});
 	});
 }
