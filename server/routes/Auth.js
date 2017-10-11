@@ -1,7 +1,6 @@
 var md5 = require("md5");
 var Helper = require("../helpers/helper");
 var app_config = './server/app.json';
-var app_config = './server/app.json';
 module.exports = function(app,io,db){
 	//Evento Constructor User - Se dispara cuando el Schema user ha sido instanciado.
 	db.on("user",function(schema){
