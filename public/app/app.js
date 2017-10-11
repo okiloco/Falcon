@@ -20,8 +20,37 @@ Ext.application({
         /*socket.on("message",function(msg){
             console.log("msg:",msg); 
         })  */
-        var socket =  new Falcon.socket.Socket();
-        socket.connect();      
+        var self =this;
+        this.loadConfig(function(config){
+            var instaled = config.success;
+            localStorage.instaled = instaled;
+        });
+       /* var socket =  new Falcon.socket.Socket();
+        socket.connect();  */    
+    },
+    loadConfig:function(callback){
+        Ext.Ajax.request({
+            scope: this,
+            url: Constants.URL_CONFIG_APP,
+            params: {
+                
+            },
+            success: function(response) {
+                var responseObject = Ext.decode(response.responseText);
+                console.log(responseObject);
+                if(callback!=undefined){
+                    callback(responseObject);
+                }       
+            },
+            failure: function(response) {
+                Ext.Msg.show({
+                    title: 'Error',
+                    msg: 'Error al procesar la petición.',
+                    buttons: Ext.Msg.OK,
+                    icon: Ext.Msg.ERROR
+                });
+            }
+        });
     }
 
 });

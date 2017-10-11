@@ -4,6 +4,7 @@ Ext.define('Admin.view.main.MainModel', {
 
     data: {
     	socket:{},
+        instaled:false,
     	defaultToken:'ptz',
         currentView: null,
         picture:'resources/images/user-profile/2.png',

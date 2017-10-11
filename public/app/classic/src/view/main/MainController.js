@@ -163,11 +163,23 @@ Ext.define('Admin.view.main.MainController', {
         var me =this;
         var vm = this.getViewModel();
         var view = (node && node.get('viewType'));
-        console.log("#"+hashTag);
-        if(localStorage.user_id!=undefined){
-            view = hashTag;
+
+        if(localStorage.length>0){
+            var instaled = JSON.parse(localStorage.instaled || "true");
+
+            if(instaled){
+                if(localStorage.user_id!=undefined){
+                    view = hashTag;
+                }else{
+                    view = "login";
+                }
+               
+            }else{
+                console.log("No instaled");
+                view = hashTag;
+            }
         }else{
-            view = "login";
+           view = "login";
         }
         return view;
     },
@@ -194,7 +206,7 @@ Ext.define('Admin.view.main.MainController', {
         lastView = mainLayout.getActiveItem();
         
         //@fvargas: Si la vista no existe se crea una nueva, pero si ya existe y se quiere cargar Login se crea nuevamente.
-        if (!existingItem || view=='login') {
+        if (!existingItem || view=='login' || view=='wizard') {
             newView = Ext.create({
                 xtype: view,
                 routeId: hashTag,  // for existingItem search later
@@ -294,58 +306,34 @@ Ext.define('Admin.view.main.MainController', {
     },
     onKeyUp:function(key,event){
     },
-    loadConfig:function(callback){
-        Ext.Ajax.request({
-            scope: this,
-            url: Constants.URL_CONFIG_APP,
-            params: {
-                
-            },
-            success: function(response) {
-                var responseObject = Ext.decode(response.responseText);
-                console.log(responseObject);
-                if(callback!=undefined){
-                    callback(responseObject);
-                }       
-            },
-            failure: function(response) {
-                Ext.Msg.show({
-                    title: 'Error',
-                    msg: 'Error al procesar la petición.',
-                    buttons: Ext.Msg.OK,
-                    icon: Ext.Msg.ERROR
-                });
-            }
-        });
-    },
     //@fvargs: Renderizar Vista.
     onMainViewRender:function() {
         var vm = this.getViewModel();
-
-        this.loadConfig(function(config){
-            console.log("config:",config);
-        });
-
 
         if (!window.location.hash) {
             if(localStorage.user_id!=undefined){
                 this.redirectTo(vm.get("defaultToken"));
             }else{
-                this.redirectTo("login");
+                // this.redirectTo("login");
             }
+        }else{
+            console.log("window.location.hash",window.location.hash)
         }
     },
     onMainViewBeforeRender:function() {
         var vm = this.getViewModel();
         vm.set("username",localStorage.username);
-        /*if(!localStorage.user_id){
-            this.redirectTo("login");
-        }*/
+        console.log("Render",localStorage);
+        if(localStorage.user_id!=undefined){
+            this.redirectTo(vm.get("defaultToken"));
+        }else{
+            // this.redirectTo("login");
+        }
     },
     //@fvargs: Renderizar Vista.
 
     onRouteChange:function(id){
-
+        console.log("#"+id);
         this.setCurrentView(id);
     },
 

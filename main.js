@@ -25,12 +25,12 @@ function createWindow(options){
 
 
 	return new Promise(function(resolve,reject){
-		win.loadURL(url.format({
+		/*win.loadURL(url.format({
 			pathname:path.join(__dirname,(options.url || '/public/app/index.html')),
 			protocol:'file:',
 			slashes:true
-		}));
-
+		}));*/
+		win.loadURL("http://localhost:3000/"+(options.url || ''));
 		//Abrir inspector de elementos
 		win.webContents.openDevTools();
 
@@ -47,20 +47,20 @@ function createWindow(options){
 }
 
 loadConfig(function(config){
+	
 	server(config)
 	.then(function(){
 		console.log("Aplicación Iniciada.",__dirname)
 
-		createWindow({url:'/public/app/index.html'})
+		createWindow({url:'public/app/index.html#login'})
 		.then(win=>{
 		});
 	},
 	function(err){
 		console.log("No se pudo Iniciar la Aplicación.");
-		/*createWindow({
-			width:400,
-			height:400,
-		});*/
+		createWindow({url:'public/app/index.html#wizard'})
+		.then(win=>{
+		});
 	});
 });
 exports.canGame = function(){
