@@ -18,7 +18,6 @@ Ext.define('Admin.view.authentication.AuthenticationController', {
                 waitMsg: 'Procesando solicitud...',
                 success: function(f, action) {
                     var res = action.result;
-                    console.log(res.user.username);
                     localStorage.user_id =res.user._id;
                     localStorage.username =res.user.username;
 

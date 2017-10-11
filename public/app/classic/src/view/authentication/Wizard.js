@@ -67,7 +67,7 @@ Ext.define('Admin.view.authentication.Wizard', {
                 {
                     xtype: 'component',
                     html: '<div style="text-align:right">' +
-                        '<a href="#'+((!localStorage.user_id)?'login':'ptz')+'" class="link-forgot-password">'+
+                        '<a href="#ptz" class="link-forgot-password">'+
                             'Atrás</a>' +
                         '</div>',
                     /*listeners:{

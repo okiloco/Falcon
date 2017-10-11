@@ -158,6 +158,19 @@ Ext.define('Admin.view.main.MainController', {
             }
         }, this);
     },
+
+    gethashTag:function(node,hashTag){
+        var me =this;
+        var vm = this.getViewModel();
+        var view = (node && node.get('viewType'));
+        console.log("#"+hashTag);
+        if(localStorage.user_id!=undefined){
+            view = hashTag;
+        }else{
+            view = "login";
+        }
+        return view;
+    },
     setCurrentView: function(hashTag) {
         hashTag = (hashTag || '').toLowerCase();
         var me = this,
@@ -168,21 +181,20 @@ Ext.define('Admin.view.main.MainController', {
             store = navigationList.getStore(),
             node = store.findNode('routeId', hashTag) ||
                    store.findNode('viewType', hashTag),
-            view = (node && node.get('viewType')) || 
-            ((hashTag=='passwordreset')?"passwordreset":((hashTag=='wizard')?"wizard":"login")) || ((!localStorage.user_id)?'login':'page404'),
-            // view = (node && node.get('viewType')) || ((hashTag=='login' || hashTag=='passwordreset') || 'page404'),
+            view = this.gethashTag(node,hashTag),
+            // view = (node && node.get('viewType')) || (hashTag=='passwordreset')?"passwordreset":"login" || (!localStorage.user_id)?'login':'page404',
             lastView = me.lastView,
             existingItem = mainCard.child('component[routeId=' + hashTag + ']'),
             newView;
-
         // Kill any previously routed window
         if (lastView && lastView.isWindow) {
             lastView.destroy();
         }
 
         lastView = mainLayout.getActiveItem();
-
-        if (!existingItem) {
+        
+        //@fvargas: Si la vista no existe se crea una nueva, pero si ya existe y se quiere cargar Login se crea nuevamente.
+        if (!existingItem || view=='login') {
             newView = Ext.create({
                 xtype: view,
                 routeId: hashTag,  // for existingItem search later
@@ -193,6 +205,7 @@ Ext.define('Admin.view.main.MainController', {
         if (!newView || !newView.isWindow) {
             // !newView means we have an existing view, but if the newView isWindow
             // we don't add it to the card layout.
+
             if (existingItem) {
                 // We don't have a newView, so activate the existing view.
                 if (existingItem !== lastView) {
@@ -280,29 +293,59 @@ Ext.define('Admin.view.main.MainController', {
         }
     },
     onKeyUp:function(key,event){
-        //console.log(event.getKey());
+    },
+    loadConfig:function(callback){
+        Ext.Ajax.request({
+            scope: this,
+            url: Constants.URL_CONFIG_APP,
+            params: {
+                
+            },
+            success: function(response) {
+                var responseObject = Ext.decode(response.responseText);
+                console.log(responseObject);
+                if(callback!=undefined){
+                    callback(responseObject);
+                }       
+            },
+            failure: function(response) {
+                Ext.Msg.show({
+                    title: 'Error',
+                    msg: 'Error al procesar la petición.',
+                    buttons: Ext.Msg.OK,
+                    icon: Ext.Msg.ERROR
+                });
+            }
+        });
     },
     //@fvargs: Renderizar Vista.
     onMainViewRender:function() {
+        var vm = this.getViewModel();
+
+        this.loadConfig(function(config){
+            console.log("config:",config);
+        });
+
+
         if (!window.location.hash) {
-            //console.log(localStorage.user_id);
             if(localStorage.user_id!=undefined){
-                this.redirectTo("ptz");
+                this.redirectTo(vm.get("defaultToken"));
             }else{
                 this.redirectTo("login");
             }
-            
         }
     },
     onMainViewBeforeRender:function() {
-        if(!localStorage.user_id){
+        var vm = this.getViewModel();
+        vm.set("username",localStorage.username);
+        /*if(!localStorage.user_id){
             this.redirectTo("login");
-        }
+        }*/
     },
     //@fvargs: Renderizar Vista.
 
     onRouteChange:function(id){
-        //console.log("change: ",id)
+
         this.setCurrentView(id);
     },
 

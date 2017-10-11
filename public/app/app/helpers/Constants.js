@@ -1,11 +1,12 @@
 Ext.define('Admin.helpers.Constants', {
 	alternateClassName: 'Constants',
 	singleton: true,
-	
+	//App
+	URL_CONFIG_APP:BASE_PATH+'config/',
 	//Login
 	URL_LOGIN:BASE_PATH+'login',
 	URL_LOGOUT_APP:BASE_PATH+'logout',
-	URL_VIEWER:IP_CAMERA+'mjpg/video.mjpg',
+	URL_VIEWER:IP_CAMERA+'/mjpg/video.mjpg',
 
 	//Iconos
 	URL_ICON_IMAGEN_EMPTY:'resources/images/icons/64/camera.png',

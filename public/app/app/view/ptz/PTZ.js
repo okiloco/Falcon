@@ -52,7 +52,7 @@ Ext.define('Falcon.view.ptz.PTZ',{
                             '</div>',
                         '</tpl>',
                         '</div>',
-                        '<div class="image">',
+                        '<div id="imageviewer" class="image">',
                             '<img src="'+ Constants.URL_VIEWER+'" style="width:100%; height:100%;" frameborder="0"/>',
                         '</div>',
                         '<div class="viewer-footer">',

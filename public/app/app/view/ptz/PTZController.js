@@ -202,5 +202,8 @@ Ext.define('Falcon.view.ptz.PTZController', {
 		    }
 		});
     	console.log(infraccion);
+    },
+    onBeforeRender:function(self){
+    	console.log(global.config);
     }
 });

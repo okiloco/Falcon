@@ -23,7 +23,7 @@ Ext.define('Admin.view.main.MainContainerWrap', {
     beforeLayout : function() {
         // We setup some minHeights dynamically to ensure we stretch to fill the height
         // of the viewport minus the top toolbar
-
+       
         var me = this,
             height = Ext.Element.getViewportHeight() - 64,  // offset by topmost toolbar height
             // We use itemId/getComponent instead of "reference" because the initial

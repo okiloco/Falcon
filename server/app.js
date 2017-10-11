@@ -13,6 +13,18 @@ const mongoose = require("mongoose");
 const ManagerDB = require("./database/ManagerDB");
 mongoose.Promise = global.Promise;
 var Helper = require("./helpers/helper");
+
+
+app.get("/config",function(req,res){
+	Helper.readFile('./server/app.json').
+	then(function(config){
+		res.send({
+			"success":(!Helper.isEmpty(config)),
+			config
+		});
+	});
+});
+
 module.exports = function(config){
 
 	var port = process.env.PORT || 3000;
@@ -34,8 +46,9 @@ module.exports = function(config){
 	function init(){
 		io.on("connect",function(socket){
 			console.log("socket connected.");
-			socket.emit("start",config);
+			// socket.emit("start",config);
 		});
+
 	}
 
 	console.log("Iniciando Aplicación",config);

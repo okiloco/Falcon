@@ -17,11 +17,11 @@ Ext.application({
         'Admin.*'
     ],
     launch:function(){
-        var socket = global.socket = new Falcon.socket.Socket();
-        socket.connect();
-        socket.on("message",function(msg){
+        /*socket.on("message",function(msg){
             console.log("msg:",msg); 
-        })        
+        })  */
+        var socket =  new Falcon.socket.Socket();
+        socket.connect();      
     }
 
 });

@@ -136,7 +136,7 @@ module.exports = function(app,io,db){
 					}else{
 						res.send(JSON.stringify({
 							"success":true,
-							"msg":"Acceda como Super Administrador al Sistema.",
+							"msg":"Puede que el Sistema ya está instalado<br>Inicar Sesión como Super Administrador.",
 						}));
 					}
 				});
