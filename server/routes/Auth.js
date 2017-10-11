@@ -101,29 +101,32 @@ module.exports = function(app,io,db){
 									"usergroup":group.id,
 									"email":params.email || ''
 								},function(user){
-									Helper.readFile(app_config,function(obj){
-										obj["user"] = {
-											"username":params.username,
-											"email":params.email || ''
-										}
-										obj["camera"] ={
-											"camera_ip":params.camera_ip,
-											"camera_user":params.camera_user,
-											"camera_password":params.camera_password
-										}
-										obj["movil"] ={
-											"movil_plate":params.movil_plate,
-											"movil_name":params.movil_name
-										}
-										delete params.password;
-										delete params.email;
-										delete params.username;
-										for(var key in params){
-											obj[key] = params[key];
-										}
-										Helper.writeFile(app_config,obj,function(err){
-										});
-									})
+
+									var obj = {};
+									obj["user"] = {
+										"username":params.username,
+										"email":params.email || ''
+									}
+									obj["camera"] ={
+										"camera_ip":params.camera_ip,
+										"camera_user":params.camera_user,
+										"camera_password":params.camera_password
+									}
+									obj["movil"] ={
+										"movil_plate":params.movil_plate,
+										"movil_name":params.movil_name
+									}
+									delete params.password;
+									delete params.email;
+									delete params.username;
+									for(var key in params){
+										obj[key] = params[key];
+									}
+									Helper.writeFile(app_config,obj,function(err){
+										console.log("Archivo de configuración creado.")
+									},function(){
+										console.log("No se pudo crear el archivo de configuración")
+									});
 									res.send(JSON.stringify({
 										"success":true,
 										"msg":"Usuario creado con éxito.",
