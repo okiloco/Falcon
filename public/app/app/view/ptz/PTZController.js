@@ -399,4 +399,62 @@ Ext.define('Admin.view.ptz.PTZController', {
     	    }]
     	}).showBy(Ext.get(el),'c-bl',[-10,10]);
     },
+    onPlayVideo:function(dataview, record, item, index, e, eOpts){
+       var me = this;
+       var videopreview = Ext.fly("videopreview");
+       var closevideo = videopreview.down("#closevideo");
+       var video = videopreview.down("video");
+       var panel = dataview.up();
+       var el = video.el.dom;
+       var source;
+       videopreview.removeCls("videopreview-hidden");
+
+       el.addEventListener('ended',myHandler,false);
+       var origH = dataview.height;
+       function myHandler(e) {
+        console.log("Video finalizó.")
+        // panel.expand();
+        // video.addCls("videopreview-hidden");
+           // What you want to do after the event
+       }
+
+
+       source = video.down('source');
+       source.dom.src = record.get("url");
+       el.load();
+       el.play(); 
+       // panel.collapse(Ext.Component.DIRECTION_TOP,true);
+
+       panel.on("collapse",function(self, eOpts ){
+           el.play();  
+       }); 
+       closevideo.on("click",function(self, eOpts ){
+           videopreview.addCls("videopreview-hidden");
+           el.pause();  
+           source.dom.src = "";
+           if(panel.getCollapsed()!=false){
+            // panel.expand();
+           }
+       }); 
+
+       /*Ext.create('Ext.fx.Anim', {
+           target: dataview,
+           duration: 100,
+           from: {
+               y:  origH//starting width 400
+           },
+           to: {
+               y:  0// end height 300
+           },
+           listeners:{
+                afteranimate:function(anim, startTime, eOpts ){
+                    el.play();
+                } 
+           }
+       });*/
+
+       // video.play();
+       /*sources = sources[0];
+       sources.src = record.get("url");*/
+    }
 });

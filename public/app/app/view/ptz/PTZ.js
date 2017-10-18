@@ -32,16 +32,19 @@ Ext.define('Admin.view.ptz.PTZ',{
             xtype:'panel',
             region:'center',
             layout:'vbox',
+            flex:1,
             items:[
                 {
                     xtype:'dataview',
                     name:'viewer',
                     cls:'viewer',
+                    layout:'hbox',
                     flex:.8,
                     itemSelector: 'div.viewer-tools .item',
                     bind:{
                         store:'{toolStore}',
                     },
+                    width:'100%',
                     tpl: new Ext.XTemplate(
                         '<div class="viewer-tools">',
                         '<div id="recIndicator" class="rec recIndicator-hidden">',
@@ -57,8 +60,17 @@ Ext.define('Admin.view.ptz.PTZ',{
                             '<img src="{image}" style="width:100%; height:100%;" frameborder="0"/>',
                         '</tpl>',
                         '</div>',
-                        '<div id="imageviewer" class="image">',
-                            '<img src="'+Constants.URL_VIEWER+'" style="width:100%; height:100%;" frameborder="0"/>',
+                        '<div id="imageviewer">',
+                            '<div id="videopreview" class="videopreview videopreview-hidden">',
+                                '<div id="closevideo"><i class="fa fa-window-close" aria-hidden="true"></i></div>',
+                                '<video controls  width="100%" height="100%">',
+                                    '<source src="" type="video/mp4">',
+                                '</video>',
+                            '</div>',
+                            '<img id="imgpreview" class="imgpreview imgpreview-hidden" src="" style="width:100%; height:100%;" frameborder="0"/>',
+                            '<div class="campreview">',
+                                '<img src="'+Constants.URL_VIEWER+'" style="width:100%; height:100%;" frameborder="0"/>',
+                            '</div>',
                         '</div>',
                         '<div class="viewer-footer">',
                             '<span id="timer">{time}</span>',
@@ -66,28 +78,49 @@ Ext.define('Admin.view.ptz.PTZ',{
                     )
                 },
                 {
-                    xtype:'dataview',
-                    name:'video_viewer',
-                    cls:'video_viewer',
+                    xtype:'panel',
+                    layout:'fit',
+                    collapseible:true,
+                    hideCollapseTool:true,
+                    titleCollapse:false,
+                    width:"100%",
                     flex:.2,
-                    itemSelector: 'div.video_viewer .item',
-                    layout:'hbox',
-                    bind:{
-                        store:'{videoStore}',
-                    },
-                    tpl: new Ext.XTemplate(
-                        '<div class="video_viewer">',
-                            '<tpl for=".">',
-                                '<div class="item">',
-                                    '<video width="150" height="80" controls>',
-                                        '<source src="http://localhost:3000/app/video/preview?id={id}" type="video/mp4">',
-                                    '</video>',
+                    collapseMode:'mini',
+                    items:[
+                        {
+                            xtype:'dataview',
+                            name:'video_viewer',
+                            cls:'video_viewer',
+                           
+                            itemSelector: 'div.video_viewer .item #play',
+                            layout:'hbox',
+                            bind:{
+                                store:'{videoStore}',
+                            },
+                            scrollable:'horizontal',    
+                            tpl: new Ext.XTemplate(
+                                '<div class="video_viewer">',
+                                    '<div class="container">',
+                                        '<tpl for=".">',
+                                            '<div class="item">',
+                                                '<video width="150" height="80" class="video-player">',
+                                                    '<source src="http://localhost:3000/app/video/preview?id={id}" type="video/mp4">',
+                                                '</video>',
+                                                '<div id="play">',
+                                                    '<i class="fa fa-play-circle" aria-hidden="true"></i>',
+                                                '</div>',
+                                            '</div>',
+                                        '</tpl>',
+                                    '</div>',
                                 '</div>',
-                            '</tpl>',
-                        '</div>',
-                        '<div class="video_viewer-footer">',
-                        '</div>'
-                    )
+                                '<div class="video_viewer-footer">',
+                                '</div>'
+                            ),
+                            listeners:{
+                                itemclick:'onPlayVideo'
+                            }
+                        }
+                    ]
                 }
             ]
         },
