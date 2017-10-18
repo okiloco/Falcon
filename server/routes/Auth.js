@@ -9,6 +9,8 @@ module.exports = function(app,io,db){
 
 			var self = this;
 			return new Promise(function(resolve,reject){
+				 
+				 var result={};
 				 self.findOne(params)
 				.populate('usergroup')
 				.select('username email usergroup modules')
@@ -20,7 +22,8 @@ module.exports = function(app,io,db){
 			        		user.usergroup.modules[index]=doc;
 			        	});
 			        });
-	        		resolve(user);
+					//user.usergroup.modules=modules;
+			        resolve(user);
 		      	})
 				.then(function(data){
 					reject("Usuario y/o contraseña invalidos.");
@@ -59,6 +62,7 @@ module.exports = function(app,io,db){
 
 						req.session.user_id =user._id;
 						res.locals.user = user;
+						global.user = user;
 						
 						res.send(JSON.stringify({
 							"user":user,
@@ -122,7 +126,7 @@ module.exports = function(app,io,db){
 									for(var key in params){
 										obj[key] = params[key];
 									}
-									Helper.writeFile(app_config,obj,function(err){
+									Helper.writeFile(app_config,obj,{spaces: 2, EOL: '\r\n'},function(err){
 										console.log("Archivo de configuración creado.")
 									},function(){
 										console.log("No se pudo crear el archivo de configuración")

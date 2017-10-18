@@ -51,9 +51,11 @@ function generateGET(options) {
 };
 
 
+
 Recorder.prototype.setConfig = function(options){
 	console.log("timeLimit: ",this.timeLimit);
-
+	//para emitir eventos ilimitados
+	this.setMaxListeners(0);
 	if(options.duration==undefined){
 		options["duration"] = 600;
 	}
@@ -71,27 +73,26 @@ Recorder.prototype.pause = function(callback){
 	var self = this;
 	self.playing = (!self.playing);
 	self._readStarted = (!self._readStarted);
-
 	self.emit("pause",self.playing,callback);
 	if(callback!=undefined){
 		callback(self); 
 	}
-	
-	
 	return self;
 }
 
 Recorder.prototype.stop = function(callback){
 	var self = this;
 	self.emit("end");
+	if(self.writeStream!=null){
+		self.writeStream.end();
+		self.readStream.stdout.unpipe(this.writeStream);
+	}
 	if(callback!=undefined){
 		callback(self); 
 	}
-	self.writeStream.end();
-	self.readStream.stdout.unpipe(this.writeStream);
 	return self;
 }
-var count = 0;
+var count;
 Recorder.prototype.record = function(options,callback){
 	
 	var self = this;
@@ -102,20 +103,25 @@ Recorder.prototype.record = function(options,callback){
       fs.mkdirSync(basepath);
   	}
 	
-	var lote = dateFormat(new Date(),"yyyymmd");
+	var lote = dateFormat(new Date(),"yyyymmdd");
 	basepath = path.join(basepath,lote);
 	if (!fs.existsSync(basepath)) {
   		fs.mkdirSync(basepath);
 	}	
 	
-	var name = dateFormat(new Date(),"yyyymmd");
-	count++;
-	this.filename = path.join(basepath,this.prefix+self.id_dispositivo+'_'+name+'_'+count+'.mp4');
+	this.lote = dateFormat(new Date(),"yyyymmdd");
+
+	//
+
+	//CZBQ2_20171012_90 - IDDISPOSITIVO_LOTE_CONSECUTIVO
+	this.filename = this.prefix+'_'+this.lote+'_'+options.count+'.mp4';
+	this.filename_tmp = this.prefix+'_'+this.lote+'_'+options.count+'_temp.mp4';
+	this.url_video_tmp = path.join(basepath,this.filename_tmp);
+	this.url_video = path.join(basepath,this.filename);
 	
-	console.log(self.db);
+	console.log(this.filename_tmp);
 
 	if(typeof(options)!=undefined){
-		console.log(typeof(options));
 		if(typeof(options)=='function' && callback == undefined){
 			callback = options;
 		}else{
@@ -124,27 +130,30 @@ Recorder.prototype.record = function(options,callback){
 	}
 	this.once('readStart', function(){
 		if(self.playing){
-			if (!fs.existsSync(self.filename)) {
-			    this.writeStream = fs.createWriteStream(self.filename);
-    			this.readStream.stdout.pipe(this.writeStream);
+			if (!fs.existsSync(self.url_video_tmp)) {
+				
+				    self.writeStream = fs.createWriteStream(self.url_video_tmp);
+	    			self.readStream.stdout.pipe(self.writeStream);
 
-    			console.log("duration: ",this.timeLimit);
-    			setTimeout(function(){
-    			  console.log("time out.");
-    			  self.emit("end");
-    			},((self.timeLimit)*1000));
+	    			console.log("duration: ",this.timeLimit);
+	    			setTimeout(function(){
+	    			  console.log("time out.");
+	    			  self.emit("end");
+	    			},((self.timeLimit)*1000));
 
-    			this.once("end",function(){
-    				self._readStarted = false;
-    				self.playing = false;
-    				if(callback!=undefined){
-    					callback(self);
-    				} 
-    			});
-
-
-
-    			console.log("Start record "+self.filename+"\r\n");
+	    			this.once("end",function(){
+	    				self._readStarted = false;
+	    				self.playing = false;
+	    				if(callback!=undefined){
+	    					callback(self);
+	    				} 
+	    			});
+	    			console.log("Start record "+self.url_video_tmp+"\r\n");
+		  	}else{
+    			console.log("El video ya existe y no se puede reescribir.",self.url_video_tmp+"\r\n");
+		  		if(callback!=undefined){
+		  			callback();
+		  		} 
 		  	}
 		}
 	});
@@ -184,7 +193,11 @@ Recorder.prototype.record = function(options,callback){
         self.playing = true;
 		this.connect();
 	}
-	
+	this.on('lostConnection',function(){
+		if(callback!=undefined){
+			callback();
+		}
+	});
 	return this;
 }
 
@@ -201,6 +214,7 @@ exports.createRecorder = function(options,db) {
 	var config = {
 		url:path,
 		id_dispositivo:this.id_dispositivo,
+		videocodec:options.videocodec,
 		db: this.db,
 		// timeLimit: (options.duration!=undefined)?options.duration:this.timeLimit, //length of one video file (seconds) 
 		folder: this.folder, //path to video folder 

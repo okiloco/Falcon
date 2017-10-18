@@ -13,20 +13,24 @@ Ext.application({
     // explicitly.
     //
     requires: [
-        'Falcon.socket.Socket',
         'Admin.*'
     ],
     launch:function(){
-        /*socket.on("message",function(msg){
-            console.log("msg:",msg); 
-        })  */
-        var self =this;
-        this.loadConfig(function(config){
-            var instaled = config.success;
+        /*   var self =this;
+        var socket =  new Admin.socket.Socket();
+        socket.connect(function(options){
+            console.log(options);
+            var config = options.config;
+
+            var camera = config.camera;
+            var instaled = options.success;
+            
             localStorage.instaled = instaled;
-        });
-       /* var socket =  new Falcon.socket.Socket();
-        socket.connect();  */    
+            localStorage.config = JSON.stringify(config);
+
+            global.IP_CAMERA = camera.camera_ip+"/mjpg/video.mjpg";
+            console.log(localStorage.instaled,global.IP_CAMERA);
+        });*/  
     },
     loadConfig:function(callback){
         Ext.Ajax.request({

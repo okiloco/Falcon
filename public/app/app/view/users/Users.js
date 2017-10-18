@@ -4,7 +4,9 @@ Ext.define('Admin.view.users.Users',{
     xtype: 'users',
     requires: [
         'Admin.view.users.UsersController',
-        'Admin.view.users.UsersModel'
+        'Admin.view.users.UsersModel',
+        'Admin.view.groups.GroupsModel',
+        'Admin.view.users.UserForm'
     ],
 
     controller: 'users-users',
@@ -18,68 +20,93 @@ Ext.define('Admin.view.users.Users',{
     flex:1,
     margin:20,
     cls: 'shadow',
-    items:[
-        {
-            xtype:'grilla',
-            bind:{
-                store:'{userstore}'
-            },
-            cls: 'user-grid',
-            forceFit:true,
-            layout:'fit',
-            columns:[
-                {
-                    text:"Usuario",
-                    dataIndex:'username'
-                },
-                {
-                    text:"Email",
-                    dataIndex:'email'
-                },
-                {
-                    text:"Rol",
-                    dataIndex:'rol'
-                },
-                {
-                    xtype: 'actioncolumn',
-                    cls: 'content-column',
-                    width: 450,
-                    items: [
-                        {
-                            xtype: 'button',
-                            iconCls: 'x-fa fa-pencil',
-                            tooltip: 'Editar Registro',
-                            handler:'onEditar',                       
-                        },
-                        {
-                            xtype: 'button',
-                            iconCls: 'x-fa fa-close',
-                            tooltip: 'Eliminar Registro',
-                            // handler:'onEliminar'
-                        }
-                    ],
-                    cls: 'content-column',
-                    // dataIndex: 'bool',
-                    text: 'Acciones'                   
-                }
-            ],
-            dockedItems:[
-                {
-                    xtype:"toolbar",
-                    items:[
-                        {
-                            xtype: 'searchbutton',
-                            name: 'username',
-                            emptyText: 'Usuario',
-                            listeners:{
-                                search:function(self){
-                                    console.log(self);
+    initComponent: function() {
+        var me = this;
+
+        Ext.applyIf(me, {
+          items:[
+              {
+                  xtype:'grilla',
+                  bind:{
+                      store:'{userstore}'
+                  },
+                  cls: 'user-grid',
+                  forceFit:true,
+                  layout:'fit',
+                  columns:[
+                      {
+                          text:"Usuario",
+                          dataIndex:'username'
+                      },
+                      {
+                          text:"Email",
+                          dataIndex:'email'
+                      },
+                      {
+                          text:"Rol",
+                          dataIndex:'rol'
+                      },
+                      {
+                          xtype: 'actioncolumn',
+                          cls: 'content-column',
+                          width: 450,
+                          items: [
+                              {
+                                  xtype: 'button',
+                                  iconCls: 'x-fa fa-pencil',
+                                  tooltip: 'Editar Registro',
+                                  handler:'onEditar',                       
+                                  handler:'onEdit'
+                              },
+                              {
+                                  xtype: 'button',
+                                  iconCls: 'x-fa fa-close',
+                                  tooltip: 'Eliminar Registro',
+                                  handler:'onRemove'
+                              }
+                          ],
+                          cls: 'content-column',
+                          // dataIndex: 'bool',
+                          text: 'Acciones'                   
+                      }
+                  ],
+                  dockedItems:[
+                      {
+                          xtype:"toolbar",
+                          items:[
+
+                                {
+                                    xtype: 'textfield',
+                                    name: 'username',
+                                    emptyText: 'Usuario'
+                                },
+                                {
+                                    xtype: 'button',
+                                    text: 'Filtrar',
+                                    name: 'filtrar',
+                                    handler:'search'
+                                },
+                                {
+                                    xtype: 'button',
+                                    text: 'Limpiar',
+                                    name: 'limpiar',
+                                    handler:'limpiar'
+                                },
+                                '->',
+                                {
+                                    xtype: 'button',
+                                    text: 'Nuevo',
+                                    name: 'usernew',
+                                    // scope:me,
+                                    handler:'onNew'
                                 }
-                            }
-                        }
-                    ]
-                }
-            ]
-        }
-    ]
+                          ]
+                      }
+                  ]
+              }
+          ]  
+        });
+
+        me.callParent(arguments);
+    }
 });

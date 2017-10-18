@@ -1,53 +1,84 @@
-Ext.define('Falcon.view.ptz.PTZModel', {
+Ext.define('Admin.view.ptz.PTZModel', {
     extend: 'Ext.app.ViewModel',
     alias: 'viewmodel.ptz',
     data: {
+        config:null,
         name: 'Falcon',
+        camera:{},
         time:0,
         interval:null,
+        socket:null,
         playing:false,
         images:[
         	{
         		name:'Imagen 01',
-        		src:Constants.URL_ICON_IMAGEN_EMPTY,
+        		url:Constants.URL_ICON_IMAGEN_EMPTY,
         		iconCls:"empty"
         	},
         	{
         		name:'Imagen 02',
-        		src:Constants.URL_ICON_IMAGEN_EMPTY,
+        		url:Constants.URL_ICON_IMAGEN_EMPTY,
         		iconCls:"empty"
         	},
         	{
         		name:'Imagen 03',
-        		src:Constants.URL_ICON_IMAGEN_EMPTY,
+        		url:Constants.URL_ICON_IMAGEN_EMPTY,
         		iconCls:"empty"
         	},
         	{
         		name:'Imagen 04',
-        		src:Constants.URL_ICON_IMAGEN_EMPTY,
+        		url:Constants.URL_ICON_IMAGEN_EMPTY,
         		iconCls:"empty"
         	}
         ],
     },
     stores:{
     	imagenStore: {
-    		model: 'Base',
-    		autoLoad: false,
+            model: 'Admin.model.image.Image',
+            autoLoad: true,
+            pageSize: 4,
+            infraccion:null,
+            data:'{images}',
+            proxy: {
+                type: 'ajax',
+                timeout:600000,
+                url: Constants.URL_IMAGES,
+                reader: {
+                    type:'json',
+                    rootProperty:'data',
+                },
+                actionMethods:{
+                    read:'GET'
+                },
+                extraParams: {
+                    estado:0
+                }
+            },
+            listeners: {
+                // load: 'onLoadistadoinfraccionrechazadasstore'
+            }
+        },
+        videoStore: {
+    		model: 'Admin.model.video.Video',
+    		autoLoad: true,
     		pageSize: 4,
             infraccion:null,
-			data:'{images}',
-    		/*proxy: {
+			// data:'{images}',
+    		proxy: {
     			type: 'ajax',
     			timeout:600000,
-    			url: constants.URL_LISTAR_SEGUIMIENTO_COMPARENDOS,
+    			url: Constants.URL_VIDEOS,
     			reader: {
     				type:'json',
     				rootProperty:'data',
     			},
     			actionMethods:{
-    				read:'POST'
-    			}
-    		},*/
+    				read:'GET'
+    			},
+                extraParams: {
+                    estado:0
+                }
+    		},
     		listeners: {
     			// load: 'onLoadistadoinfraccionrechazadasstore'
     		}
@@ -55,16 +86,10 @@ Ext.define('Falcon.view.ptz.PTZModel', {
     	toolStore: {
     		model: 'Base',
     		autoLoad: false,
-			data:[
-				/*{
-					text:'8s...',
-					cls:'time'
-				},*/
-			],
+			data:'{camera}',
     		listeners: {
     			// load: 'onLoadistadoinfraccionrechazadasstore'
     		}
     	}
     }
-
 });

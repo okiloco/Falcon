@@ -13,12 +13,12 @@ module.exports = function(app,router,db,schema){
 			.select('username email usergroup modules')
 			.cursor()
 			.eachAsync(function(user) {
-				result.push(user);
 		        user.usergroup.modules.forEach(function(docs,index,arr){
 		        	db.module.findOne(docs.module,(err,doc)=>{
 		        		user.usergroup.modules[index]=doc;
 		        	});
 		        });
+				result.push(user);
 	      	})
 	    	.then(res => {
 	    		callback(result);
@@ -37,16 +37,62 @@ module.exports = function(app,router,db,schema){
 		if(params.password!=undefined){
 			params.password=md5(params.password)
 		};
-		db.user.create(params,function(err,doc){
-			if(!doc){
-				res.send(JSON.stringify({"success":false,"msg":err}));
-			}else{
-				res.send(JSON.stringify({
-					"success":true,
-					"msg":(!params.id)?"Usuario creado con éxito.":"Usuario actualizado con éxito."
-				}));
-			}
-		});
+
+		if(!params.usergroup || !params.username){
+			res.send(JSON.stringify({
+				"success":false,
+				"msg":"Debe especificar un grupo o nombre de usuario."
+			}));
+			return;
+		}
+
+		if(params.id!=undefined && params.id!=''){
+			db.user.findOne({"_id":params.id})
+			.then(function(user){
+				if(!user){
+					res.send(JSON.stringify({
+						"success":false,
+						"msg":"El usuario no existe."
+					}));
+				}else{
+
+					db.user.create(params,function(err,doc){
+						res.send(JSON.stringify({
+							"success":true,
+							"msg":(!params.id)?"Usuario creado con éxito.":"Usuario actualizado con éxito."
+						}));
+					});
+				}
+			});
+		}else{
+			db.user.findOne({"username":params.username})
+			.then(function(user){
+				if(!user){
+
+					db.group.findOneById(params.usergroup,function(err,doc){
+						if(!doc){
+							res.send(JSON.stringify({
+								"success":false,
+								"msg":"El grupo de usuario no existe."
+							}));
+						}else{
+							db.user.create(params,function(err,doc){
+								res.send(JSON.stringify({
+									"success":true,
+									"msg":(!params.id)?"Usuario creado con éxito.":"Usuario actualizado con éxito."
+								}));
+							});
+						}
+					});
+				}else{
+					res.send(JSON.stringify({
+						"success":false,
+						"msg":"No se pudo crear porque el usuario ya existe."
+					}));
+				}
+			})
+		}
+		
 	});
 	return router;
 }

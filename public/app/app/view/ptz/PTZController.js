@@ -1,37 +1,53 @@
-Ext.define('Falcon.view.ptz.PTZController', {
+Ext.define('Admin.view.ptz.PTZController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.ptz',
     capturarImagen:function(self,e,eOpts){
-        Ext.Ajax.request({
-        	scope: this,
-        	url: Constants.URL_CAPTURAR_IMAGEN,
-        	params: {
-        		
-        	},
-        	success: function(response) {
-        		var responseObject = Ext.decode(response.responseText);
-        		Ext.Msg.show({
-        		    title: 'Aviso',
-        		    msg: responseObject.msg,
-        		    buttons: Ext.Msg.OK,
-        		    icon: Ext.Msg.INFO                    
-        		});		
-        	},
-        	failure: function(response) {
-        		Ext.Msg.show({
-        			title: 'Error',
-        			msg: 'Error al procesar la petición.',
-        			buttons: Ext.Msg.OK,
-        			icon: Ext.Msg.ERROR
-        		});
-        	}
-        });
+        var vm = this.getViewModel();
+        var panel = self.up("ptz");
+        var form = panel.down("infraccionform");
+        var infraccion = vm.get("infraccion");
+        var captureimages = form.up("panel").down("[name=captureimages]");
+
+        if(captureimages.getStore().getCount()<Constants.MAX_CAPTURES){
+            Ext.Ajax.request({
+                scope: this,
+                url: Constants.URL_CAPTURAR_IMAGEN,
+                params: {
+                    
+                },
+                success: function(response) {
+                    var responseObject = Ext.decode(response.responseText)
+                    Msg.info(responseObject.msg);
+                    captureimages.getStore().reload();
+                },
+                failure: function(response) {
+                    Ext.Msg.show({
+                        title: 'Error',
+                        msg: 'Error al procesar la petición.',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.Msg.ERROR
+                    });
+                }
+            });
+        }else{
+            Ext.Msg.show({
+                title: 'Atención',
+                msg: 'Solo puede capturar '+Constants.MAX_CAPTURES+' imagenes.<br>Si desea capturar otras imagenes, debe eliminar las que considere necesarias.',
+                buttons: Ext.Msg.OK,
+                icon: Ext.Msg.INFO                    
+            });
+        }
+    },
+    setImage:function(){
+
     },
     recordVideo:function(btn,params,playing){
 
 		var me = this;
 		var vm = me.getViewModel();
 		var timer = Ext.fly('timer');
+        var panel = btn.up("ptz");
+        var dataview_videos = panel.down("[name=video_viewer]");
 
 		if(params.duration!=undefined){
 			var seg = params.duration;
@@ -69,7 +85,11 @@ Ext.define('Falcon.view.ptz.PTZController', {
 	       method:'GET',
 	       params:params,
 	       success: function(form, action) {
-	       	console.log("Video terminado. ",playing,btn.name);
+	       		console.log("Video terminado. ",playing,btn.name);
+
+                dataview_videos.getStore().reload();
+
+	       		Msg.info(action.result.msg);
            },
            failure: function(form, action) {
                switch (action.failureType) {
@@ -92,6 +112,8 @@ Ext.define('Falcon.view.ptz.PTZController', {
            }
 	    });
 		console.log("Grabar video",params);
+
+
     },
     clearSesion:function(){
     	localStorage.clear();
@@ -185,8 +207,37 @@ Ext.define('Falcon.view.ptz.PTZController', {
     },
     newInfraccion:function(self){
     	var vm = this.getViewModel();
-    	var infraccion = vm.get("infraccion") || Ext.create('Admin.model.infraccion.Infraccion',{});
+    	var panel = self.up("ptz");
+    	var form = panel.down("infraccionform");
+    	var infraccion = vm.get("infraccion");
+    	var captureimages = form.up("panel").down("[name=captureimages]");
 
+    	if(captureimages.getStore().getCount()>0){
+    		Ext.Msg.show({
+    		    title: 'Atención',
+    		    msg: 'Hay evidencias sin confirmar.<br>Por favor apruebe o cancele las evidencias, antes de continuar.',
+    		    buttons: Ext.Msg.OK,
+    		    icon: Ext.Msg.INFO                    
+    		});
+    	}else{
+    		captureimages.getStore().removeAll();
+    		vm.set("infraccion",null);
+    		form.reset();
+    	}
+
+    },
+	confirmInfraccion:function(self){
+    	var vm = this.getViewModel();
+    	var panel = self.up("ptz");
+    	var form = panel.down("infraccionform");
+    	console.log(form);
+    	var params = form.getForm().getFieldValues();
+    	var infraccion = vm.get("infraccion") || Ext.create('Admin.model.infraccion.Infraccion',params);
+    	var dataview = form.up("panel").down("[name=captureimages]");
+
+    	var images = dataview.getStore().each(function(record,index){
+    		console.log(record);
+    	});
     	infraccion.save({
 		    callback: function(record, operation, success) {
 		    	var responseObject = Ext.decode(operation.getResponse().responseText);
@@ -198,12 +249,154 @@ Ext.define('Falcon.view.ptz.PTZController', {
 		        	    buttons: Ext.Msg.OK,
 		        	    icon: Ext.Msg.ERROR                    
 		        	});
+		        }else{
+		        	var infraccion = responseObject.infraccion;
+		        	var params = infraccion;
+		        	console.log(infraccion);
+
+		        	var userfile = infraccion.videos.concat(infraccion.images);
+		        	params["userfile"] = Ext.encode(userfile);
+		        	/*params["userfile"] = Ext.encode([
+	        	   		"http://localhost:3000/public/images/20171014/czbq_20171014_1.jpg",
+	        	   		"http://localhost:3000/public/videos/20171013/czbq_20171013_2.mp4"
+	        	   	]);*/
+		        	Ext.Ajax.request({
+		        	   url : Constants.URL_BACKOFFICE,
+		        	   params:params,
+		        	   method : 'POST',
+		        	   waitMsg : 'Uploading your file...',
+		        	   cors: true,
+	        	       useDefaultXhrHeader : false,
+		        	   success : function(response) {
+		        	      Ext.Msg.alert("Success","Upload Successfull!");
+		        	   },
+		        	   failure : function() {
+		        	       Ext.Msg.alert("Failure","Upload Failed!");
+		        	   }
+		        	});
 		        }
 		    }
 		});
     	console.log(infraccion);
     },
-    onBeforeRender:function(self){
-    	console.log(global.config);
-    }
+    cancelarInfraccion:function(self){
+    	Ext.Msg.confirm('Atención', 'Desea cancelar la Infraccion<br>Se borraran todas las evidencias actuales.', function(buttonId, text, v) {
+    		if(buttonId == 'yes') {
+    			console.log("Eliminar Videos e Imagenes con Estado 0");
+    		}
+    	}, this);
+    },
+    onRender:function(self){
+    	// global.IP_CAMERA = camera.camera_ip+"/mjpg/video.mjpg";
+    	console.log(global.IP_CAMERA);
+    },
+    itemClick:function(dataview, record, item, index, e, eOpts){
+    	var el = e.target;
+    	var me = this;
+    	console.log(record);
+
+    	var vm = this.getViewModel();
+    	var panel = dataview.up("ptz");
+    	var viewer = panel.down("[name =viewer]");
+    	vm.set("camera",{"image":record.get("url")});
+    	viewer.refresh();
+
+    	Ext.create('Ext.menu.Menu', {
+    	    // width: 270,
+    	    margin: '10px 10px 10px 0px',
+    	    cls:'x-menu action-tools',
+    	    padding:'0',
+    	    bodyStyle:'border-radius:7px;',
+    	    frame:false,
+    	    plain:true,
+    	    layout:{
+    	    	type:'hbox'
+    	    },
+    	    defaults:{
+    	        pakcage:'center',
+    	        cls:'item-menu',
+    	        xtype:'menuitem',
+    	        scope:me,
+    	        width:'auto'
+    	    },
+    	    items: [
+    	    {
+    	        text: 'Eliminar',
+    	        iconCls:'fa fa-trash',
+    	        handler:function(){
+    	        	var vm = this.getViewModel();
+    	        	Ext.Msg.confirm('Atención', 'Desea Eliminar la Imagen?', function(buttonId, text, v) {
+    	        		if(buttonId == 'yes') {
+    	        			Ext.Ajax.request({
+    	        				scope: this,
+    	        				url: Constants.URL_IMAGES,
+    	        				method:"DELETE",
+    	        				params: {
+    	        					id:record.get("id")
+    	        				},
+    	        				success: function(response) {
+    	        					var responseObject = Ext.decode(response.responseText);
+    	        					Msg.info(responseObject.msg);
+    	        					dataview.getStore().reload();	
+    	        				},
+    	        				failure: function(response) {
+    	        					Ext.Msg.show({
+    	        						title: 'Error',
+    	        						msg: 'Error al procesar la petición.',
+    	        						buttons: Ext.Msg.OK,
+    	        						icon: Ext.Msg.ERROR
+    	        					});
+    	        				}
+    	        			});
+    	        		}
+    	        	}, this);
+
+    	        }
+    	    },/*{
+    	        text: 'Principal',
+    	        iconCls:'fa fa-check',
+    	        // handler:'onWizard'
+    	    },*/{
+    	        text: 'Ver',
+    	        iconCls:'fa fa-eye',
+    	        handler:function(self){
+			    	var vm = this.getViewModel();
+			    	Ext.create('Ext.window.Window', {
+			    	    title: 'Vista previa',
+			    	    height: 400,
+			    	    width: 800,
+			    	    // layout: 'fit',
+			    	    modal: true,
+			    	    constrainHeader: true,
+			    	    resizable: false,
+			    	    maximizable: true,
+			    	    bodyCls:'iframe-win',
+			    	    bodyStyle: "padding-right:5px;padding-left:5px;",
+	    	            layout: 'anchor', 
+			    	    items : [{
+		    	            xtype : "box",
+		    	            autoEl : {
+		    	                tag : "iframe",
+		    	                src : vm.get("camera").image,
+		    	                width: 400,
+                                height: 380,
+                                style: 'height: 100%; width: 100%; border: none',
+
+		    	            }
+		    	        }],
+		    	        listeners:{
+		    	        	afterrender:function(self){
+		    	        		console.log(self);
+		    	        	}
+		    	        }
+			    	    /*html: [
+			    	    	'<div class="embed-container" style="background:red;scale:1;">',
+			    	    		'<iframe src="'+ vm.get("camera").image +'" frameborder="0" scrolling="no" width="560" height="20" style="height:300px;width:300px;" frameborder="0"></iframe>',
+		    	    		'</div>'
+			    	    ].join("")*/
+			    	}).show();
+			    }
+    	    }]
+    	}).showBy(Ext.get(el),'c-bl',[-10,10]);
+    },
 });

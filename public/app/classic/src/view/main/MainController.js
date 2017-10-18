@@ -165,7 +165,7 @@ Ext.define('Admin.view.main.MainController', {
         var view = (node && node.get('viewType'));
 
         if(localStorage.length>0){
-            var instaled = JSON.parse(localStorage.instaled || "true");
+            var instaled = global.instaled;
 
             if(instaled){
                 if(localStorage.user_id!=undefined){
@@ -309,7 +309,6 @@ Ext.define('Admin.view.main.MainController', {
     //@fvargs: Renderizar Vista.
     onMainViewRender:function() {
         var vm = this.getViewModel();
-
         if (!window.location.hash) {
             if(localStorage.user_id!=undefined){
                 this.redirectTo(vm.get("defaultToken"));
@@ -317,17 +316,45 @@ Ext.define('Admin.view.main.MainController', {
                 // this.redirectTo("login");
             }
         }else{
+            if(localStorage.length>0){
+                var instaled = global.instaled;
+
+                if(instaled){
+                    if(localStorage.user_id!=undefined){
+                        this.redirectTo(vm.get("defaultToken"));
+                    }else{
+                        this.redirectTo("login");
+                    }
+                }else{
+                    this.redirectTo("wizard");
+                }
+            }
             console.log("window.location.hash",window.location.hash)
         }
     },
     onMainViewBeforeRender:function() {
+        
         var vm = this.getViewModel();
-        vm.set("username",localStorage.username);
+
+
+        
         console.log("Render",localStorage);
         if(localStorage.user_id!=undefined){
             this.redirectTo(vm.get("defaultToken"));
         }else{
-            // this.redirectTo("login");
+            if(localStorage.length>0){
+                var instaled = global.instaled;
+
+                if(instaled){
+                    if(localStorage.user_id!=undefined){
+                        this.redirectTo(vm.get("defaultToken"));
+                    }else{
+                        this.redirectTo("login");
+                    }
+                }else{
+                    this.redirectTo("wizard");
+                }
+            }
         }
     },
     //@fvargs: Renderizar Vista.

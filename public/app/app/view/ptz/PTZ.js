@@ -1,16 +1,14 @@
 
-Ext.define('Falcon.view.ptz.PTZ',{
+Ext.define('Admin.view.ptz.PTZ',{
     extend: 'Ext.panel.Panel',
     xtype: 'ptz',
     requires: [
-        'Falcon.view.ptz.PTZController',
-        'Falcon.view.ptz.PTZModel'
+        'Admin.view.ptz.PTZController',
+        'Admin.view.ptz.PTZModel',
+        'Admin.view.ptz.InfraccionForm',
+        'Admin.socket.Socket'
     ],
-
-    controller: 'ptz',
-    viewModel: {
-        type: 'ptz'
-    },
+    reference:'ptzpanel',    
     flex:1,
     height:600,
     layout: {
@@ -25,15 +23,21 @@ Ext.define('Falcon.view.ptz.PTZ',{
         autoScroll:false
     },
     bodyPadding:5,
-    initComponent: function() {
-        var me = this;
-
-        Ext.apply(me, {
+    controller: 'ptz',
+    viewModel: {
+        type: 'ptz'
+    },
+    items:[
+        {
+            xtype:'panel',
+            region:'center',
+            layout:'vbox',
             items:[
                 {
                     xtype:'dataview',
-                    region:'center',
+                    name:'viewer',
                     cls:'viewer',
+                    flex:.8,
                     itemSelector: 'div.viewer-tools .item',
                     bind:{
                         store:'{toolStore}',
@@ -50,10 +54,11 @@ Ext.define('Falcon.view.ptz.PTZ',{
                             '<div class="item">',
                                 '<span class="text">{text}</span>',
                             '</div>',
+                            '<img src="{image}" style="width:100%; height:100%;" frameborder="0"/>',
                         '</tpl>',
                         '</div>',
                         '<div id="imageviewer" class="image">',
-                            '<img src="'+ Constants.URL_VIEWER+'" style="width:100%; height:100%;" frameborder="0"/>',
+                            '<img src="'+Constants.URL_VIEWER+'" style="width:100%; height:100%;" frameborder="0"/>',
                         '</div>',
                         '<div class="viewer-footer">',
                             '<span id="timer">{time}</span>',
@@ -62,14 +67,49 @@ Ext.define('Falcon.view.ptz.PTZ',{
                 },
                 {
                     xtype:'dataview',
+                    name:'video_viewer',
+                    cls:'video_viewer',
+                    flex:.2,
+                    itemSelector: 'div.video_viewer .item',
+                    layout:'hbox',
+                    bind:{
+                        store:'{videoStore}',
+                    },
+                    tpl: new Ext.XTemplate(
+                        '<div class="video_viewer">',
+                            '<tpl for=".">',
+                                '<div class="item">',
+                                    '<video width="150" height="80" controls>',
+                                        '<source src="http://localhost:3000/app/video/preview?id={id}" type="video/mp4">',
+                                    '</video>',
+                                '</div>',
+                            '</tpl>',
+                        '</div>',
+                        '<div class="video_viewer-footer">',
+                        '</div>'
+                    )
+                }
+            ]
+        },
+        {
+            xtype:'panel',
+            layout:'vbox',
+            region:'east',
+            flex:.3,
+            defaults:{
+               width:'100%'
+            },
+            items:[
+                {
+                    xtype:'dataview',
+                    name:"captureimages",
                     cls:'preview',
+                    flex:.5,
                     itemSelector: 'div.thumb-wrap',
-                    region:'east',
                     emptyText: 'No se han capturado fotografias',
                     bind:{
                         store:'{imagenStore}'
                     },
-                    flex:.3,
                     layout:{
                         type:'hbox',
                         pack:'center'
@@ -78,8 +118,8 @@ Ext.define('Falcon.view.ptz.PTZ',{
                         '<h2>Vista previa</h2>',
                         '<tpl for=".">',
                             '<div style="margin-bottom: 10px;" class="thumb-wrap">',
-                              '<input class="check x-form-type-checkbox" type="checkbox" name="vehicle" value="Bike"><span>Imagen Principal</span></input>',
-                              '<img class="image {[this.getClass(values)]}" src="{src}" />',
+                              /*'<input class="check x-form-type-checkbox" type="checkbox" name="vehicle" value="Bike"><span>Imagen Principal</span></input>',*/
+                              '<img class="image {[this.getClass(values)]}" src="{url}" />',
                             '</div>',
                         '</tpl>',
                         {
@@ -91,93 +131,94 @@ Ext.define('Falcon.view.ptz.PTZ',{
                     listeners:{
                         itemclick:'itemClick'
                     }
-
-                }
-            ],
-            dockedItems:[
-                {
-                    xtype:'toolbar',
-                    dock:'top',
-                    defaults:{
-                        listeners:{
-                            toggle:'onToggle',
-                            click:'onRecorVideo',
-                            playing:'onPlaying'
-                        }
-                    },
-                    items:[
-                        {
-                            xtype: 'button',
-                            text: 'Nueva <br> Infracción',
-                            iconCls:'fa fa-hand-paper-o',
-                            iconAlign: 'top',
-                            name: 'infraccion',
-                            handler:'newInfraccion'
-                        },
-                        {
-                            xtype: 'button',
-                            text: 'Capturar <br> Nueva Imagen',
-                            iconCls:'fa fa-camera',
-                            iconAlign: 'top',
-                            name: 'capture',
-                            handler:'capturarImagen'
-                        },
-                        {
-                            xtype: 'button',
-                            text: 'Iniciar <br> Grabación',
-                            iconCls:'fa fa-video-camera',
-                            iconAlign: 'top',
-                            enableToggle: true,
-                            name: 'grabar'
-                        },
-                        {
-                            xtype: 'button',
-                            text: 'Grabar 8<br>  segundos',
-                            iconCls:'fa fa-video-camera',
-                            enableToggle: true,
-                            iconAlign: 'top',
-                            name: '8segundos'
-                        }
-                        /*,'->',
-                        {
-                            xtype: 'button',
-                            tooltip: 'Salir',
-                            iconCls: 'fa fa-sign-out',
-                            name: 'logout'
-                        },*/
-
-                    ]
                 },
                 {
-                    xtype:'toolbar',
-                    dock:'bottom',
-                    layout: {
-                        pack: 'left'
-                    },
-                    items:[
-                        {
-                            xtype: 'button',
-                            tooltip: 'Capturar <br> Nueva Imagen',
-                            iconCls:'fa fa-camera',
-                            name: 'capture',
-                            handler:'capturarImagen'
-                        },
-                        {
-                            xtype: 'button',
-                            tooltip: 'Detener<br>Grabación',
-                            iconCls:'fa fa-stop',
-                            name: 'stop'
-                        }
-                    ]
+                    xtype:'infraccionform',
+                    flex:.5,
                 }
-            ],
-            listeners:{
-                afterrender:function(self){
+            ]
+        }
+    ],
+    dockedItems:[
+        {
+            xtype:'toolbar',
+            dock:'top',
+            defaults:{
+                listeners:{
+                    toggle:'onToggle',
+                    click:'onRecorVideo',
+                    playing:'onPlaying'
                 }
-            }
-        });
+            },
+            items:[
+                {
+                    xtype: 'button',
+                    text: 'Nueva <br> Infracción',
+                    iconCls:'fa fa-hand-paper-o',
+                    iconAlign: 'top',
+                    name: 'infraccion',
+                    handler:'newInfraccion'
+                },
+                {
+                    xtype: 'button',
+                    text: 'Capturar <br> Nueva Imagen',
+                    iconCls:'fa fa-camera',
+                    iconAlign: 'top',
+                    name: 'capture',
+                    handler:'capturarImagen'
+                },
+                {
+                    xtype: 'button',
+                    text: 'Iniciar <br> Grabación',
+                    iconCls:'fa fa-video-camera',
+                    iconAlign: 'top',
+                    enableToggle: true,
+                    name: 'grabar'
+                },
+                {
+                    xtype: 'button',
+                    text: 'Grabar 8<br>  segundos',
+                    iconCls:'fa fa-video-camera',
+                    enableToggle: true,
+                    iconAlign: 'top',
+                    name: '8segundos'
+                }
+                /*,'->',
+                {
+                    xtype: 'button',
+                    tooltip: 'Salir',
+                    iconCls: 'fa fa-sign-out',
+                    name: 'logout'
+                },*/
 
-        me.callParent(arguments);
+            ]
+        },
+        {
+            xtype:'toolbar',
+            dock:'bottom',
+            layout: {
+                pack: 'left'
+            },
+            items:[
+                {
+                    xtype: 'button',
+                    tooltip: 'Capturar <br> Nueva Imagen',
+                    iconCls:'fa fa-camera',
+                    name: 'capture',
+                    handler:'capturarImagen'
+                },
+                {
+                    xtype: 'button',
+                    tooltip: 'Detener<br>Grabación',
+                    iconCls:'fa fa-stop',
+                    name: 'stop'
+                }
+            ]
+        }
+    ],
+    listeners:{
+        render:'onRender',
+        // beforerender:'beforeRender'
     }
 });
 

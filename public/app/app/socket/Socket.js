@@ -1,17 +1,15 @@
-Ext.define('Falcon.socket.Socket', {
+Ext.define('Admin.socket.Socket', {
 	alternateClassName: 'Socket',
 	init: function() {
 		
 		//Ext.apply(this,socket);
 	},
-	connect:function(){
+	connect:function(callback){
 		var socket = io.connect(BASE_PATH,{'forceNew':true});
-		
 		socket.on("start",function(config){
-
-		    var camera = config.camera;
-		    IP_CAMERA = camera.camera_ip;
-		    
+		    if(callback!=undefined){
+		    	callback(config);
+		    }
 		});
 	}
 });

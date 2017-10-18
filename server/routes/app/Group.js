@@ -26,7 +26,7 @@ module.exports = function(app,io,db,schema){
 		});
 	}
 
-	router.route("/users").post(function(req,res){
+	/*router.route("/users").post(function(req,res){
 		var params = req.body;
 		console.log("Actualizar grupo");
 		if(params.password!=undefined){
@@ -42,6 +42,6 @@ module.exports = function(app,io,db,schema){
 				}));
 			}
 		});
-	});
+	});*/
 	return router;
 }

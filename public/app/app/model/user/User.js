@@ -9,10 +9,9 @@ Ext.define('Admin.model.user.User', {
         'direccion',
         'nombres',
         'apellidos',
-        'rol_id',
-        {name:'id',mapping:"_id"},
+        {name:'id'},
         { name: 'rol', mapping:'usergroup.name'},
-        { name: 'usergroup', mapping:'usergroup._id'},
+        { name: 'usergroup', mapping:'usergroup._id', reference: 'Admin.model.group.Group'},
         'estado'
     ]
 });

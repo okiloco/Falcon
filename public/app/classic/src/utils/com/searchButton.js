@@ -16,10 +16,13 @@ Ext.define('Admin.utils.com.searchButton', {
             cls: 'x-form-search-trigger',
             tabIndex :1,
             listeners: {
-              scope:me,
+              // scope:me,
               click:function(self){
                 if(config.listeners!=undefined){
-                  if(config.listeners.hasOwnProperty("search")){config.listeners.search(self);}
+                  if(config.listeners.hasOwnProperty("search")){
+                    console.log("click")
+                    config.listeners.search(self);
+                  }
                 }else{
                   console.info('Debe definir una funcion en el listener, llamada search, para realizar una acción.');  
                 }

@@ -19,14 +19,14 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 var http = require('http');
+var path = require('path'); 
 var util = require('util');
 var request = require('request');
 var fs = require('fs');
 var MjpegConsumer = require('mjpeg-consumer');
 var ffmpeg = require('ffmpeg');
-
+var dateFormat = require('dateformat');
 var Recorder = require('rtsp-recorder');
 
 exports.createCamera = function(options) {
@@ -120,21 +120,34 @@ Camera.prototype.requestImage = function(options, callback) {
 //Fachada para Imagenes
 Camera.prototype.captureImage = function(options,callback){
 
+  var self =this;
   this.requestImage(options,function(err,data){
-    var path = this.folder+''+this.prefix;
 
-    console.log(path);
-    var filename = path+''+dateString()+'.jpg';
+      self.lote = dateFormat(new Date(),"yyyymmdd");
+      var basepath = path.join('.',self.folder);
+      basepath = path.join(basepath,self.lote);
+      if(!fs.existsSync(basepath)) {
+        fs.mkdirSync(basepath);
+      }
+      self.filename = self.prefix+'_'+self.lote+'_'+options.count+'.jpg';
+      self.url_image = path.join(basepath,self.filename);
 
-    if (!fs.existsSync(path)) {
-      fs.mkdirSync(path);
-    }
+      var stream = fs.createWriteStream(self.url_image);
+      stream.once('open', function(fd) {
+        try{
+          stream.write(data);
+          stream.end();
+          callback(err,self);
+        }catch(err){
+          callback("Error de conexión con la camara.");
+        }
+      });
 
-    callback(err,data);
-    fs.writeFile(filename, data, function(err) {
-          if (err) throw err;
-    });
+      /*fs.writeFile(self.url_image, data, function(err) {
+        callback(err,self);
+      });*/
   });
+
 };
 
 Camera.prototype.getImageResolution = function(callback) {

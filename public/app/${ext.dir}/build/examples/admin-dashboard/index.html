@@ -9,13 +9,15 @@
         <script src="resources/socket.io/socket.io.js"></script>  
     <script>if (window.module) module = window.module;</script>
     <script type="text/javascript" src="resources/js/joystick.js"></script>
+    <script type="text/javascript" src="./index.js"></script>
+   
     <title>Admin Dashboard</title>
     <style type="text/css">
         @import url('https://fonts.googleapis.com/css?family=Roboto');
         html, body {
            height: 100%;
            margin: 0px;
-           background-color: #18425A;
+           background-color: #2e2c29;
         }
 
         .custom-login-form h2{
@@ -162,7 +164,7 @@
         }
         #contenido{
           min-height:100%;
-          background-color: #18425A;
+          background-color: #2e2c29;
           margin: 0px;
           padding: 0px;
         }
@@ -170,9 +172,8 @@
     </style>
     <script type="text/javascript">
 
-       BASE_PATH='http://localhost:3000/';
-       IP_CAMERA='';
-                   
+       
+        
         var Ext = Ext || {}; // Ext namespace won't be defined yet...
 
         // This function is called by the Microloader after it has performed basic
@@ -215,7 +216,7 @@
             //};
         };
     </script>
-    
+    <script type="text/javascript" src="resources/js/FloatWin.js"></script>
     
     <!-- The line below must be kept intact for Sencha Cmd to build your application -->
     <script id="microloader" data-app="39acbe74-575a-4e77-8062-a62324a1e58f" type="text/javascript">var Ext=Ext||{};Ext.manifest=Ext.manifest||"modern.json";Ext=Ext||{};

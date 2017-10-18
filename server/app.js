@@ -1,7 +1,13 @@
 const express =require('express');
+var http = require("https");
 var md5 = require("md5");
 var fs = require("fs");
 var path = require("path");
+var url = require("url");
+var req = require('request')
+var pem = require('pem');
+var cors = require('cors')
+
 var bodyParser = require("body-parser");
 var session = require("express-session");
 var session_middleware = require("./middlewares/session");
@@ -14,6 +20,30 @@ const ManagerDB = require("./database/ManagerDB");
 mongoose.Promise = global.Promise;
 var Helper = require("./helpers/helper");
 
+const corsOptions = {
+	origin:'http://localhost:3000'
+}
+app.use(cors(corsOptions))
+
+// Add headers
+app.use(function (req, res, next) {
+
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    // Request methods you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    // Request headers you wish to allow
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+    // Set to true if you need the website to include cookies in the requests sent
+    // to the API (e.g. in case you use sessions)
+    res.setHeader('Access-Control-Allow-Credentials', true);
+
+    // Pass to next layer of middleware
+    next();
+});
 
 app.get("/config",function(req,res){
 	Helper.readFile('./server/app.json').
@@ -22,13 +52,19 @@ app.get("/config",function(req,res){
 			"success":(!Helper.isEmpty(config)),
 			config
 		});
+	},function(err){
+		res.send({
+			"success":false
+		});
 	});
 });
+
 
 module.exports = function(config){
 
 	var port = process.env.PORT || 3000;
-	// config["port"] = port;
+	config["port"] = port;
+	
 	/*obj["user"] = {
 		"username":params.username,
 		"email":params.email || ''
@@ -46,12 +82,16 @@ module.exports = function(config){
 	function init(){
 		io.on("connect",function(socket){
 			console.log("socket connected.");
-			// socket.emit("start",config);
+			// config["user"] = global.user;
+			socket.emit("start",{
+				"success":(!Helper.isEmpty(config)),
+				"config":config
+			});
 		});
 
 	}
 
-	console.log("Iniciando Aplicación",config);
+	console.log("Iniciando Aplicación");
 	return new Promise(function(resolve,reject){
 		//Sockets
 		
@@ -68,7 +108,7 @@ module.exports = function(config){
 		const db = ManagerDB.createManagerDB();
 
 		app.use("/public",express.static("public"));
-		app.use("/app",session_middleware);
+		//app.use("/app",session_middleware);
 		var routes = require("./routes");
 		app.use("/app",routes(app,db));
 		

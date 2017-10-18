@@ -20,8 +20,8 @@ Ext.define('Admin.view.authentication.AuthenticationController', {
                     var res = action.result;
                     localStorage.user_id =res.user._id;
                     localStorage.username =res.user.username;
-
-                    me.redirectTo('ptz', true);
+                    location.reload();
+                    //me.redirectTo('ptz', true);
                 },
                 failure: function(f, action) {
                     Ext.Msg.show({

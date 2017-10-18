@@ -258,6 +258,10 @@
         {
             //Archivo para Estilos Personalizados
             "path": "resources/css/custom.css"
+        },
+        {
+            //Archivo para Estilos Personalizados
+            "path": "resources/css/mensaje.css"
         }
     ],
 

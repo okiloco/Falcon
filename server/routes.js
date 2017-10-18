@@ -37,6 +37,7 @@ module.exports = function(app,db,io){
 	const app_routes = './server/routes/app';
 	var routes_map = {};
 	
+	global.router = router;
 	/**
 	* @loadRoutes: base_path, prefix
 	* Carga los archivos de las rutas especializadas.
@@ -44,39 +45,40 @@ module.exports = function(app,db,io){
 	function loadRoutes(base_path,prefix){
 		return new Promise(function(resolve,reject){
 			prefix = prefix || '';
-			console.log("ruta:::",base_path,prefix)
 			function readFiles(base_path,prefix){
 				fs.readdirSync(base_path).forEach(function(file){
 					file = './routes'+prefix+'/'+file;
 					var ext = path.extname(file);
+					var route;
 					if(ext!=null && ext=='.js'){
-						try{
+						var name = path.parse(file).name.toLowerCase();
+						var controllerName=Helper.capitalize(name);
+						var schema;
+						var route_name;
+						
+						if(prefix==''){
+							console.log("Router public: ",name);
 							route = require(file);
-							var name = path.parse(file).name.toLowerCase();
-							var controllerName=Helper.capitalize(name);
-							var schema;
-							var route_name;
-							
-							if(prefix==''){
-								console.log("Router public: ",name);
-								//Instanciar ruta: publica
-								route(app,io,db,schema);
-							}else{
-								/*Listener para cuando se cree el Schema con el nombre especifico.*/
-								db.on(name,function(schema){
-									route_name = pluralize(schema.lang || "es",name);
-									route_name = prefix+"/"+route_name;
-									/*
-									* Instanciar ruta: privada: 
-									* La aplicación empieza a usar el nuevo middlewares route.
-									*/
-									// console.log("route: ",name,route_name);
-									app.use(route_name,route(app,router,db,schema));
-								});
-							}
-						}catch(err){
-							reject(err);
-							console.log("No se pudo cargar: ",err);
+							//Instanciar ruta: publica
+							route(app,io,db,schema);
+						}else{
+							/*Listener para cuando se cree el Schema con el nombre especifico.*/
+								try{	
+									route = require(file);
+									db.on(name,function(schema){
+										route_name = pluralize(schema.lang || "es",name);
+										route_name = prefix+"/"+route_name;
+										/*
+										* Instanciar ruta: privada: 
+										* La aplicación empieza a usar el nuevo middlewares route.
+										*/
+										//app.use(route_name,route(app,global.router,db,schema));
+										app.use(route_name,route(app,global.router,db,schema));
+									});
+								}catch(err){
+									reject(err);
+									console.log("No se pudo cargar: ",err);
+								}
 						}
 					}
 				});
@@ -116,8 +118,8 @@ module.exports = function(app,db,io){
 		}
 		save = function(req,res,next){
 			var params = req.body;
-			db[name].create(params,function(err,doc){
-				console.log("GET: save "+route_name);
+			db[name].create(params,function(doc){
+				console.log("POST: save "+route_name);
 				if(!doc){
 					res.send(JSON.stringify({"success":false,"msg":err}));
 				}else{
@@ -127,11 +129,11 @@ module.exports = function(app,db,io){
 					}));
 				}
 			});
-			console.log(router.route)
 		}
 		remove = function(req,res,next){
-			db[name].removeById(req.params._id,function(msg,doc){
-				console.log("GET: remove "+route_name);
+			var params = req.body;
+			db[name].removeById(params.id,function(msg,doc){
+				console.log("DELETE: remove "+route_name);
 				res.send(JSON.stringify({
 					success:true,
 					msg:msg
@@ -142,7 +144,7 @@ module.exports = function(app,db,io){
 		router.route(route_name).get(list);//Listar y Buscar
 		router.route(route_name).post(save);//crear registro nuevo y actualizar
 		router.route(route_name+':_id').get(findById);//busca un registro por Id
-		router.route(route_name+'/delete/:_id').post(remove);//Eliminar registro por Id
+		router.route(route_name).delete(remove);//Eliminar registro por Id
 	}
 	/**
 	* on:define name, schema
@@ -172,10 +174,10 @@ module.exports = function(app,db,io){
 	//Cargar routes de aplicación
 	loadRoutes(public_routes)
 	.then(function(){
-		console.log("rutas publicas cargadas.")
+		// console.log("rutas publicas cargadas.")
 		loadRoutes(app_routes,"/app")
 		.then(function(){
-			console.log("routes privadas cargadas.");
+			// console.log("routes privadas cargadas.");
 		});
 	});
 	

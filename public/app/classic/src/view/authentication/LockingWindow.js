@@ -28,12 +28,12 @@ Ext.define('Admin.view.authentication.LockingWindow', {
     flex:1,
     initComponent: function() {
         var me = this;
-
-        console.log(me.height)
+        
+        //console.log(me.height)
         Ext.apply(me, {
             listeners:{
                 show:function(self){
-                    self.setHtml('<img style="height:'+me.height+'px;" src="'+ Constants.URL_VIEWER+'">')
+                    self.setHtml('<img style="min-height:'+me.height+'px; width:100%;" src="'+Constants.URL_VIEWER+'">')
                 }
             },
             html:[

@@ -1,10 +1,12 @@
 Ext.define('Admin.model.infraccion.Infraccion', {
     extend:'Admin.model.Base',
     fields:[
-    {name:"id", convert:function(v){
-    	return undefined;
-    }},
-       "_id",
+    
+        {   
+            name : 'id',
+            type : 'int',
+            persist: false
+        }, 
        "codigo",
        "lote",
        "placa",

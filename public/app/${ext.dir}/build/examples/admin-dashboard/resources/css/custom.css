@@ -134,3 +134,10 @@ span#timer{
 .auth-locked-window .image{
   background: red;
 }
+
+/*Form Icons*/
+
+.x-form-add-trigger-default:before{
+    content: "\f0fe"!important;
+}
+

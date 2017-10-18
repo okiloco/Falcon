@@ -1,5 +1,12 @@
 html, body {cursor: default;}
 
+iframe img{
+  height: 400px;
+  width: 400px;
+}
+.iframewin{
+
+}
 /*PTZ*/
 .viewer{
 	background-color: #212121;	
@@ -40,21 +47,23 @@ div.viewer-tools .item{
 }
 
 .thumb-wrap{
-	margin:5px;
-	border:1px solid #ccc;
-	width: 45%;
-	height:auto;
-	float: left;
-	background: #CFD8DC;
+	margin: 5px;
+  border: 1px solid #ccc;
+  width: 45%;
+  height: auto;
+  float: left;
+  background: #CFD8DC;
+  overflow: hidden;
+  position: relative;
+  display: block;
 }
 .thumb-wrap img.image{
 	width: 100%;
-	height: auto;
-	cursor: pointer;
-	margin-top: -10px;
+  height: auto;
+  cursor: pointer;
 }
 .thumb-wrap img.image.empty {
-    padding: 10px;
+    padding: 20px;
 }
 
 .thumb-wrap span.name {
@@ -72,6 +81,7 @@ div.viewer-tools .item{
 .preview h2{
 	padding-left: 10px;
 	font-size: 14px;
+  line-height: 0;
 }
 .thumb-wrap input.check.x-form-type-checkbox {
     position: relative;
@@ -134,3 +144,28 @@ span#timer{
 .auth-locked-window .image{
   background: red;
 }
+
+/*Form Icons*/
+
+.x-form-add-trigger-default:before{
+    content: "\f0fe"!important;
+}
+.action-tools .x-menu-item-icon-default{
+  padding-top: 5px;
+}
+
+/*Video*/
+
+.video_viewer{
+  position: relative!important;
+  background: red;
+}
+.video_viewer .item{
+  width: 150px;
+  height: 80px;
+  background: yellow;
+  margin: 10px;
+  float: left;
+  display: inline-block;
+}
+

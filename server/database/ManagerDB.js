@@ -7,6 +7,7 @@ var session = require("express-session");
 const mongoose = require("mongoose");
 var md5 = require('md5');
 mongoose.Promise = global.Promise;
+var dateFormat = require('dateformat');
 
 var ObjectId = mongoose.Types.ObjectId;
 
@@ -315,7 +316,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 		* relacionandolos con los campos del esquema.
 		* Devuelve el modelo con los datos pasados.
 		*/
-		schema.statics.fieldsMap = function(params){
+		schema.statics.fieldsMap = function(params,model){
 			var fields = this.getFields();
 			var output ={}; 
 
@@ -324,7 +325,6 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 					for(var key in params){
 						var field = fields[key];
 						var val = params[key];
-
 						if(field!=undefined){
 							
 							if(field.type == 'Array' || field.type=='Object'){
@@ -335,16 +335,16 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 									if(typeof(val)=='string'){
 										if(field.type=='Array'){
 											var item = {};
-											item[field.ref] = ObjectId(val);
+											item[field.ref] = val;
 											output[key].push(item)
 										}else{
-											output[key]=ObjectId(val);
+											output[key]=val;
 										}
 									}else if(typeof(val)=='object'){
 										
 										val.forEach(function(record,index){
 											var item = {};
-											item[field.ref] = ObjectId(record);
+											item[field.ref] = record;
 											if(field.type=='Array'){
 												output[key].push(item)
 											}else{
@@ -378,10 +378,14 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 						}
 					}
 					//Objeto resultante
-					
-					for(var s in fields){
-						//output[s] = model[s];
-						// console.log("\t"+s,model[s])
+					if(model!=undefined){
+						for(var s in fields){
+							if(s!='id' || s!='_id'){
+								model[s] = output[s];
+							}
+							//output[s] = model[s];
+							// console.log("\t"+s,model[s])
+						}
 					}
 					resolve(output);
 				}else{
@@ -392,19 +396,19 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 		schema.statics.create = function(params,callback){
 			var me = this;
 			if(!Helper.isEmpty(params)){
-				if(params._id){
-					this.findById(params._id,function(err,doc){
+				if(params.id){
+					this.findById(params.id,function(err,doc){
 						//doc - Representa una instancia del mondelo mongoose.
 						if(!doc){ 
 							if(callback!=undefined){
-							 	callback("No existe registro.",doc);
+							 	callback("No existe registro.");
 							 	return;
 							}
 						};
-						params = me.getFieldsMap(params)
-						me.fieldsMap(params)
+						params = me.getFieldsMap(params);
+						me.fieldsMap(params,doc)
 						.then(function(obj_map){
-							doc.save(function(err,obj_map){
+							doc.update(obj_map,doc,function(err,obj_map){
 								if(err) throw err;
 								if(callback!=undefined) callback(err,obj_map);
 							});
@@ -417,27 +421,20 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 					this.fieldsMap(params)
 					.then(function(obj_map){
 					 	var instance = new model(obj_map);//Instancia del Modelo
-					 	instance.save()
-					 	.then(function(err){
-						 	console.log("Documento Creado con éxito!");
-						 	if(name=='schema'){
-						 		self.autoRefesh = true;
-						 		self.refresh(function(){
-	 								if(callback!=undefined){
-	 									callback(instance)
-	 								}
-	 							});
-						 	}else{
-					 		 	if(callback!=undefined){
-					 			 	if(callback!=undefined) callback(instance);
+				 	 	instance.save(function(err,doc){
+		 	 		      	if(name=='schema'){
+  						 		self.autoRefesh = true;
+  						 		self.refresh(function(){
+  	 								if(callback!=undefined){
+  	 									callback(doc)
+  	 								}
+  	 							});
+  						 	}else{
+  					 		 	if(callback!=undefined){
+  					 			 	if(callback!=undefined) callback(doc,err);
 					 		 	}
-						 	}
-					 	},function(err){
-						 	console.log("No se pudo crear el documento!",err);
-				 		 	if(callback!=undefined){
-				 			 	if(callback!=undefined) callback();
-				 		 	}
-					 	});
+  						 	}
+				 	 	});
 					},function(err){
 					 	if(callback!=undefined){
 						 	if(callback!=undefined) callback(err);

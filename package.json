@@ -12,6 +12,7 @@
   "dependencies": {
     "body-parser": "^1.18.1",
     "buffertools": "~2.1.0",
+    "cors": "^2.8.4",
     "dateformat": "^3.0.2",
     "express": "^4.15.4",
     "express-fileupload": "^0.2.0",
@@ -24,6 +25,7 @@
     "mongoose": "^4.11.11",
     "node-rtsp-stream": "0.0.3",
     "path": "^0.12.7",
+    "pem": "^1.12.3",
     "pluralize": "^7.0.0",
     "pluralize-es": "^1.0.0",
     "remote": "^0.2.6",
