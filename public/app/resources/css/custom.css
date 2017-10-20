@@ -242,3 +242,25 @@ span#timer{
 .imgpreview-hidden{
   display: none;
 }
+
+.video-not-found i{
+   -webkit-animation-name: appLoadingIndicator;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation: rotating 2s linear infinite;
+  -moz-animation: rotating 2s linear infinite;
+  -ms-animation: rotating 2s linear infinite;
+  -o-animation: rotating 2s linear infinite;
+}
+.video-not-found #play{
+  font-size: 40px!important;
+  opacity: .5;
+}
+
+.video-not-found #play i::before{
+  content: "\f110" !important; 
+  
+}
+
+
+
+/*f110 */

@@ -40,6 +40,12 @@ Ext.define('Admin.view.ptz.InfraccionForm',{
                     name: 'direccion',
                     emptyText: 'Dirección',
                     allowBlank:false
+                },
+                {
+                    xtype:'checkboxfield',
+                    boxLabel: 'Confirmar',
+                    name: 'estado',
+                    inputValue: '1'
                 }
             ]
         }    
@@ -47,14 +53,14 @@ Ext.define('Admin.view.ptz.InfraccionForm',{
     buttons:[
         {
             xtype:'button',
-            text:'Confirmar',
+            text:'Aceptar',
             name:'confirmar',
             // iconCls:'save-icon',
             formBind:true,                         
             handler:'confirmInfraccion',
             cls: 'ux-action-btn'
-        },
-        {
+        }
+        /*{
             xtype:'button',
             text:'Cancelar',
             name:'cancelar',
@@ -62,7 +68,7 @@ Ext.define('Admin.view.ptz.InfraccionForm',{
             formBind:true,                         
             handler:'cancelarInfraccion',
             cls: 'ux-action-btn'
-        },
+        },*/
     ]
     
 });

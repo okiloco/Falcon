@@ -1,8 +1,8 @@
 var dateFormat = require('dateformat');
 var streaming = require("../../js/videoStreaming");
 var md5 = require("md5");
-//Image
-module.exports = function(app,router,db,schema){
+//Image  
+module.exports = function(app,io,router,db,schema){
 	
 	var config = global.config;
 	var camera_config = config.camera;

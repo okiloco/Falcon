@@ -80,7 +80,7 @@ Ext.define('Admin.view.ptz.PTZModel', {
                 }
     		},
     		listeners: {
-    			// load: 'onLoadistadoinfraccionrechazadasstore'
+    			load: 'onLoadVideo'
     		}
     	},
     	toolStore: {

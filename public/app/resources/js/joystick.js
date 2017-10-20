@@ -5,7 +5,7 @@
     var repGP;  
     var pan_value=0;
     var til_value=-47;
-    var zoom_value=40;
+    var zoom_value=10;
     var pan_continous=0;
 
     function canGame() {

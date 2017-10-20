@@ -4,7 +4,6 @@ var md5 = require("md5");
 var fs = require("fs");
 var path = require("path");
 var url = require("url");
-var req = require('request')
 var pem = require('pem');
 var cors = require('cors')
 
@@ -19,6 +18,10 @@ const mongoose = require("mongoose");
 const ManagerDB = require("./database/ManagerDB");
 mongoose.Promise = global.Promise;
 var Helper = require("./helpers/helper");
+
+var request = require('request');
+var formData = require('form-data');
+
 
 const corsOptions = {
 	origin:'http://localhost:3000'
@@ -63,7 +66,7 @@ app.get("/config",function(req,res){
 module.exports = function(config){
 
 	var port = process.env.PORT || 3000;
-	config["port"] = port;
+	
 	
 	/*obj["user"] = {
 		"username":params.username,
@@ -79,16 +82,81 @@ module.exports = function(config){
 		"movil_name":params.movil_name
 	}*/
 	global.config = config;
+
+	function subirArchivos(params){
+		var socket = global.scoket;
+		var formData = {
+			"urlVideos":params.urlVideos,
+			"urlImages":params.urlImages,
+			"lote":params.lote,
+			"codigo":params.codigo,
+			"direccion":params.direccion,
+			"dispositivo":params.dispositivo,
+			"estado":params.estado,
+			"fecha":params.fecha,
+			"lat":params.lat,
+			"long":params.long,
+			"lote":params.lote,
+			"placa":params.placa,
+			"userfile[]":[]
+		};
+		var files  = params.urls;
+		var userfiles =[];
+
+		console.log(params.urlVideos,params.urlImages);
+		return new Promise(function(resolve,reject){
+
+			console.log("Se va a subir los Archivos.");
+			files.forEach(function(file){
+				var url = ("image" || "video" in file)?(file.image.url):file.url;
+				try{
+					userfiles.push(fs.createReadStream(url));
+				}catch(err){
+					console.log("[Error al leer archivos]",url,"Error:",err);
+					reject(err);
+					return;					
+				}
+			});
+			formData["userfile[]"] = userfiles;
+			request.post({
+				"url":'http://backof-dev.construsenales.co/service/falconwebservice/falconFileUpload', 
+				formData: formData},
+				function(err, httpResponse, body) { 
+
+					if (err) {
+						console.log("[Error al enviar archivos]",err);
+					   	reject("Error al enviar archivos "+err);
+					   	return;
+					}
+					resolve(formData);
+				});
+		});
+	};
+
 	function init(){
 		io.on("connect",function(socket){
+			config["port"] = port;
 			console.log("socket connected.");
 			// config["user"] = global.user;
+			global.socket = socket;
+
 			socket.emit("start",{
 				"success":(!Helper.isEmpty(config)),
-				"config":config
+				"config":config,
+				"user":global.user
+			});
+			socket.on("new-infraccion",function(params){
+				console.log("Nueva Infracción recibida.");
+				subirArchivos(params)
+				.then(function(doc){
+					console.log("Todo bien todo bien!")
+					socket.emit("uploaded",null,doc);
+				}, function(err){
+					console.log("[ERROR] Algo salió mal.",err)
+					socket.emit("upload-fail",err);
+				});
 			});
 		});
-
 	}
 
 	console.log("Iniciando Aplicación");
@@ -108,7 +176,7 @@ module.exports = function(config){
 		const db = ManagerDB.createManagerDB();
 
 		app.use("/public",express.static("public"));
-		//app.use("/app",session_middleware);
+		// app.use("/app",session_middleware);
 		var routes = require("./routes");
 		app.use("/app",routes(app,db));
 		

@@ -7,8 +7,8 @@ var fs = require('fs'),
     url = require('url'),
     path = require('path');
 
-//Video
-module.exports = function(app,router,db,schema){
+//Video 
+module.exports = function(app,io,router,db,schema){
 	//Ejemplo de Virtual
 	var config = global.config;
 	var camera_config = config.camera;
@@ -37,7 +37,7 @@ module.exports = function(app,router,db,schema){
 	});
 
 	function convertVideo(urlVideo,urlVideoDestino){
-
+		
 		return new Promise(function(resolve,reject){
 			  var proc = new ffmpeg({ source: urlVideo })
 			  .withSize('800x450')
@@ -50,6 +50,7 @@ module.exports = function(app,router,db,schema){
 			  proc.on("end",function(){
 			  	resolve();
 			  	console.log("El archivo se ha convertido con éxito.");
+			  	// global.socket("message","El archivo se ha convertido con éxito.");
 			  });
 		});
 	}
@@ -57,7 +58,7 @@ module.exports = function(app,router,db,schema){
 		var action = req.query.action;
 		var params = req.query;
 		var lote = dateFormat(new Date(),"yyyymmdd");
-
+		
 		db.video.find({"lote":lote})
 		.then(function(results){
 			params["count"] = (results.length + 1);
@@ -71,6 +72,7 @@ module.exports = function(app,router,db,schema){
 							msg:"No se pudo grabar el video.<br>Revise la conexión con la camara.<br>Puede que el video no pueda rescribirse."
 						}));
 					}else{
+                       
 						db.video.create({
 							"filename":video.filename,
 							"lote":video.lote,
@@ -80,21 +82,15 @@ module.exports = function(app,router,db,schema){
 							
 							var url_video_tmp =video.url_video_tmp; 
 							var url_video =video.url_video; 
-
-							convertVideo(url_video_tmp,url_video)
-							.then(function(){
-								fs.unlink(url_video_tmp, function (err) {
-		                            if (err) {
-		                                throw err;
-		                            }
-		                            res.send(JSON.stringify({
-           								success:true,
-           								msg:'Video creado con éxito',
-           								video:doc
-           							}));
-		                        });
+							video.on("video-convert",function(){
+								global.socket.emit("video-convert");
 							});
-							
+
+                            res.send(JSON.stringify({
+   								success:true,
+   								msg:'Video creado con éxito',
+   								video:doc
+   							}));
 						});			
 					}
 				});
@@ -108,6 +104,8 @@ module.exports = function(app,router,db,schema){
 		var params = req.params,
 		action = params.action;
 		var range = req.headers.range;
+
+
 		switch(action){
 			case 'stop':
 				var rec = video.stop(function(record){
@@ -125,8 +123,10 @@ module.exports = function(app,router,db,schema){
 				// var readStream = fs.createReadStream(filename);
 				var total;
 
+				console.log("video:",filename)
 				if (!fs.existsSync(filename)) {
 					console.log("El archivo no existe.");
+					global.socket.emit("video-not-found",req.query.id);
 				}else{
 					res.writeHead(200,{'Content-Type':'video/mp4'	
 					});

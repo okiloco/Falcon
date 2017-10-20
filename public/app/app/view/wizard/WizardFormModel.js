@@ -1,4 +1,4 @@
-Ext.define('Falcon.view.wizard.WizardFormModel', {
+Ext.define('Admin.view.wizard.WizardFormModel', {
     extend: 'Ext.app.ViewModel',
     alias: 'viewmodel.wizardform',
 

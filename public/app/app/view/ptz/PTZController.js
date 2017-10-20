@@ -6,7 +6,8 @@ Ext.define('Admin.view.ptz.PTZController', {
         var panel = self.up("ptz");
         var form = panel.down("infraccionform");
         var infraccion = vm.get("infraccion");
-        var captureimages = form.up("panel").down("[name=captureimages]");
+        var captureimages = form.up("panel")
+        .down("[name=captureimages]");
 
         if(captureimages.getStore().getCount()<Constants.MAX_CAPTURES){
             Ext.Ajax.request({
@@ -32,7 +33,7 @@ Ext.define('Admin.view.ptz.PTZController', {
         }else{
             Ext.Msg.show({
                 title: 'Atención',
-                msg: 'Solo puede capturar '+Constants.MAX_CAPTURES+' imagenes.<br>Si desea capturar otras imagenes, debe eliminar las que considere necesarias.',
+                msg: 'Solo puede capturar '+Constants.MAX_CAPTURES+' imagenes.',
                 buttons: Ext.Msg.OK,
                 icon: Ext.Msg.INFO                    
             });
@@ -43,11 +44,11 @@ Ext.define('Admin.view.ptz.PTZController', {
     },
     recordVideo:function(btn,params,playing){
 
-		var me = this;
-		var vm = me.getViewModel();
-		var timer = Ext.fly('timer');
-        var panel = btn.up("ptz");
-        var dataview_videos = panel.down("[name=video_viewer]");
+	   var me = this;
+	   var vm = me.getViewModel();
+	   var timer = Ext.fly('timer');
+       var panel = btn.up("ptz");
+       var dataview_videos = panel.down("[name=video_viewer]");
 
 		if(params.duration!=undefined){
 			var seg = params.duration;
@@ -86,9 +87,10 @@ Ext.define('Admin.view.ptz.PTZController', {
 	       params:params,
 	       success: function(form, action) {
 	       		console.log("Video terminado. ",playing,btn.name);
-
-                dataview_videos.getStore().reload();
-
+            global.socket.on("video-convert",function(params){ 
+              dataview_videos.getStore().reload();
+            });
+            dataview_videos.getStore().reload();
 	       		Msg.info(action.result.msg);
            },
            failure: function(form, action) {
@@ -112,8 +114,6 @@ Ext.define('Admin.view.ptz.PTZController', {
            }
 	    });
 		console.log("Grabar video",params);
-
-
     },
     clearSesion:function(){
     	localStorage.clear();
@@ -145,16 +145,16 @@ Ext.define('Admin.view.ptz.PTZController', {
     },
     onPlaying:function(self,playing){
 
-    	var sign= Ext.fly("recIndicator");
-		var vm = this.getViewModel();
-		vm.set("playing",playing);
+      var sign= Ext.fly("recIndicator");
+  		var vm = this.getViewModel();
+  		vm.set("playing",playing);
 
     	if(playing){
-			console.log(vm.get("time"));
-    		sign.removeCls("recIndicator-hidden");
+			   console.log(vm.get("time"));
+    		   sign.removeCls("recIndicator-hidden");
     	}else{
-    		sign.addCls("recIndicator-hidden");
-			clearInterval(vm.get("interval"));
+    		   sign.addCls("recIndicator-hidden");
+			  clearInterval(vm.get("interval"));
     	}
     },
     onToggle:function(self, pressed, eOpts){
@@ -165,28 +165,42 @@ Ext.define('Admin.view.ptz.PTZController', {
     	var vm = this.getViewModel();
     	var pressed = self.pressed;
     	
-    	if(self.enableToggle){
-	    	//Habilitar Botones
-	    	this.enableButtons(self,pressed);
-		 	if(pressed){
-		 		var params ={action:"record"};
-			    switch(self.name){
-			    	case '8segundos':
-			    		params["duration"] = 8;
-			    		self["mode"] = 'auto';
-			    	break;
-			    	case 'grabar':
-			    		console.log(self.name);
-			    	break;
-			    }
-			    if(!vm.get("playing")){
-				    this.recordVideo(self,params,pressed);
-				}
-		 	}else{
-	 			this.stopVideo(self,pressed);
-	 			return false;
-		 	}
-    	}
+        var panel = self.up("ptz");
+        var dataview_videos = panel.down("[name=video_viewer]");
+
+
+        console.log("GRABAR VIDEO!",self.name)
+        if(dataview_videos.getStore().getCount()<Constants.MAX_CAPTURES){
+                if(self.enableToggle){
+                    //Habilitar Botones
+                    this.enableButtons(self,pressed);
+                    if(pressed){
+                       var params ={action:"record"};
+                        switch(self.name){
+                          case '8segundos':
+                             params["duration"] = 8;
+                             self["mode"] = 'auto';
+                          break;
+                          case 'grabar':
+                             console.log(self.name);
+                          break;
+                        }
+                        if(!vm.get("playing")){
+                           this.recordVideo(self,params,pressed);
+                        }
+                    }else{
+                       this.stopVideo(self,pressed);
+                       return false;
+                    }
+                } 
+        }else{
+            Ext.Msg.show({
+                title: 'Atención',
+                msg: 'Solo puede grabar '+Constants.MAX_REC+' videos.',
+                buttons: Ext.Msg.OK,
+                icon: Ext.Msg.INFO                    
+            });
+        }
     },
     enableButtons:function(self,pressed,all){
     	var view = this.getView();
@@ -230,54 +244,43 @@ Ext.define('Admin.view.ptz.PTZController', {
     	var vm = this.getViewModel();
     	var panel = self.up("ptz");
     	var form = panel.down("infraccionform");
-    	console.log(form);
     	var params = form.getForm().getFieldValues();
     	var infraccion = vm.get("infraccion") || Ext.create('Admin.model.infraccion.Infraccion',params);
-    	var dataview = form.up("panel").down("[name=captureimages]");
+    	var dataview_images = form.up("panel").down("[name=captureimages]");
+        var dataview_videos = panel.down("[name=video_viewer]");
+    	
+        if(dataview_images.getStore().getCount()>0 && dataview_videos.getStore().getCount()>0){
+        	infraccion.save({
+    		    callback: function(record, operation, success) {
+    		    	var responseObject = Ext.decode(operation.getResponse().responseText);
+    		        // do something whether the save succeeded or failed
+    		        if(!success){
+    		        	Ext.Msg.show({
+    		        	    title: 'Atención',
+    		        	    msg: responseObject.msg,
+    		        	    buttons: Ext.Msg.OK,
+    		        	    icon: Ext.Msg.ERROR                    
+    		        	});
+    		        }else{
+    		        	var infraccion = responseObject.infraccion;
+    		        	var params = infraccion;
+    		        	console.log(infraccion);
+    		        	Msg.info(responseObject.msg);
 
-    	var images = dataview.getStore().each(function(record,index){
-    		console.log(record);
-    	});
-    	infraccion.save({
-		    callback: function(record, operation, success) {
-		    	var responseObject = Ext.decode(operation.getResponse().responseText);
-		        // do something whether the save succeeded or failed
-		        if(!success){
-		        	Ext.Msg.show({
-		        	    title: 'Atención',
-		        	    msg: responseObject.msg,
-		        	    buttons: Ext.Msg.OK,
-		        	    icon: Ext.Msg.ERROR                    
-		        	});
-		        }else{
-		        	var infraccion = responseObject.infraccion;
-		        	var params = infraccion;
-		        	console.log(infraccion);
-
-		        	var userfile = infraccion.videos.concat(infraccion.images);
-		        	params["userfile"] = Ext.encode(userfile);
-		        	/*params["userfile"] = Ext.encode([
-	        	   		"http://localhost:3000/public/images/20171014/czbq_20171014_1.jpg",
-	        	   		"http://localhost:3000/public/videos/20171013/czbq_20171013_2.mp4"
-	        	   	]);*/
-		        	Ext.Ajax.request({
-		        	   url : Constants.URL_BACKOFFICE,
-		        	   params:params,
-		        	   method : 'POST',
-		        	   waitMsg : 'Uploading your file...',
-		        	   cors: true,
-	        	       useDefaultXhrHeader : false,
-		        	   success : function(response) {
-		        	      Ext.Msg.alert("Success","Upload Successfull!");
-		        	   },
-		        	   failure : function() {
-		        	       Ext.Msg.alert("Failure","Upload Failed!");
-		        	   }
-		        	});
-		        }
-		    }
-		});
-    	console.log(infraccion);
+                        dataview_images.getStore().reload();
+                        dataview_videos.getStore().reload();
+                        form.getForm().reset();
+    		        }
+    		    }
+    		});
+        }else{
+            Ext.Msg.show({
+                title: 'Atención',
+                msg: 'Debe tomar evidencias de video e imagenes.',
+                buttons: Ext.Msg.OK,
+                icon: Ext.Msg.ERROR                    
+            });
+        }
     },
     cancelarInfraccion:function(self){
     	Ext.Msg.confirm('Atención', 'Desea cancelar la Infraccion<br>Se borraran todas las evidencias actuales.', function(buttonId, text, v) {
@@ -289,6 +292,10 @@ Ext.define('Admin.view.ptz.PTZController', {
     onRender:function(self){
     	// global.IP_CAMERA = camera.camera_ip+"/mjpg/video.mjpg";
     	console.log(global.IP_CAMERA);
+        global.socket.on("video-not-found",function(id){ 
+          var video = Ext.fly(id);
+          video.addCls("video-not-found");
+        });
     },
     itemClick:function(dataview, record, item, index, e, eOpts){
     	var el = e.target;
@@ -456,5 +463,16 @@ Ext.define('Admin.view.ptz.PTZController', {
        // video.play();
        /*sources = sources[0];
        sources.src = record.get("url");*/
+    },
+    onLoadVideo:function(store,records,success,eOpts){
+        var me =this.getView();
+        var dataview = me.down("[name=video_viewer]");
+        Ext.Array.each(Ext.query("video"), function(item, index, total) {
+            var video = Ext.get(item);
+            var el = video.el.dom;  
+            el.addEventListener("error",function(event){
+                console.log("Error al cargar video.");
+            });
+        });
     }
 });

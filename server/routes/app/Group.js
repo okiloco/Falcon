@@ -1,6 +1,6 @@
 var md5 = require("md5");
 //Users
-module.exports = function(app,io,db,schema){
+module.exports = function(app,io,router,db,schema){
 	//Ejemplo de Virtual
 	schema.virtual("alias").get(function(){
 		return this.username+"-lord";

@@ -73,7 +73,7 @@ module.exports = function(app,db,io){
 										* La aplicación empieza a usar el nuevo middlewares route.
 										*/
 										//app.use(route_name,route(app,global.router,db,schema));
-										app.use(route_name,route(app,global.router,db,schema));
+										app.use(route_name,route(app,io,global.router,db,schema));
 									});
 								}catch(err){
 									reject(err);

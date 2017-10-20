@@ -3,8 +3,8 @@ var fs = require('fs');
 var dateFormat = require('dateformat');
 var MjpegConsumer = require('mjpeg-consumer');
 var path = require('path'); 
-
-
+var ffmpeg = require('fluent-ffmpeg');
+const {spawn} = require ('child_process');
 
 /**
 * @params:
@@ -135,6 +135,7 @@ Recorder.prototype.record = function(options,callback){
 				    self.writeStream = fs.createWriteStream(self.url_video_tmp);
 	    			self.readStream.stdout.pipe(self.writeStream);
 
+
 	    			console.log("duration: ",this.timeLimit);
 	    			setTimeout(function(){
 	    			  console.log("time out.");
@@ -144,6 +145,22 @@ Recorder.prototype.record = function(options,callback){
 	    			this.once("end",function(){
 	    				self._readStarted = false;
 	    				self.playing = false;
+
+	    				var stream = new ffmpeg(self.url_video_tmp)
+	    				.size('800x450')
+	    				.videoBitrate(800)
+	    				.videoCodec('libx264')
+	    				.fps(30)
+	    				.save(this.url_video)
+	    				.on('end', function() {
+	    				    console.log('Convert finished !');
+                  self.emit("video-convert");
+	    						fs.unlink(self.url_video_tmp, function (err) {
+                    if (err) {
+                        throw err;
+                    }
+                  });
+    				  });
 	    				if(callback!=undefined){
 	    					callback(self);
 	    				} 
@@ -192,6 +209,7 @@ Recorder.prototype.record = function(options,callback){
         this.movieHeight = 0;
         self.playing = true;
 		this.connect();
+		// this.recordVideo(options);
 	}
 	this.on('lostConnection',function(){
 		if(callback!=undefined){
@@ -201,6 +219,115 @@ Recorder.prototype.record = function(options,callback){
 	return this;
 }
 
+Recorder.prototype.recordVideo = function(options) {
+
+		var self = this;
+		var lote = dateFormat(new Date(),"yyyymmdd");
+		var basepath = path.join(this.folder,lote);
+		var output_path = path.join(basepath,"prueba.mp4");
+		
+
+		this.filename = this.prefix+'_'+this.lote+'_'+options.count+'.mp4';
+		this.filename_tmp = this.prefix+'_'+this.lote+'_'+options.count+'_temp.mp4';
+		this.url_video_tmp = path.join(basepath,this.filename_tmp);
+		this.url_video = path.join(basepath,this.filename);
+
+		/*var proc = new ffmpeg(
+			this.url
+		)
+		.size('800x450')
+		.videoBitrate(800)
+		.videoCodec('libx264')
+		.fps(30)
+		.save(output_path);*/
+
+		//ffmpeg -i rtsp://192.168.1.155/axis-media/media.amp?videocodec=h264&resolution=800x450 -y -b:v 800k -vcodec libx264 -r 30 -filter:v scale=w=800:h=450 public/videos/20171019/prueba.mp4
+
+			/*this.readStream = spawn("ffmpeg",
+			    ["-rtsp_transport", "tcp", "-i", this.url, '-y', '-b:v', '800k', '-vcodec', 'libx264', '-r', '30', '-'],
+			    {detached: false}
+			);*/
+
+
+    		/*var stream = spawn("ffmpeg",
+			    ["-rtsp_transport", "tcp", "-i", this.url+"&duration=8", '-y', '-b:v', '800k', '-vcodec', 'libx264', '-r', '30', '-filter:v', 'scale=w=800:h=450', self.filename],
+			    {detached: false}
+				);*/
+
+				var stream = new ffmpeg(this.url)
+				.size('800x450')
+				.videoBitrate(800)
+				.videoCodec('libx264')
+				.fps(30)
+				.save(self.filename);
+
+				stream.on('start', function(commandLine) {
+			    console.log('Spawned Ffmpeg with command: ' + commandLine);
+    	    var child = stream.ffmpegProc;
+    	    child.stderr.on('data', function(err) {
+  		   		console.log("Error: ",err);
+  	  	  });
+    	    
+			  });
+		   	/*if(!self._readStarted){
+          self._readStarted = true;
+          self.emit('start');
+        }		
+
+		    stream.stdout.on('data', function(chunk) {
+		   		console.log("chick: ",chunk);
+	  	  });
+		   
+		    stream.stdout.on('close', function() {
+			   	console.log("closed.");
+			   	self._readStarted = false;
+		    });
+				
+		    this.on("start",function(){
+
+			   	self.writeStream = fs.createWriteStream(self.filename);
+			   	stream.stdout.pipe(self.writeStream);
+
+			   	console.log("Started!");
+			   	setTimeout(function(){
+			   	    self.writeStream.end();
+			   	}, self.timeLimit*1000);
+
+			   	self.writeStream.on('finish', function(){
+			   	    console.log("Finished.");
+			   	    stream.stdin.pause();
+			   	});
+
+		   });*/
+  	  
+			/*stream.stderr.on('data', function(data) {
+				if(!self._readStarted){
+		            self._readStarted = true;
+		            self.emit('start');
+		        }
+			});
+
+
+			this.once("start",function(){
+
+			    self.writeStream = fs.createWriteStream(output_path);
+			    self.readStream.stdout.pipe(self.writeStream);
+
+
+			    self.writeStream.on('finish', function(){
+			        // self.recordStream();
+			    	console.log("Video terminado.")
+			        process.kill(self.readStream.pid);
+			    });
+
+			    setTimeout(function(){
+			        self.writeStream.end();
+			    }, self.timeLimit*1000);
+
+			    console.log("Start record "+output_path+"\r\n");
+			});*/
+
+}
 exports.createRecorder = function(options,db) {
 	var path = 'rtsp://'+options.cameraIP+'/axis-media/media.amp'+generateGET({
 		videocodec:options.videocodec,

@@ -4,12 +4,13 @@ Ext.define('Admin.view.authentication.Wizard', {
 
     requires: [
         'Admin.view.authentication.Dialog',
+        'Admin.view.wizard.Wizard',
         'Ext.form.Label',
         'Ext.form.field.Text',
         'Ext.button.Button'
     ],
 
-    title: 'Instalcacion',
+    title: 'Instalación',
 
     defaultFocus : 'authdialog',  // Focus the Auth Form to force field focus as well
 
@@ -32,49 +33,8 @@ Ext.define('Admin.view.authentication.Wizard', {
             cls: 'auth-dialog-login',
             items: [
                 {
-                    xtype: 'label',
-                    cls: 'lock-screen-top-label',
-                    text: 'Ingrese su correo para recibir instrucciones de cambio de clave.'
-                },
-                {
-                    xtype: 'textfield',
-                    cls: 'auth-textbox',
-                    height: 55,
-                    name: 'email',
-                    hideLabel: true,
-                    allowBlank: false,
-                    emptyText: 'user@example.com',
-                    vtype: 'email',
-                    triggers: {
-                        glyphed: {
-                            cls: 'trigger-glyph-noop auth-email-trigger'
-                        }
-                    }
-                },
-                {
-                    xtype: 'button',
-                    reference: 'resetPassword',
-                    scale: 'large',
-                    ui: 'soft-blue',
-                    formBind: true,
-                    iconAlign: 'right',
-                    iconCls: 'x-fa fa-angle-right',
-                    text: 'Solicitar cambio Contraseña',
-                    listeners: {
-                        click: 'onResetClick'
-                    }
-                },
-                {
-                    xtype: 'component',
-                    html: '<div style="text-align:right">' +
-                        '<a href="#ptz" class="link-forgot-password">'+
-                            'Atrás</a>' +
-                        '</div>',
-                    /*listeners:{
-                        el:{
-                            click:'onGoBack'
-                        }
-                    }   */ 
+                    xtype:'wizard-panel',
+                    flex:1
                 }
             ]
         }

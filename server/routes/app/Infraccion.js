@@ -1,24 +1,40 @@
 var dateFormat = require('dateformat');
 var streaming = require("../../js/videoStreaming");
 var md5 = require("md5");
-//Video
-module.exports = function(app,router,db,schema){
+var request = require('request');
+var formData = require('form-data');
+var fs = require('fs');
+
+//Video 
+module.exports = function(app,io,router,db,schema){
 	
 
 	var camera_config = config.camera;
 	
 	schema.virtual("urlVideos").get(function(){
 		var videos = this.videos.map(function(doc){
-			return doc.url;
+			if(doc){
+				return doc.url;
+			}else{
+				return;
+			}
 		});
 		return videos.join(";");
 	});
 	schema.virtual("urlImages").get(function(){
 		var images = this.images.map(function(doc){
-			return doc.url;
+			if(doc){
+				return doc.url;
+			}else{
+				return;
+			}
 		});
 		return images.join(";");
 	});
+
+
+	
+
 	schema.statics.listar = function(params,callback){
 		var result=[];
 		db.infraccion.query(params,function(err,query){
@@ -29,15 +45,22 @@ module.exports = function(app,router,db,schema){
 			//.select('urlVideos urlImages videos video images image')
 			.cursor()
 			.eachAsync(function(infraccion) {
+
 				infraccion["urlVideos"] ="";
 				infraccion["urlImages"] ="";
+		        
 		        infraccion.videos.forEach(function(docs,index,arr){
+		        	console.log("Video:",docs.video)
 		        	db.video.findById(docs.video,(err,doc)=>{
+		        		// console.log("Video:",doc);
 		        		infraccion.videos[index]=doc;
 		        	});
 		        });
+
 		        infraccion.images.forEach(function(docs,index,arr){
+		        	console.log("Imagen:",docs.image)
 		        	db.image.findById(docs.image,(err,doc)=>{
+		        		// console.log("Imagen:",doc);
 		        		infraccion.images[index]=doc;
 		        	});
 		        });
@@ -51,26 +74,19 @@ module.exports = function(app,router,db,schema){
 
 	router.route("/infracciones")
 	.get(function(req,res){
-		var params = req.query;
+		var params = req.query || {};
 		db.infraccion.listar(params,function(docs){
 			res.send(JSON.stringify({data:docs,success:true}));
 		});
 	});
+
+	//@infracciones/:action
 	router.route("/infracciones/:action")
 	.post(function(req,res){
 		var params = req.body;
 		var lote = dateFormat(new Date(),"yyyymmdd");
+		var socket = global.socket;
 
-		/*var videos = params.videos || [];
-		var images = params.images || [];
-
-		if(typeof(videos)=='string'){
-			videos = [videos];
-		}
-		if(typeof(images)=='string'){
-			images = [images];
-		}*/
-		
 		db.infraccion.find({"lote":lote})
 		.then(function(results){
 			var count = (results.length + 1);
@@ -78,51 +94,64 @@ module.exports = function(app,router,db,schema){
 			params["dispositivo"] = camera_config.camera_id;
 			params["lote"] = lote;
 
-			var videos = [];
-			var images = [];
-			
+			var arr_videos = [];
+			var arr_images = [];
 
-			db.video.find({"estado":0,"lote":lote},function(err,videos){
-
-				if(videos.length==0){
+			//#Recorrer Videos
+			db.video.find({"estado":0,"lote":lote})
+			.select('url')
+			.cursor()
+			.eachAsync(function(video) {
+				video.estado=1;
+				arr_videos.push({"video":video._id});
+				video.save(function(){
+					console.log("Video: ",video);
+				});
+			})
+			.then(() => {
+				console.log("Se terminaron los videos.");
+				if(arr_videos.length==0){
 					res.send(JSON.stringify({"success":false,"msg":"No se han grabado videos."}));
 					return;
 				}
-			 	videos.forEach(function(video,index,array){
-			 		videos.push({"video":video._id});
-			 		if(index == (array.length -1 )){
-			 			db.image.find({"estado":0,"lote":lote},function(err,images){
-
-			 				if(images.length==0){
-			 					res.send(JSON.stringify({"success":false,"msg":"No se han capturado imagenes."}));
-			 					return;
-			 				}
-			 			 	images.forEach(function(image,i,arr){
-
-			 					images.push({"image":image._id});
-
-			 					if(i == (arr.length -1 )){
-			 						db.image.update({"estado":0,"lote":lote},{"estado":1},function(){
-			 							db.video.update({"estado":0,"lote":lote},{"estado":1},function(){
-			 								db.infraccion.create(params,function(infraccion){
-				 								infraccion.estado = 1;
-				 								infraccion.images = images;
-				 								infraccion.videos = videos;
-						 						infraccion.save(function(){
-					 								db.infraccion.listar({"_id":infraccion._id},function(docs){
-			 											res.send(JSON.stringify({"infraccion":docs[0],"success":true}));
-			 										});
-				 								});
-						 					});
-			 							});
-			 						});
-			 					}
-			 			 	});
-			 			});		
-			 		}
-			 	});
+				//#Recorrer Imagenes	
+				db.image.find({"estado":0,"lote":lote})
+				.select('url')
+				.cursor()
+				.eachAsync(function(image) {
+					image.estado=1;
+					arr_images.push({"image":image._id});
+					image.save(function(){
+						console.log("Image: ",image);
+					});
+				})
+				.then(() => {
+					console.log("Se terminaron las imagenes.");
+					if(arr_images.length==0){
+						res.send(JSON.stringify({"success":false,"msg":"No se han capturado imagenes."}));
+						return;
+					}
+					//#Crear la Infracción
+					db.infraccion.create(params,function(infraccion){
+						
+						infraccion.images = arr_images;
+						infraccion.videos = arr_videos;
+						infraccion.creator = global.user.id;
+						//#Guardar Cambios en infraccion
+						infraccion.save(function(){
+							db.infraccion.listar({"_id":infraccion._id},function(docs){
+								if(params.estado){
+									console.log("Estado: ",params.estado);
+									//#emit:[infraccion]
+									socket.emit("infraccion",docs[0]);
+								}
+								console.log("Se creó la infraccion.")
+								res.send(JSON.stringify({"infraccion":docs[0],"success":true,"msg":"Infracción Registrada con éxito."}));
+							});
+						});
+					});
+				});
 			});
-			
 		});
 	});
 

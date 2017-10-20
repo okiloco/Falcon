@@ -90,19 +90,19 @@ Ext.define('Admin.view.ptz.PTZ',{
                         {
                             xtype:'dataview',
                             name:'video_viewer',
-                            cls:'video_viewer',
-                           
+                            cls:'video_viewer_container',
                             itemSelector: 'div.video_viewer .item #play',
                             layout:'hbox',
                             bind:{
                                 store:'{videoStore}',
                             },
+                            loadingUseMsg:false,
                             scrollable:'horizontal',    
                             tpl: new Ext.XTemplate(
                                 '<div class="video_viewer">',
                                     '<div class="container">',
                                         '<tpl for=".">',
-                                            '<div class="item">',
+                                            '<div class="item" id={id}>',
                                                 '<video width="150" height="80" class="video-player">',
                                                     '<source src="http://localhost:3000/app/video/preview?id={id}" type="video/mp4">',
                                                 '</video>',
@@ -178,8 +178,8 @@ Ext.define('Admin.view.ptz.PTZ',{
             dock:'top',
             defaults:{
                 listeners:{
-                    toggle:'onToggle',
                     click:'onRecorVideo',
+                    toggle:'onToggle',
                     playing:'onPlaying'
                 }
             },
@@ -198,7 +198,9 @@ Ext.define('Admin.view.ptz.PTZ',{
                     iconCls:'fa fa-camera',
                     iconAlign: 'top',
                     name: 'capture',
-                    handler:'capturarImagen'
+                    listeners:{
+                        click:'capturarImagen'
+                    }
                 },
                 {
                     xtype: 'button',

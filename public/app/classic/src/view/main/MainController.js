@@ -164,22 +164,20 @@ Ext.define('Admin.view.main.MainController', {
         var vm = this.getViewModel();
         var view = (node && node.get('viewType'));
 
-        if(localStorage.length>0){
-            var instaled = global.instaled;
+        var instaled = global.instaled;
+        if(instaled){
+            if(localStorage.length>0){
 
-            if(instaled){
                 if(localStorage.user_id!=undefined){
                     view = hashTag;
                 }else{
                     view = "login";
                 }
-               
             }else{
-                console.log("No instaled");
-                view = hashTag;
+               view = "login";
             }
         }else{
-           view = "login";
+           view = hashTag;
         }
         return view;
     },
