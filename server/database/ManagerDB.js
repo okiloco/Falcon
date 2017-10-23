@@ -253,10 +253,10 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 		}
 		var raw_config = options;
 
-		options.timestamps ={
+		/*options.timestamps ={
 	        createdAt: 'Date',
 	        updatedAt: 'Date'
-	    };
+	    };*/
 
 
 		
@@ -778,25 +778,35 @@ ManagerDB.prototype.connect =  function(callback) {
 		self.load()
 		.then(function(data){
 
-			mongoose.connect(self.linkconex,(err,res)=>{
-				if(err){
-					console.log('Error al conectarse a la base de datos.',err);
-					reject();
-					return;
-				}
-				/**
-				* Definir los schemas de la base de datos
-				*/
-				// return;
-				self.define()
-				.then(function(){
-					console.log("ManagerDB Ready.")
-					self.emit("ready");
-					resolve("Conectado a la base de datos.");
-				},function(){
-					reject("Conectado a la base de datos. No hay esquemas para definir.");
+			console.log();
+			var state = mongoose.connection.readyState;
+
+			if(state==0){
+				mongoose.connect(self.linkconex,(err,res)=>{
+					if(err){
+						console.log('Error al conectarse a la base de datos.',err);
+						reject();
+						return;
+					}
+					/**
+					* Definir los schemas de la base de datos
+					*/
+					// return;
+					self.define()
+					.then(function(){
+						console.log("ManagerDB Ready.")
+						self.emit("ready");
+						resolve("Conectado a la base de datos.");
+					},function(){
+						reject("Conectado a la base de datos. No hay esquemas para definir.");
+					});
 				});
-			});
+			}else if(state==1){
+				if(callback!=undefined){
+					callback(doc)
+				}
+				resolve("...ya está conectado a la base de datos.");
+			}
 		});
 	});
 	

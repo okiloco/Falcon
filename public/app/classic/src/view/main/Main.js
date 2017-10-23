@@ -3,6 +3,7 @@ Ext.define('Admin.view.main.Main', {
 
     requires: [
         'Ext.button.Segmented',
+        'Admin.view.preferences.Preferences',
         'Ext.list.Tree'
     ],
 

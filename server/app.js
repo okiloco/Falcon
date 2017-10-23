@@ -17,14 +17,14 @@ var events = require('events');//Events administra eventos
 const mongoose = require("mongoose");
 const ManagerDB = require("./database/ManagerDB");
 mongoose.Promise = global.Promise;
-var Helper = require("./helpers/helper");
-
+var Helper = require("./helpers/helper.js");
+var Constants = require("./helpers/Constants.js");
 var request = require('request');
 var formData = require('form-data');
 
 
 const corsOptions = {
-	origin:'http://localhost:3000'
+	origin:Constants.URL_BASE
 }
 app.use(cors(corsOptions))
 
@@ -42,7 +42,7 @@ app.use(function (req, res, next) {
 
     // Set to true if you need the website to include cookies in the requests sent
     // to the API (e.g. in case you use sessions)
-    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Credentials', false);
 
     // Pass to next layer of middleware
     next();
@@ -59,6 +59,44 @@ app.get("/config",function(req,res){
 		res.send({
 			"success":false
 		});
+	});
+});
+app.get("/organismos",function(req,res){
+
+	var options = {
+		"method":'GET',
+		"url":Constants.URL_ORGANISMOS
+	};
+	request(options,function(err,response,body){
+		var result = response;
+		console.log("BODY:::",body);
+		if (err) {
+			console.log("[Error al enviar archivos]",err);
+		   	return;
+		}
+		res.send(JSON.stringify({
+			"data":JSON.parse(body)
+		}));
+	});
+});
+app.get("/dispositivos",function(req,res){
+
+	var params = req.query;
+	var options = {
+		"method":'GET',
+		"url":Constants.URL_DISPOSITIVOS,
+		"qs":params
+	};
+	request(options,function(err,response,body){
+		var result = response;
+		console.log("GET BODY:::",body);
+		if (err) {
+			console.log("[Error al enviar archivos]",err);
+		   	return;
+		}
+		res.send(JSON.stringify({
+			"data":JSON.parse(body)
+		}));
 	});
 });
 
@@ -108,7 +146,7 @@ module.exports = function(config){
 
 			console.log("Se va a subir los Archivos.");
 			files.forEach(function(file){
-				var url = ("image" || "video" in file)?(file.image.url):file.url;
+				var url = file.url;
 				try{
 					userfiles.push(fs.createReadStream(url));
 				}catch(err){
@@ -119,17 +157,17 @@ module.exports = function(config){
 			});
 			formData["userfile[]"] = userfiles;
 			request.post({
-				"url":'http://backof-dev.construsenales.co/service/falconwebservice/falconFileUpload', 
-				formData: formData},
-				function(err, httpResponse, body) { 
+			"url":Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE, 
+			formData: formData},
+			function(err, httpResponse, body) { 
 
-					if (err) {
-						console.log("[Error al enviar archivos]",err);
-					   	reject("Error al enviar archivos "+err);
-					   	return;
-					}
-					resolve(formData);
-				});
+				if (err) {
+					console.log("[Error al enviar archivos]",err);
+				   	reject("Error al enviar archivos "+err);
+				   	return;
+				}
+				resolve(formData);
+			});
 		});
 	};
 
@@ -146,7 +184,7 @@ module.exports = function(config){
 				"user":global.user
 			});
 			socket.on("new-infraccion",function(params){
-				console.log("Nueva Infracción recibida.");
+				console.log("Nueva Infracción recibida.",params);
 				subirArchivos(params)
 				.then(function(doc){
 					console.log("Todo bien todo bien!")
@@ -176,10 +214,14 @@ module.exports = function(config){
 		const db = ManagerDB.createManagerDB();
 
 		app.use("/public",express.static("public"));
-		// app.use("/app",session_middleware);
+		app.use("/app",session_middleware);
 		var routes = require("./routes");
 		app.use("/app",routes(app,db));
-		
+		app.use(function(req, res, next) {
+		  res.header("Access-Control-Allow-Origin", "*");
+		  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+		  next();
+		});
 		
 		server.listen(port,function(){
 			db.connect()

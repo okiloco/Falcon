@@ -35,7 +35,7 @@ module.exports = {
 	readFile:function(file){
 		return new Promise(function(resolve,reject){
 			var app_config = jsonfile.readFile(file,function(err,obj){
-				if(err){ reject(err); return;}
+				if(err){ resolve({}); }
 				resolve(obj);
 			});
 		});

@@ -4,24 +4,36 @@ var md5 = require("md5");
 //Image  
 module.exports = function(app,io,router,db,schema){
 	
-	var config = global.config;
-	var camera_config = config.camera;
+	var config;
+	var camera;
 
-	var camera = streaming({
-		id_dispositivo:2,
-		address: camera_config.camera_ip,
-		folder:'./public/images/',
-		prefix:camera_config.camera_id,
-		port: '80',
-		username: camera_config.camera_user,
-		password: camera_config.camera_password,
-		db:db
-	});
+	function init(){
+		config=global.config;
+		console.log(config);
+		if(config!=undefined){
+
+			camera = streaming({
+				id_dispositivo:2,
+				address: config.camera_ip,
+				folder:'./public/images/',
+				prefix:config.camera_id,
+				port: '80',
+				username: config.camera_user,
+				password: config.camera_password,
+				db:db
+			});
+		}else{
+			throw "No se econtró configuración de la camara.";
+		}
+	}
 	router.get("/image/:action",(req,res)=>{
 		var params = req.params,
 		action = params.action;
 		var lote = dateFormat(new Date(),"yyyymmdd");
 		
+		//Iniciar configuración camara
+		init();	
+
 		switch(action){
 			case 'new':
 				db.image.find({"lote":lote})

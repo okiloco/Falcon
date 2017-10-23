@@ -2,8 +2,7 @@ const {app, BrowserWindow} = require('electron')
 const path = require('path')
 const url = require('url')
 var server = require('./server/app');
-
-
+var Constants = require("./server/helpers/Constants.js");
 var Helper = require("./server/helpers/helper");
 var app_config = './server/app.json';
 function loadConfig(callback){
@@ -37,7 +36,7 @@ function createWindow(options){
 			protocol:'file:',
 			slashes:true
 		}));*/
-		win.loadURL("http://localhost:3000/"+(options.url || ''));
+		win.loadURL(Constants.URL_BASE+(options.url || ''));
 		//Abrir inspector de elementos
 		win.webContents.openDevTools();
 
@@ -63,7 +62,7 @@ function SplashScreen(options){
 	splashscreen.on("closed",()=>{
 		win = null;
 	});
-	splashscreen.loadURL("http://localhost:3000/public/app/splashscreen.html");
+	splashscreen.loadURL(Constants.URL_BASE+"public/app/splashscreen.html");
 	splashscreen.once('ready-to-show', () => {
 	     splashscreen.show();
     });

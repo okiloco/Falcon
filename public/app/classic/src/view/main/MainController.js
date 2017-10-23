@@ -46,9 +46,9 @@ Ext.define('Admin.view.main.MainController', {
                iconCls:'fa fa-key',
                handler:'onChangePass'
            },{
-               text: 'Instalar',
-               iconCls:'fa fa-key',
-               handler:'onWizard'
+               text: 'Configurar',
+               iconCls:'fa fa-cog',
+               handler:'onPreferences'
            },{
                text: 'Salir',
                iconCls:'fa fa-sign-out',
@@ -56,22 +56,21 @@ Ext.define('Admin.view.main.MainController', {
            }]
        }).showBy(Ext.get(el),'c-bl',[-40,140]);
     },
-    onWizard:function(self){
-        var me=this;
-        me.redirectTo('wizard',true);
-         // Ext.create('Admin.view.authentication.PasswordReset').show();
-        /*Ext.create('Ext.window.Window', {
-            title: 'Cambiar Contraseña',
-            height: 200,
-            width: 400,
-            layout: 'fit',
-            modal: true,
-            constrainHeader: true,
-            resizable: false,
-            items: [
-                Ext.create('Admin.view.authentication.PasswordReset')
-            ]
-        }).show();*/
+    onPreferences:function(self){
+        Ext.create('Ext.window.Window', {
+           title: 'Configuración',
+           width: 400,
+           layout: 'fit',
+           modal: true,
+           constrainHeader: true,
+           resizable: false,
+           iconCls:'fa fa-cog',
+           items: [
+                {
+                    xtype:'preference'
+                }
+           ]
+       }).show();   
     },
     onChangePass:function(self){
         var me=this;

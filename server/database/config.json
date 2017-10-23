@@ -27,25 +27,25 @@
 			"lang":"en"
 		},
 		{
-			"name":"module", 
-			"config":"{\"name\":\"String\",\"config\":\"String\",\"estado\":{\"type\":\"Boolean\",\"default\":\"true\"}}",
-			"lang":"en"
+			"name" : "organismo",
+		    "config" : "{\"name\":\"String\",\"codigo\":\"String\",\"dispositivos\":[{\"type\":\"ObjectId\",\"ref\":\"dispositivo\"}]}",
+		    "lang" : "es"
 		},
 		{
-			"name":"image", 
-			"config":"{\"filename\":\"String\",\"lote\":\"String\",\"url\":\"String\",\"creator\":{\"type\":\"ObjectId\",\"ref\":\"user\"},\"estado\":{\"type\":\"Number\",\"default\":\"0\"}}",
-			"lang":"en"
+			"name" : "video",
+		    "config" : "{\"filename\":\"String\",\"lote\":\"String\",\"url\":\"String\",\"creator\":{\"type\":\"ObjectId\",\"ref\":\"user\"},\"estado\":{\"type\":\"Number\",\"default\":\"0\"}}",
+		    "lang" : "en"
 		},
 		{
-			"name":"video", 
-			"config":"{\"filename\":\"String\",\"lote\":\"String\",\"url\":\"String\",\"creator\":{\"type\":\"ObjectId\",\"ref\":\"user\"},\"estado\":{\"type\":\"Number\",\"default\":\"0\"}}",
-			"lang":"en"
+			"name" : "image",
+		    "config" : "{\"filename\":\"String\",\"lote\":\"String\",\"url\":\"String\",\"creator\":{\"type\":\"ObjectId\",\"ref\":\"user\"},\"estado\":{\"type\":\"Number\",\"default\":\"0\"}}",
+		    "lang" : "en"
 		},
 		{
-			"name":"infraccion", 
-			"config":"{\"codigo\": \"String\",\"lote\": \"String\",\"placa\": \"String\",\"direccion\": \"String\",\"municipio\": {\"type\": \"ObjectId\",\"ref\": \"ciudad\"},\"dispositivo\": {\"type\": \"String\"},\"lat\": {\"type\": \"String\",\"default\": \"0\"},\"long\": {\"type\": \"String\",\"default\": \"0\"},\"videos\": [{\"video\": {\"type\": \"ObjectId\",\"ref\": \"video\"}}],\"images\": [{\"image\": {\"type\": \"ObjectId\",\"ref\": \"image\"}}],\"fecha\": {\"type\": \"Date\",\"default\": \"now\"},\"creator\": {\"type\": \"ObjectId\",\"ref\": \"user\"},\"estado\": {\"type\": \"Number\",\"default\": \"0\"}}",
-			"lang":"es"
-		},
-
-	]
+			"name" : "infraccion",
+		    "config" : "{\"codigo\": \"String\",\"lote\": \"String\",\"placa\": \"String\",\"direccion\": \"String\",\"municipio\": {\"type\": \"ObjectId\",\"ref\": \"ciudad\"},\"dispositivo\": {\"type\": \"String\"},\"lat\": {\"type\": \"String\",\"default\": \"0\"},\"long\": {\"type\": \"String\",\"default\": \"0\"},\"videos\": [{\"video\": {\"type\": \"ObjectId\",\"ref\": \"video\"}}],\"images\": [{\"image\": {\"type\": \"ObjectId\",\"ref\": \"image\"}}],\"fecha\": {\"type\": \"Date\",\"default\": \"now\"},\"creator\": {\"type\": \"ObjectId\",\"ref\": \"user\"},\"estado\": {\"type\": \"Number\",\"default\": \"0\"}}",
+		    "lang" : "es"
+		}
+	],
+	"Schemas":[]
 }

@@ -154,4 +154,35 @@ module.exports = function(app,io,db){
 			console.log("Instalación completada.")
 		});
 	});
+	app.post("/config",function(req,res){
+
+		var params = req.body;
+
+		Helper.readFile('./server/app.json').
+		then(function(config){
+
+			for(var key in config){
+				if(typeof(config[key])=='object'){
+					for(var s in config[key]){
+						config[key][s] = params[s];
+					}
+				}else{
+					config[key]=params[key];
+				}
+			}
+			Helper.writeFile('./server/app.json',config).
+			then(function(config){
+				res.send({
+					"success":true,
+					"msg":"Configuración Actualizada.<br>Se debe cerrar la sesión e iniciar nuevamente, para reflejar los cambios.",
+					config
+				});
+			},function(err){
+				res.send({
+					"success":false
+				});
+			});
+
+		});
+	});
 }

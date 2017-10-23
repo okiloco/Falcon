@@ -3,6 +3,8 @@ Ext.define('Admin.helpers.Constants', {
 	singleton: true,
 	//App
 	URL_CONFIG_APP:BASE_PATH+'config/',
+	URL_WIZARD:BASE_PATH+'install',
+	
 	//Login
 	URL_LOGIN:BASE_PATH+'login',
 	URL_LOGOUT_APP:BASE_PATH+'logout',
@@ -33,6 +35,13 @@ Ext.define('Admin.helpers.Constants', {
 
 	//Videos
 	URL_VIDEOS:BASE_PATH+'app/videos',
+
+
+	//Organismos
+	URL_ORGANISMOS:BASE_PATH+'organismos',
+
+	URL_DISPOSITIVOS:BASE_PATH+'dispositivos',
+
 
 	//Backoffice
 	// URL_BACKOFFICE:'http://backof-dev.construsenales.co/service/falconwebservice/falconFileUpload',

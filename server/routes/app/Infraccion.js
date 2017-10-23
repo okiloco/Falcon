@@ -9,7 +9,6 @@ var fs = require('fs');
 module.exports = function(app,io,router,db,schema){
 	
 
-	var camera_config = config.camera;
 	
 	schema.virtual("urlVideos").get(function(){
 		var videos = this.videos.map(function(doc){
@@ -31,9 +30,6 @@ module.exports = function(app,io,router,db,schema){
 		});
 		return images.join(";");
 	});
-
-
-	
 
 	schema.statics.listar = function(params,callback){
 		var result=[];
@@ -86,12 +82,13 @@ module.exports = function(app,io,router,db,schema){
 		var params = req.body;
 		var lote = dateFormat(new Date(),"yyyymmdd");
 		var socket = global.socket;
+		var config = global.config;
 
 		db.infraccion.find({"lote":lote})
 		.then(function(results){
 			var count = (results.length + 1);
-			params["codigo"] = camera_config.camera_id+"_"+lote+"_"+count;
-			params["dispositivo"] = camera_config.camera_id;
+			params["codigo"] = config.camera_id+"_"+lote+"_"+count;
+			params["dispositivo"] = config.camera_id;
 			params["lote"] = lote;
 
 			var arr_videos = [];
@@ -158,7 +155,6 @@ module.exports = function(app,io,router,db,schema){
 	router.route("/infracciones/:id")
 	.get(function(req,res){
 		var params = req.query;
-
 	});
 	return router;
 }

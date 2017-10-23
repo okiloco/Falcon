@@ -292,10 +292,13 @@ Ext.define('Admin.view.ptz.PTZController', {
     onRender:function(self){
     	// global.IP_CAMERA = camera.camera_ip+"/mjpg/video.mjpg";
     	console.log(global.IP_CAMERA);
-        global.socket.on("video-not-found",function(id){ 
-          var video = Ext.fly(id);
-          video.addCls("video-not-found");
-        });
+      /*var socket = Ext.create("Admin.socket.Socket");
+      socket.connect(function(){
+      });*/
+      global.socket.on("video-not-found",function(id){ 
+        var video = Ext.fly(id);
+        video.addCls("video-not-found");
+      });
     },
     itemClick:function(dataview, record, item, index, e, eOpts){
     	var el = e.target;

@@ -2,6 +2,7 @@ var dateFormat = require('dateformat');
 var streaming = require("../../js/videoStreaming");
 var md5 = require("md5");
 var ffmpeg = require('fluent-ffmpeg');
+var ffmpeg = require('fluent-ffmpeg');
 var fs = require('fs'),
     http = require('http'),
     url = require('url'),
@@ -10,32 +11,12 @@ var fs = require('fs'),
 //Video 
 module.exports = function(app,io,router,db,schema){
 	//Ejemplo de Virtual
-	var config = global.config;
-	var camera_config = config.camera;
-
+	var config;
+	var video;
 	/*schema.virtual("alias").get(function(){
 		return this.username+"-lord";
 	});*/
-	var camera = streaming({
-		id_dispositivo:2,
-		address: camera_config.camera_ip,
-		folder:'./public/images/',
-		prefix:camera_config.camera_id,
-		port: '80',
-		username: camera_config.camera_user,
-		password: camera_config.camera_password,
-		db:db
-	}); 
-
-	var video = camera.createRecord({
-		resolution: '800x450',
-		videocodec:'h264',
-		folder:'./public/videos/',
-		prefix:camera_config.camera_id,
-		audio:0,
-		fps:25
-	});
-
+	
 	function convertVideo(urlVideo,urlVideoDestino){
 		
 		return new Promise(function(resolve,reject){
@@ -55,10 +36,31 @@ module.exports = function(app,io,router,db,schema){
 		});
 	}
 	router.get("/video",(req,res)=>{
+
+		config = global.config;
 		var action = req.query.action;
 		var params = req.query;
 		var lote = dateFormat(new Date(),"yyyymmdd");
-		
+		var camera = streaming({
+			id_dispositivo:2,
+			address: config.camera_ip,
+			folder:'./public/images/',
+			prefix:config.camera_id,
+			port: '80',
+			username: config.camera_user,
+			password: config.camera_password,
+			db:db
+		}); 
+
+		video = camera.createRecord({
+			resolution: '800x450',
+			videocodec:'h264',
+			folder:'./public/videos/',
+			prefix:config.camera_id,
+			audio:0,
+			fps:25
+		});
+
 		db.video.find({"lote":lote})
 		.then(function(results){
 			params["count"] = (results.length + 1);
@@ -105,7 +107,6 @@ module.exports = function(app,io,router,db,schema){
 		action = params.action;
 		var range = req.headers.range;
 
-
 		switch(action){
 			case 'stop':
 				var rec = video.stop(function(record){
@@ -137,7 +138,6 @@ module.exports = function(app,io,router,db,schema){
 		break;	
 		}
 	});
-
 	
 	const HTML_PATH = 'public/index.html';
 	const SIZE_INDEX = fs.statSync(HTML_PATH).size;

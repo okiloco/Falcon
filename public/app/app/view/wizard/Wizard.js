@@ -9,7 +9,7 @@ Ext.define('Admin.view.wizard.Wizard', {
     layout: 'card',
 
     viewModel: {
-        type: 'wizardform'
+        type: 'wizardformModel'
     },
 
     controller:'wizardform_c',
@@ -20,7 +20,7 @@ Ext.define('Admin.view.wizard.Wizard', {
         /*
          * Seek out the first enabled, focusable, empty textfield when the form is focused
          */
-        defaultFocus: 'textfield:not([value]):focusable:not([disabled])',
+        //defaultFocus: 'textfield:not([value]):focusable:not([disabled])',
 
         defaultButton : 'nextbutton'
     },
@@ -46,46 +46,49 @@ Ext.define('Admin.view.wizard.Wizard', {
             },
             items:[
                 {
-                    xtype:'combo',
-                    emptyText : 'Organismo',
-                    name:'organismo',
-                    id:'organismo',
-                    editable:false,
-                    store : Ext.create('Ext.data.Store',{
-                        fields:['name','value'],
-                        data:[
-                            {name:'Barranquilla',value:'BQA'}
-                            //{name:'Soledad',value:'SOL'},
-                            //{name:'Puerto Colombia',value:'PTO'}
-                            ]
-                    }),
-                    displayField:'name',
-                    valueField:'value'
-                },{
-                    xtype:'combo',
-                    emptyText : 'Camara',
-                    name:'camera_id',
-                    id:'camera_id',
-                    editable:false,
-                    store : Ext.create('Ext.data.Store',{
-                        fields:['name','value'],
-                        data:[
-                            {name:'CZBQ01',value:'CZBQ01'}
-                            //{name:'CZBQ02',value:'CZBQ02'},
-                            //{name:'CZBQ03',value:'CZBQ03'}
-                            ]
-                    }),
-                    displayField:'name',
-                    valueField:'value'
-                },{
+                    xtype: 'combo',
+                    name: 'organismo',
+                    fieldLabel: 'Organismo',
+                    bind:{
+                        store:'{organismostore}'
+                    },
+                    emptyText:'Selecione Organismo',
+                    allowBlank : false,
+                    queryMode: 'local',
+                    displayField: 'name',
+                    valueField: 'codigo',
+                    listeners:{
+                        select:function(self, record, eOpts){
+                            var form = self.up("form");
+                            var camara = form.down("[name=camera_id]");
+                            camara.reset();
+                            camara.getStore().getProxy().extraParams = record.getData();
+                            camara.getStore().load();
+                        }
+                    }
+                },
+                {
+                    xtype: 'combo',
+                    name: 'camera_id',
+                    fieldLabel: 'Camara',
+                    bind:{
+                        store:'{dispositivostore}'
+                    },
+                    emptyText:'Selecione Dispositivo',
+                    queryMode: 'local',
+                    displayField: 'name',
+                    valueField: 'codigo',
+                    allowBlank : false
+                },
+                {
                     emptyText : 'IP Camara',
                     name:'camera_ip',
-                    id:'camera_ip',
                     allowBlank : false,
+                    regex: /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
+                    regexText: 'Debe ser una dirección IP Válida.'
                 },{
                     emptyText : 'Usuario',
                     name:'camera_user',
-                    id:'camera_user',
                     allowBlank : false,
                 },{
                     emptyText : 'Contraseña',
@@ -110,21 +113,18 @@ Ext.define('Admin.view.wizard.Wizard', {
                 {
                     emptyText : 'Nombre de Usuario',
                     name:'username',
-                    id:'username',
                     allowBlank : false,
                 },
                 {
                     emptyText : 'Email',
                     vtype: 'email',
                     name:'email',
-                    id:'email',
                     allowBlank : false,
                 },
                 {
                     emptyText : 'Ingrese contraseña',
                     inputType: 'password',
                     name:'password',
-                    id:'password',
                     cls: 'wizard-form-break',
                     allowBlank : false,
                 },
@@ -132,7 +132,6 @@ Ext.define('Admin.view.wizard.Wizard', {
                     emptyText : 'Reingrese constraseña',
                     inputType: 'password',
                     name:'re_password',
-                    id:'re_password',
                     allowBlank : false,
                 },
             ]
@@ -151,13 +150,11 @@ Ext.define('Admin.view.wizard.Wizard', {
                 {
                     emptyText : 'Placa vehiculo',
                     name:'movil_plate',
-                    id:'movil_plate',
                     allowBlank : false,
                 },
                 {
                     emptyText : 'Nombre vehiculo',
                     name:'movil_name',
-                    id:'movil_name',
                     allowBlank : false,
                 }
             ]
@@ -228,7 +225,6 @@ Ext.define('Admin.view.wizard.Wizard', {
                 {
                     text: 'Volver',
                     ui: this.colorScheme,
-                    formBind: true,
                     id:'vol_btn',
                     bind: {
                         disabled: '{atBeginning}'
@@ -241,7 +237,6 @@ Ext.define('Admin.view.wizard.Wizard', {
                     text: 'Siguiente',
                     ui: this.colorScheme,
                     id:'sig_btn',
-                    formBind: true,
                     reference : 'nextbutton',
                     bind: {
                         disabled: '{atEnd}'

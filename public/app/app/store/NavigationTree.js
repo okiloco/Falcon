@@ -23,15 +23,9 @@ Ext.define('Admin.store.NavigationTree', {
                 iconCls: 'x-fa fa-user',
                 viewType: 'users',
                 routeId: 'users',
+                hidden:true,
                 leaf: true
-            },
-            {
-                text: 'Wizard',
-                iconCls: 'x-fa fa-user',
-                viewType: 'wiz',
-                routeId: 'wiz',
-                leaf: true
-            },
+            }
 
             /*,
                 {
@@ -113,5 +107,10 @@ Ext.define('Admin.store.NavigationTree', {
                 leaf: true
             }*/
         ]
+    },
+    listeners:{
+        load:function(store, records, successful, operation, node, eOpts ){
+            console.log(records);
+        } 
     }
 });
