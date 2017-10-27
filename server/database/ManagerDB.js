@@ -8,7 +8,8 @@ const mongoose = require("mongoose");
 var md5 = require('md5');
 mongoose.Promise = global.Promise;
 var dateFormat = require('dateformat');
-
+var moment = require('moment-timezone');
+moment().tz("America/Bogota").format();
 var ObjectId = mongoose.Types.ObjectId;
 
 var fs = require("fs");
@@ -157,6 +158,8 @@ ManagerDB.prototype.parseObject = function(obj){
 					}else if(field.type=='Date' && field.hasOwnProperty("default")){
 						if(field.default=='now'){
 							field.default = Date.now;
+							// field.default = moment().tz(new Date().toLocaleString(),"America/Bogota").format();
+							// field.default = new Date().toLocaleString();
 						}
 					}
 				}
@@ -366,7 +369,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 								if(field.type=='Date'){
 									if(field.default!=undefined){
 										if(field.default=='now'){
-											output[key] = new Date();
+											output[key] =  moment().tz(new Date().toLocaleString(),"America/Bogota").format();
 										}
 									}
 								}else{
@@ -422,6 +425,10 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 					.then(function(obj_map){
 					 	var instance = new model(obj_map);//Instancia del Modelo
 				 	 	instance.save(function(err,doc){
+				 	 		if(err){
+				 	 			throw err;
+				 	 			return;
+				 	 		}
 		 	 		      	if(name=='schema'){
   						 		self.autoRefesh = true;
   						 		self.refresh(function(){
@@ -450,12 +457,14 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 			if(params._id){
 				query = this.findById(params._id,function(err,doc){
 					if(callback!=undefined) callback(err,query);
+					console.log("query: ",params);
 					return query;
 				});
 			}else{
 				params = this.getFieldsMap(params);
 				query = this.find(params,function(err,docs){
 					if(callback!=undefined) callback(err,query);
+					console.log("query: ",params);
 					return query;
 				});
 			}
@@ -756,7 +765,6 @@ ManagerDB.prototype.refresh =  function(refresh, callback) {
 		}
 	}
 }
-
 /**
 * @connect: callback
 * Conecta con la base de datos MongoDB

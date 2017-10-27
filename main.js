@@ -1,4 +1,5 @@
 const {app, BrowserWindow} = require('electron')
+
 const path = require('path')
 const url = require('url')
 var server = require('./server/app');
@@ -21,21 +22,18 @@ function loadConfig(callback){
 }
 
 
-let win
+let win;
 let splashscreen;
-
+let ready = false;
+let win_tmp;
 function createWindow(options){
 	options = options || {};
-	win = new BrowserWindow({backgroundColor: '#2e2c29',center:true, show: false, width:options.width || 1366,height: options.height || 768,background:"#18425A", title:'Falcon System', icon:__dirname+'/assests/icon.png'})
 
+
+	win = new BrowserWindow({backgroundColor: '#2e2c29',center:true, show: false, width:options.width || 1366,height: options.height || 768,background:"#18425A", title:'Falcon System', icon:__dirname+'/assests/icon.png'})
 
 	// mainWindow = new BrowserWindow({width: WINDOW_WIDTH, height: WINDOW_HEIGHT, x: x, y: y});
 	return new Promise(function(resolve,reject){
-		/*win.loadURL(url.format({
-			pathname:path.join(__dirname,(options.url || '/public/app/index.html')),
-			protocol:'file:',
-			slashes:true
-		}));*/
 		win.loadURL(Constants.URL_BASE+(options.url || ''));
 		//Abrir inspector de elementos
 		win.webContents.openDevTools();
@@ -46,8 +44,21 @@ function createWindow(options){
 		const ses = win.webContents.session;
 		
 		win.once('ready-to-show', () => {
-		     win.show();
-		     splashscreen.close();
+	     	win.show();
+			if(!ready){
+				win_tmp = win;		
+			}else{
+				if(win_tmp!=undefined){
+					win_tmp.close();
+				}
+			}
+	     	if(splashscreen!=undefined){
+	     		try{
+	     			splashscreen.close();
+	     		}catch(err){
+	  				console.log("Error ",err)
+	  			}
+	     	}
 	    });
 
 	    var hasGP = false;
@@ -73,24 +84,48 @@ exports.server = server;
 exports.canGame = function(){
     return "getGamepads" in win;
 }
-app.on("ready",function(win){	
+app.on("ready",function(_win){	
 	SplashScreen({"url":"public/app/splashscreen.html"});
 	loadConfig(function(config){
-		
 		server(config)
 		.then(function(){
 			console.log("Aplicación Iniciada.",__dirname)
 			splashscreen.hide();
 			createWindow({url:'public/app/index.html#login'})
 			.then(win=>{
+				ready=true;
 			});
 		},
 		function(err){
-			splashscreen.hide();
-			console.log("La Aplicación está lista para ser Instalada.");
-			createWindow({url:'public/app/index.html#wizard'})
-			.then(win=>{
+			const ElectronOnline = require('electron-online')
+			const connection = new ElectronOnline();
+		    splashscreen.hide();
+		    
+
+			connection.on('online', () => {
+			  console.log('App is online!')
+			  console.log("La Aplicación está lista para ser Instalada.");
+			  if(!ready){
+				  createWindow({url:'public/app/index.html#wizard'})
+				  .then(win=>{
+				  	ready=true;
+				  });
+			  }
+			})
+			 
+			connection.on('offline', () => {
+			  	console.log('App is offline!');
+			  	
+			  	if(!ready){
+			  		
+				  	createWindow({url:'public/app/index.html#offline'})
+					  .then(win=>{
+					  	
+				  	});
+				}
 			});
+
+			
 		});
 	});
 });

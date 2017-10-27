@@ -13,7 +13,7 @@ Ext.define('Admin.view.pages.ErrorBase', {
     autoShow: true,
     cls: 'error-page-container',
     closable: false,
-    title: 'Sencha',
+    title: 'Ups!',
     titleAlign: 'center',
     maximized: true,
     modal: true,

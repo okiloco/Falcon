@@ -1,5 +1,7 @@
 const remote = require("electron").remote;
 const main = remote.require('./main.js');
+
+
 var Helper = remote.require("./server/helpers/helper.js");
 var Constants = remote.require("./server/helpers/Constants.js");
 var app_config = './server/app.json';
@@ -20,6 +22,9 @@ function subirInfracciones(params){
 		}else{
 			Msg.info("Archivos subidos con éxito.");
 		}
+	});
+	socket.on("infraccion-update",function(err){
+		Msg.info("Infracción actualizada con éxito.");
 	});
 	socket.on("upload-fail",function(err){
 		if(err){
@@ -68,8 +73,28 @@ function __init(){
 			Msg.info("Infracción Lista para subirse.");
 		});
 
+		socket.on("infraccion-error",function(infraccion){
+			Ext.Msg.show({
+			    title: 'Atención',
+			    msg: 'No se pudo actualizar la Infracción, verifique su conexión a Internet.',
+			    buttons: Ext.Msg.OK,
+			    icon: Ext.Msg.WARNING                    
+			});
+		});
 		socket.on("message",function(msg){
 			Msg.info(msg);
+		});
+		socket.on('online', (msg) => {
+			if(Msg!=undefined){
+				Msg.info(msg);
+			}
+		  	console.log('App is online!')
+		});
+		socket.on('offline', (msg) => {
+			if(Msg!=undefined){
+				Msg.info(msg);
+			}
+		  	console.log('App is offline!')
 		});
 		console.log("FalconSystem",global.instaled);
 

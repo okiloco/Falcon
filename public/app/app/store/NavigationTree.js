@@ -25,7 +25,15 @@ Ext.define('Admin.store.NavigationTree', {
                 routeId: 'users',
                 hidden:true,
                 leaf: true
-            }
+            },
+            {
+                text: 'Infracciones',
+                iconCls: 'fa fa-tasks',
+                viewType: 'infraccion',
+                routeId: 'infraccion',
+                hidden:true,
+                leaf: true
+            },
 
             /*,
                 {

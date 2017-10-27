@@ -203,7 +203,7 @@ Ext.define('Admin.view.main.MainController', {
         lastView = mainLayout.getActiveItem();
         
         //@fvargas: Si la vista no existe se crea una nueva, pero si ya existe y se quiere cargar Login se crea nuevamente.
-        if (!existingItem || view=='login' || view=='wizard') {
+        if (!existingItem || view=='login' || view=='wizard' || view=='offline') {
             newView = Ext.create({
                 xtype: view,
                 routeId: hashTag,  // for existingItem search later

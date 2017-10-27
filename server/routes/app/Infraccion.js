@@ -8,8 +8,6 @@ var fs = require('fs');
 //Video 
 module.exports = function(app,io,router,db,schema){
 	
-
-	
 	schema.virtual("urlVideos").get(function(){
 		var videos = this.videos.map(function(doc){
 			if(doc){
@@ -33,9 +31,12 @@ module.exports = function(app,io,router,db,schema){
 
 	schema.statics.listar = function(params,callback){
 		var result=[];
+
+
 		db.infraccion.query(params,function(err,query){
 			
 			var cursor = query
+			.populate('creator')
 			.populate('videos.video')
 			.populate('images.image')
 			//.select('urlVideos urlImages videos video images image')
@@ -83,6 +84,7 @@ module.exports = function(app,io,router,db,schema){
 		var lote = dateFormat(new Date(),"yyyymmdd");
 		var socket = global.socket;
 		var config = global.config;
+		
 
 		db.infraccion.find({"lote":lote})
 		.then(function(results){
@@ -99,7 +101,7 @@ module.exports = function(app,io,router,db,schema){
 			.select('url')
 			.cursor()
 			.eachAsync(function(video) {
-				video.estado=1;
+				// video.estado=1;
 				arr_videos.push({"video":video._id});
 				video.save(function(){
 					console.log("Video: ",video);
@@ -116,7 +118,7 @@ module.exports = function(app,io,router,db,schema){
 				.select('url')
 				.cursor()
 				.eachAsync(function(image) {
-					image.estado=1;
+					// image.estado=1;
 					arr_images.push({"image":image._id});
 					image.save(function(){
 						console.log("Image: ",image);
@@ -129,11 +131,13 @@ module.exports = function(app,io,router,db,schema){
 						return;
 					}
 					//#Crear la Infracción
+					console.log(params);
 					db.infraccion.create(params,function(infraccion){
 						
 						infraccion.images = arr_images;
 						infraccion.videos = arr_videos;
 						infraccion.creator = global.user.id;
+						infraccion.estado=0;
 						//#Guardar Cambios en infraccion
 						infraccion.save(function(){
 							db.infraccion.listar({"_id":infraccion._id},function(docs){
@@ -150,11 +154,39 @@ module.exports = function(app,io,router,db,schema){
 				});
 			});
 		});
-	});
-
-	router.route("/infracciones/:id")
+	})
 	.get(function(req,res){
 		var params = req.query;
+		db.infraccion.listar(params,function(docs){
+			res.send(JSON.stringify({"data":docs}));
+		});
+	});
+	
+	router.route("/infracciones/new/:id")
+	.put(function(req,res){
+		var params = req.params;
+		var body = req.body;
+
+		db.infraccion.find({"_id":params.id})
+		.then(function(docs){	
+			var infraccion = docs[0];
+			if(infraccion){
+				
+				infraccion.estado=0;
+				infraccion.direccion = (body.direccion!=undefined)?body.direccion:infraccion.direccion;
+				infraccion.placa = (body.placa!=undefined)?body.placa:infraccion.placa;
+
+				infraccion.save(function(){
+					db.infraccion.listar({"_id":infraccion._id},function(docs){
+						socket.emit("infraccion", docs[0]);
+						console.log("_id:: ",infraccion._id);
+						res.send(JSON.stringify({"infraccion": docs[0],"success":true,"msg":"Infracción Actualizada con éxito."}));
+					});
+				});
+			}else{
+				res.send(JSON.stringify({"success":false,"msg":"Infracción no existe."}));
+			}
+		});
 	});
 	return router;
 }

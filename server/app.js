@@ -6,10 +6,15 @@ var path = require("path");
 var url = require("url");
 var pem = require('pem');
 var cors = require('cors')
+var moment = require('moment-timezone');
+const ElectronOnline = require('electron-online')
+const connection = new ElectronOnline();
 
 var bodyParser = require("body-parser");
 var session = require("express-session");
 var session_middleware = require("./middlewares/session");
+var online_middleware = require("./middlewares/online");
+var online = false;
 var app = express();
 var server = require("http").Server(app);
 var io = require("socket.io")(server);
@@ -21,8 +26,9 @@ var Helper = require("./helpers/helper.js");
 var Constants = require("./helpers/Constants.js");
 var request = require('request');
 var formData = require('form-data');
-
-
+var socket;
+var db;
+var initialized = false;
 const corsOptions = {
 	origin:Constants.URL_BASE
 }
@@ -61,68 +67,28 @@ app.get("/config",function(req,res){
 		});
 	});
 });
-app.get("/organismos",function(req,res){
-
-	var options = {
-		"method":'GET',
-		"url":Constants.URL_ORGANISMOS
-	};
-	request(options,function(err,response,body){
-		var result = response;
-		console.log("BODY:::",body);
-		if (err) {
-			console.log("[Error al enviar archivos]",err);
-		   	return;
-		}
-		res.send(JSON.stringify({
-			"data":JSON.parse(body)
-		}));
-	});
-});
-app.get("/dispositivos",function(req,res){
-
-	var params = req.query;
-	var options = {
-		"method":'GET',
-		"url":Constants.URL_DISPOSITIVOS,
-		"qs":params
-	};
-	request(options,function(err,response,body){
-		var result = response;
-		console.log("GET BODY:::",body);
-		if (err) {
-			console.log("[Error al enviar archivos]",err);
-		   	return;
-		}
-		res.send(JSON.stringify({
-			"data":JSON.parse(body)
-		}));
-	});
-});
-
 
 module.exports = function(config){
 
 	var port = process.env.PORT || 3000;
-	
-	
-	/*obj["user"] = {
-		"username":params.username,
-		"email":params.email || ''
-	}
-	obj["camera"] ={
-		"camera_ip":params.camera_ip,
-		"camera_user":params.camera_user,
-		"camera_password":params.camera_password
-	}
-	obj["movil"] ={
-		"movil_plate":params.movil_plate,
-		"movil_name":params.movil_name
-	}*/
 	global.config = config;
 
+	function actualizarInfraccion(params){
+		db.infraccion.find({"_id":params.id})
+		.then(function(docs){
+			var infraccion = docs[0];
+			infraccion.estado=1;
+			infraccion.save(function(err,doc){
+				if(err){
+					socket.emit("infraccion-error",err);
+				}else{
+					socket.emit("infraccion-update",doc);
+				}
+			});
+		});
+	}
 	function subirArchivos(params){
-		var socket = global.scoket;
+		// var socket = global.scoket;
 		var formData = {
 			"urlVideos":params.urlVideos,
 			"urlImages":params.urlImages,
@@ -140,10 +106,14 @@ module.exports = function(config){
 		};
 		var files  = params.urls;
 		var userfiles =[];
-
-		console.log(params.urlVideos,params.urlImages);
+		
 		return new Promise(function(resolve,reject){
 
+
+			if(connection.status=='OFFLINE'){
+				reject("No hay conexión a Internet.");
+				return;
+			}
 			console.log("Se va a subir los Archivos.");
 			files.forEach(function(file){
 				var url = file.url;
@@ -155,46 +125,72 @@ module.exports = function(config){
 					return;					
 				}
 			});
+
+			formData["fecha"] = moment().tz(params.fecha,"America/Bogota").format();
+
 			formData["userfile[]"] = userfiles;
 			request.post({
 			"url":Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE, 
 			formData: formData},
 			function(err, httpResponse, body) { 
-
+				console.log("BODY:",body);
 				if (err) {
 					console.log("[Error al enviar archivos]",err);
 				   	reject("Error al enviar archivos "+err);
 				   	return;
 				}
-				resolve(formData);
+				resolve(params);
 			});
 		});
 	};
 
-	function init(){
-		io.on("connect",function(socket){
-			config["port"] = port;
-			console.log("socket connected.");
-			// config["user"] = global.user;
-			global.socket = socket;
 
-			socket.emit("start",{
-				"success":(!Helper.isEmpty(config)),
-				"config":config,
-				"user":global.user
-			});
-			socket.on("new-infraccion",function(params){
-				console.log("Nueva Infracción recibida.",params);
-				subirArchivos(params)
-				.then(function(doc){
-					console.log("Todo bien todo bien!")
-					socket.emit("uploaded",null,doc);
-				}, function(err){
-					console.log("[ERROR] Algo salió mal.",err)
-					socket.emit("upload-fail",err);
+	function getOnline(){
+		return online;
+	}
+	function init(){
+
+		if(!initialized){
+			io.on("connect",function(_socket){
+				config["port"] = port;
+				console.log("socket connected.");
+				global.socket = socket;
+				
+				socket = _socket;
+				
+				socket.emit("start",{
+					"success":(!Helper.isEmpty(config)),
+					"config":config,
+					"user":global.user
 				});
+				socket.on("new-infraccion",function(params){
+					console.log("Nueva Infracción recibida.",params);
+					subirArchivos(params)
+					.then(function(doc){
+						console.log("Todo bien todo bien!");
+						socket.emit("uploaded",null,doc);
+						//Actualizar Infracción.
+						actualizarInfraccion(doc);
+					}, function(err){
+						console.log(err)
+						socket.emit("upload-fail",err);
+					});
+				});
+				
 			});
-		});
+			
+			connection.on("online",function(msg){
+				console.log("Aplicación en linea.")
+				socket.emit("online","Aplicación en linea.");
+			});
+			connection.on("offline",function(msg){
+				console.log("Aplicación sin conexión.")
+				socket.emit("offline","Aplicación sin conexión.");
+			});
+			
+			console.log("Aplicación Iniciada.",new Date().toLocaleString());
+			initialized =true;
+		}
 	}
 
 	console.log("Iniciando Aplicación");
@@ -210,11 +206,11 @@ module.exports = function(config){
 			saveUninitialized:false
 		}));
 		//Crear Instancia de Objeto Administrador de base de datos
-		
-		const db = ManagerDB.createManagerDB();
+		db = ManagerDB.createManagerDB();
 
 		app.use("/public",express.static("public"));
 		app.use("/app",session_middleware);
+		// app.use("/app",online_middleware);
 		var routes = require("./routes");
 		app.use("/app",routes(app,db));
 		app.use(function(req, res, next) {

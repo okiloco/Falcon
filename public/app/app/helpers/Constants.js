@@ -45,7 +45,7 @@ Ext.define('Admin.helpers.Constants', {
 
 	//Backoffice
 	// URL_BACKOFFICE:'http://backof-dev.construsenales.co/service/falconwebservice/falconFileUpload',
-	URL_BACKOFFICE:'http://backof-dev.construsenales.co/service/falconwebservice/falconFileUpload',
+	URL_BACKOFFICE:'http://backoffice.construsenales.co/service/falconwebservice/falconFileUpload',
 
 	MAX_CAPTURES:4,
 	MAX_REC:4,

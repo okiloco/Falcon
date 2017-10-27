@@ -1,11 +1,9 @@
 Ext.define('Admin.model.infraccion.Infraccion', {
     extend:'Admin.model.Base',
     fields:[
-    
         {   
-            name : 'id',
-            type : 'int',
-            persist: false
+          name : 'id',
+          persist: false
         }, 
        "codigo",
        "lote",
@@ -16,23 +14,22 @@ Ext.define('Admin.model.infraccion.Infraccion', {
        "lat",
        "long",
        "user",
-       "estado",
        "fecha",
        "images",
-       "videos"
+       "videos",
+       "estado",
+        {
+          name:"estado_desc",
+          convert:function(v,record){
+            return (record.get("estado")==0)?"Pendiente":"Enviada";
+          }
+        },
+        {
+          name:"username", mapping:"creator.username"
+        }
     ],
     proxy: {
        type: 'rest',
        url : Constants.URL_INFRACCIONES
-    },
-    insertVideo:function(video_id){
-    	var videos = this.get("videos") || [];
-    	videos.push(video_id);
-    	this.set("videos",videos);
-    },
-    insertImage:function(image_id){
-    	var images = this.get("images") || [];
-    	images.push(image_id);
-    	this.set("images",images);
     }
 });

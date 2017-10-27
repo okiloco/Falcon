@@ -1,6 +1,7 @@
 var md5 = require("md5");
 var Helper = require("../helpers/helper");
 var app_config = './server/app.json';
+//const service = require("../services/index");
 module.exports = function(app,io,db){
 	//Evento Constructor User - Se dispara cuando el Schema user ha sido instanciado.
 	db.on("user",function(schema){
@@ -60,12 +61,16 @@ module.exports = function(app,io,db){
 					db.user.login({"username":params.username,"password":md5(params.password)})
 					.then(function(user){
 
+						//console.log(req.session.secret);
+						//var token = service(user,req.session.secret);
 						req.session.user_id =user._id;
 						res.locals.user = user;
+
 						global.user = user;
 						
 						res.send(JSON.stringify({
 							"user":user,
+							// "token":token,
 							"success":true
 						}));
 					}).catch((err)=>{

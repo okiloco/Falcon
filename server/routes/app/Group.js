@@ -3,7 +3,7 @@ var md5 = require("md5");
 module.exports = function(app,io,router,db,schema){
 	//Ejemplo de Virtual
 	schema.virtual("alias").get(function(){
-		return this.username+"-lord";
+		return this.name+"-lord";
 	});
 	schema.statics.listar = function(params,callback){
 		var result=[];

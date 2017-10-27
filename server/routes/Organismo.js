@@ -1,3 +1,6 @@
+var request = require('request');
+var formData = require('form-data');
+var Constants = require("../helpers/Constants.js");
 module.exports = function(app,io,db,schema){
 
 	db.on("organismo",function(schema){
@@ -13,5 +16,41 @@ module.exports = function(app,io,db,schema){
 			res.send(JSON.stringify(doc));
 		});					
 	});
-	
+	app.get("/organismos",function(req,res){
+
+		var options = {
+			"method":'GET',
+			"url":Constants.URL_ORGANISMOS
+		};
+		request(options,function(err,response,body){
+			var result = response;
+			if (err) {
+				console.log("[Error al enviar archivos]",err);
+			   	return;
+			}
+			res.send(JSON.stringify({
+				"data":JSON.parse(body)
+			}));
+		});
+	});
+	app.get("/dispositivos",function(req,res){
+
+		var params = req.query;
+		var options = {
+			"method":'GET',
+			"url":Constants.URL_DISPOSITIVOS,
+			"qs":params
+		};
+		request(options,function(err,response,body){
+			var result = response;
+			console.log("GET BODY:::",body);
+			if (err) {
+				console.log("[Error al enviar archivos]",err);
+			   	return;
+			}
+			res.send(JSON.stringify({
+				"data":JSON.parse(body)
+			}));
+		});
+	});
 }
