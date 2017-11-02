@@ -109,16 +109,32 @@ module.exports = function(config){
 		
 		return new Promise(function(resolve,reject){
 
-
 			if(connection.status=='OFFLINE'){
 				reject("No hay conexión a Internet.");
 				return;
 			}
+			if((params.estado!=1)){
+				reject("La infracción se subirá más tarde.");
+				return;	
+			}
+
+			
+			console.log("subir: ",params.estado,(params.estado==1));
 			console.log("Se va a subir los Archivos.");
+			
+
+			/*socket.emit("uploaded",null,params);
+			//Actualizar Infracción.
+			actualizarInfraccion(params);
+			resolve(params);
+			return;	*/
+
 			files.forEach(function(file){
 				var url = file.url;
 				try{
-					userfiles.push(fs.createReadStream(url));
+					if(url!=undefined){
+						userfiles.push(fs.createReadStream(url));
+					}
 				}catch(err){
 					console.log("[Error al leer archivos]",url,"Error:",err);
 					reject(err);
@@ -126,21 +142,45 @@ module.exports = function(config){
 				}
 			});
 
-			formData["fecha"] = moment().tz(params.fecha,"America/Bogota").format();
+			if(userfiles.length>0){
+				
+				formData["userfile[]"] = userfiles;
 
-			formData["userfile[]"] = userfiles;
-			request.post({
-			"url":Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE, 
-			formData: formData},
-			function(err, httpResponse, body) { 
-				console.log("BODY:",body);
-				if (err) {
-					console.log("[Error al enviar archivos]",err);
-				   	reject("Error al enviar archivos "+err);
-				   	return;
+				console.log("Fecha: ",params.fecha)
+				formData["fecha"] = moment().tz(params.fecha.toString(),"America/Bogota").format('YYYY-MM-DD HH:mm:ss');
+				
+				request.post({
+				"url":Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE, 
+				formData: formData},
+				function(err, httpResponse, body) { 
+
+					
+					console.log("response::",body);
+					if(body!=undefined){
+
+					var response = JSON.parse(body);
+					console.log("response:: ",response.success);
+					if (err) {
+						console.log("[Error al enviar archivos]",err);
+					   	reject("Error al enviar archivos "+err);
+					   	return;
+					}
+					if(!response.success){
+					   	reject(response.msg);
+					   	return;
+				    }
+					socket.emit("uploaded",null,params);
+					//Actualizar Infracción.
+					console.log("Antes de actualizar la infraccion:",params);
+					actualizarInfraccion(params);
+					resolve(params);
+				}else{
+					reject("Revise la conexión a Internet.");
 				}
-				resolve(params);
-			});
+				});
+			}else{
+				console.log("No se pudo subir la infracción: "+params._id+"<br>Puede que los archivos no existan.");
+			}
 		});
 	};
 
@@ -148,15 +188,68 @@ module.exports = function(config){
 	function getOnline(){
 		return online;
 	}
-	function init(){
+	function transferFiles(params){
 
-		if(!initialized){
-			io.on("connect",function(_socket){
+		var socket = global.socket;
+		return new Promise(function(resolve,reject){
+
+			var sync = global.sync || false;
+			console.log("Sync: ",sync);
+			if(connection.status=='ONLINE'){
+				if(!("length" in params)){
+					subirArchivos(params)
+					.then(function(doc){
+						console.log("Todo bien todo bien!");
+						resolve();
+					}, function(err){
+						console.log(err)
+						socket.emit("upload-fail",err);
+					});
+				}else{
+
+					if(sync){
+						params.forEach(function(doc,index,arr){
+
+							var total = (arr.length - 1);
+							console.log("\t-->index:",index,total);
+
+							db.infraccion.listar({"_id":doc._id},function(docs){
+								
+								var infraccion = docs[0];
+								infraccion.estado = 1;
+								// infraccion["urls"] = infraccion.videos.concat(infraccion.images);
+
+								subirArchivos(infraccion)
+								.then(function(doc){
+									console.log("Todo bien todo bien!");
+									if(index == total){
+										resolve();
+									}
+								}, function(err){
+									console.log(err)
+									socket.emit("upload-fail",err);
+								});
+
+							});
+						});
+					}else{
+						reject("Las infracciones se cargaran en otro momento.");
+					}
+				}
+			}else{
+				reject("No se pudo subir la(s) Infraccion(es)<br>Revise su conexión a Internet.");
+			}
+			
+		});
+	}
+	function init(){
+		io.once("connect",function(_socket){
+
+			if(!initialized){
 				config["port"] = port;
-				console.log("socket connected.");
-				global.socket = socket;
 				
 				socket = _socket;
+				global.socket = socket;
 				
 				socket.emit("start",{
 					"success":(!Helper.isEmpty(config)),
@@ -164,33 +257,56 @@ module.exports = function(config){
 					"user":global.user
 				});
 				socket.on("new-infraccion",function(params){
-					console.log("Nueva Infracción recibida.",params);
-					subirArchivos(params)
-					.then(function(doc){
-						console.log("Todo bien todo bien!");
-						socket.emit("uploaded",null,doc);
-						//Actualizar Infracción.
-						actualizarInfraccion(doc);
-					}, function(err){
-						console.log(err)
-						socket.emit("upload-fail",err);
+					console.log("Nueva Infracción recibida.");
+
+					transferFiles(params)
+					.then(function(){
+						console.log("Tranferencia exitosa.");
+						socket.emit("message","Tranferencia exitosa.");
+					},function(err){
+						socket.emit("message",err);
+						console.log(err);
 					});
 				});
-				
-			});
-			
-			connection.on("online",function(msg){
-				console.log("Aplicación en linea.")
-				socket.emit("online","Aplicación en linea.");
-			});
-			connection.on("offline",function(msg){
-				console.log("Aplicación sin conexión.")
-				socket.emit("offline","Aplicación sin conexión.");
-			});
-			
-			console.log("Aplicación Iniciada.",new Date().toLocaleString());
-			initialized =true;
-		}
+				socket.on("onsync",function(sync){
+					console.log("Sync: ",sync);
+					global.sync = sync;
+					if(sync){
+						db.infraccion.find({"estado":0},function(err,docs){
+
+							if(docs.length>0){
+								transferFiles(docs)
+								.then(function(){
+									console.log("Tranferencia exitosa.");
+									socket.emit("message","Tranferencia exitosa.");
+								},function(err){
+									console.log(err);
+									socket.emit("message",err);
+								});
+							}
+						});
+					}
+				});	
+
+				var online = (connection.status=='ONLINE');
+				connection.on("online",function(msg){
+					if(!online){
+						console.log("Aplicación en linea.",connection.status);
+						socket.emit("online","Aplicación en linea.",connection.status);
+						online = true;
+					}
+				});
+				connection.on("offline",function(msg){
+					if(online){
+						console.log("Aplicación sin conexión.",connection.status);
+						socket.emit("offline","Aplicación sin conexión.",connection.status);
+						online = false;
+					}
+				});
+				initialized =true;
+				console.log("socket connected.",new Date().toLocaleString());
+			}
+		});
 	}
 
 	console.log("Iniciando Aplicación");

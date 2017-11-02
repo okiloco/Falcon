@@ -103,20 +103,22 @@ module.exports = function(app,db,io){
 	function routePath(route_map){
 		var route_name = route_map.path;
 		var name = route_map.name;
-		list = function(req,res,next){
+		function list(req,res,next){
 			var params = req.query || {};
 			db[name].search(params,function(err,docs){
 				console.log("GET: list "+route_name);			
 				res.send(JSON.stringify({data:docs}));
 			});
 		}
-		update = function(req,res,next){
-			res.send(JSON.stringify({"success":true,"msg":"update"}));
+		
+		function findById(req,res,next){
+			var params = req.params;
+			console.log("GET: findById "+route_name);
+			db[name].search(params,function(err,docs){
+				res.send(JSON.stringify({"success":true,"data":docs}));
+			});
 		}
-		findById = function(req,res,next){
-			res.send(JSON.stringify({"success":true,"msg":"findById"}));
-		}
-		save = function(req,res,next){
+		function save(req,res,next){
 			var params = req.body;
 			db[name].create(params,function(doc){
 				console.log("POST: save "+route_name);
@@ -130,9 +132,23 @@ module.exports = function(app,db,io){
 				}
 			});
 		}
-		remove = function(req,res,next){
+		function update(req,res,next){
 			var params = req.body;
-			db[name].removeById(params.id,function(msg,doc){
+			db[name].create(params,function(doc){
+				console.log("PUT: update "+route_name);
+				if(!doc){
+					res.send(JSON.stringify({"success":false,"msg":err}));
+				}else{
+					res.send(JSON.stringify({
+						"success":true,
+						"msg":(!params._id)?"Registro creado con éxito.":"Registro actualizado con éxito."
+					}));
+				}
+			});
+		}
+		function remove(req,res,next){
+			var params = req.params;
+			db[name].removeById(params._id,function(msg,doc){
 				console.log("DELETE: remove "+route_name);
 				res.send(JSON.stringify({
 					success:true,
@@ -143,8 +159,10 @@ module.exports = function(app,db,io){
 		console.log(">define route: ",name,"/app"+route_name);
 		router.route(route_name).get(list);//Listar y Buscar
 		router.route(route_name).post(save);//crear registro nuevo y actualizar
+		router.route(route_name).put(update);//crear registro nuevo y actualizar
 		router.route(route_name+':_id').get(findById);//busca un registro por Id
-		router.route(route_name).delete(remove);//Eliminar registro por Id
+		router.route(route_name+'/:_id').get(findById);//busca un registro por Id
+		router.route(route_name+'/:_id').delete(remove);//Eliminar registro por Id
 	}
 	/**
 	* on:define name, schema

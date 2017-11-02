@@ -28,7 +28,7 @@ Ext.define('Admin.view.infraccion.Infraccion',{
             layout:'fit',
             plugins:[
                Ext.create('Ext.grid.plugin.CellEditing',{
-                  clicksToEdit: 1
+                  clicksToEdit: 2
                })
             ],
             /*listeners:{
@@ -51,7 +51,13 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                     width:150,
                     editor: Ext.create('Ext.form.field.Text',{
                         emptyText:'Placa',
+                        name:'placa',
+                        regex: /^((AU){1}|([A-Z]{3})([\d]{3}))$/,
+                        regexText: 'Debe ser una placa Válida.',
                         selectOnFocus: true,
+                        listeners: {
+                            specialkey:'onSaveEnter'
+                        }
                     })
                 },
                 {
@@ -60,19 +66,13 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                     width:250,
                     editor: Ext.create('Ext.form.field.Text',{
                         emptyText:'Dirección',
+                        name:'direccion',
+                        regex: /^((VIA)|(TRV)|(AV)|(CL)|(KR)|(KM)){1}(\s)((\d)+[A-Z]?)+(-)((\d)+[A-Z]?)+$/,
+                        regexText: 'Debe ser una dirección Válida.',
                         selectOnFocus: true,
                         listeners: {
-                            specialkey: function(self, e){
-                               var grid = self.up("grid");
-                               if (e.getKey() == e.ENTER) {
-                                  var record=grid.getSelectionModel().getSelection()[0];
-                                  console.log(record);
-                                  /*record.set('direccion',self.getValue());
-                                  console.log(record.getData());*/
-                               }
-                            }
+                            specialkey:'onSaveEnter'
                         }
-                        
                     })  
                 },
                 {
@@ -176,7 +176,15 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                         }
                      ]
                  }
-             ]             
+             ],
+             listeners:{
+                scope:this,
+                cellkeydown:function( self, td, cellIndex, record, tr, rowIndex, e, eOpts ){
+                    var grid = self.up("grid");
+                    record.set("changed",(!record.get("changed")));
+                    console.log(record.get("changed"));
+                }
+             }             
         }
      ] 
 });

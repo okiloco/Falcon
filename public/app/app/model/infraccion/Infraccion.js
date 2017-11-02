@@ -26,6 +26,9 @@ Ext.define('Admin.model.infraccion.Infraccion', {
         },
         {
           name:"username", mapping:"creator.username"
+        },
+        {
+          name:"changed", defaultValue:false, type:'bool'
         }
     ],
     proxy: {

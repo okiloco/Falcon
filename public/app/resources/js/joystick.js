@@ -7,20 +7,20 @@
             down[e.keyCode] = true;
         }).keyup(function(e) {
             if (down[16] && down[78]) {
-                alert('Nueva Infraccion');
+                console.log('Nueva Infraccion');
             }
             if (down[16] && down[67]) {
-                alert('Captura Imagen');
+                console.log('Captura Imagen');
             }
             if (down[16] && down[79]) {
-                alert('Video de 8 segundos');
+                console.log('Video de 8 segundos');
             }
             if (down[16] && down[73]) {
                 if (toggle===false) {
-                    alert('Iniciar video');
+                    console.log('Iniciar video');
                     toggle=true;
                 }else{
-                    alert('Detener video');
+                    console.log('Detener video');
                     toggle=false;
                 }
             }
@@ -29,6 +29,7 @@
    
 
     
+        
         var hasGP = false;
         var repGP;  
         var pan_value=0;
@@ -66,7 +67,7 @@
                 var j2_pad =1;
                 var j1_pad =0;
                 var movement_dead_zone=0.02;
-                var movement_sensibility = 40;
+                var movement_sensibility = 80;
                 var zoom_dead_zone = 0.4;
                 var zoom_sensibility = 1000;
 
@@ -208,5 +209,5 @@
             }
      
         });
-    
+
 }(jQuery));

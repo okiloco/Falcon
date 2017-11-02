@@ -247,9 +247,11 @@ Ext.define('Admin.view.ptz.PTZController', {
     	var params = form.getForm().getFieldValues();
     	var infraccion = vm.get("infraccion") || Ext.create('Admin.model.infraccion.Infraccion',params);
     	var dataview_images = form.up("panel").down("[name=captureimages]");
-        var dataview_videos = panel.down("[name=video_viewer]");
+      var dataview_videos = panel.down("[name=video_viewer]");
     	
         if(dataview_images.getStore().getCount()>0 && dataview_videos.getStore().getCount()>0){
+
+          console.log(infraccion.getData());
         	infraccion.save({
     		    callback: function(record, operation, success) {
     		    	var responseObject = Ext.decode(operation.getResponse().responseText);
@@ -267,9 +269,9 @@ Ext.define('Admin.view.ptz.PTZController', {
     		        	console.log(infraccion);
     		        	Msg.info(responseObject.msg);
 
-                        dataview_images.getStore().reload();
-                        dataview_videos.getStore().reload();
-                        form.getForm().reset();
+                  dataview_images.getStore().reload();
+                  dataview_videos.getStore().reload();
+                  form.getForm().reset();
     		        }
     		    }
     		});

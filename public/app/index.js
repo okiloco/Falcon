@@ -84,15 +84,23 @@ function __init(){
 		socket.on("message",function(msg){
 			Msg.info(msg);
 		});
-		socket.on('online', (msg) => {
+		
+		var sync;
+		socket.on('online', (msg,status) => {
+			sync = global.sync || false;
 			if(Msg!=undefined){
 				Msg.info(msg);
+				console.log("sync: ",sync);
+				socket.emit("onsync",sync);
 			}
 		  	console.log('App is online!')
 		});
-		socket.on('offline', (msg) => {
+		socket.on('offline', (msg,status) => {
+			sync = global.sync || false;
 			if(Msg!=undefined){
 				Msg.info(msg);
+				console.log("sync: ",sync);
+				socket.emit("onsync",sync);
 			}
 		  	console.log('App is offline!')
 		});

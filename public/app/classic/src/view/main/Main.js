@@ -44,6 +44,18 @@ Ext.define('Admin.view.main.Main', {
                      handler: 'onToggleNavigationSize'
                  },
                  '->',
+                 {
+                    xtype: 'button',
+                    enableToggle: true,
+                    iconCls:'x-fa fa-refresh',
+                    listeners:{
+                        toggle:'onToggleSync'
+                    },
+                    // ui: 'header',
+                    // href: '#profile',
+                    // hrefTarget: '_self',
+                    tooltip: 'Sincronización Automática'
+                 },
                  /*{
                      xtype: 'segmentedbutton',
                      margin: '0 16 0 0',

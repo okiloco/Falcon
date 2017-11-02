@@ -15,6 +15,15 @@ Ext.define('Admin.view.main.MainController', {
     },
 
     lastView: null,
+    onToggleSync:function(self, pressed, eOpts){
+       global["sync"] = pressed;
+       console.log("sync: ",pressed);
+       try{
+        socket.emit("onsync",pressed);   
+       }catch(err){
+            console.log("Error Socket: ",err);        
+       }
+    },
     onClickUser:function(self,el){
        var mainCardPanel=this.lookupReference('mainCardPanel');
 
@@ -386,5 +395,6 @@ Ext.define('Admin.view.main.MainController', {
 
     onEmailRouteChange: function () {
         this.setCurrentView('email');
-    }
+    },
+
 });

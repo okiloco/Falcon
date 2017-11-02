@@ -33,12 +33,16 @@ Ext.define('Admin.view.ptz.InfraccionForm',{
                     xtype: 'textfield',
                     name: 'placa',
                     emptyText: 'Placa',
+                    regex: /^((AU){1}|([A-Z]{3})([\d]{3}))+$/,
+                    regexText: 'Debe ser una placa Válida.',
                     allowBlank:false
                 },
                 {
                     xtype: 'textfield',
                     name: 'direccion',
                     emptyText: 'Dirección',
+                    regex: /^((VIA)|(TRV)|(AV)|(CL)|(KR)|(KM)){1}(\s)((\d)+[A-Z]?)+(-)((\d)+[A-Z]?)+$/,
+                    regexText: 'Debe ser una dirección Válida.',
                     allowBlank:false
                 },
                 {

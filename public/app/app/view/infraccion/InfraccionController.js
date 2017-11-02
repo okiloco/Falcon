@@ -41,7 +41,8 @@ Ext.define('Admin.view.infraccion.InfraccionController', {
     },
     upload:function(grid, rowIndex, colIndex){
     	var record = grid.getStore().getAt(rowIndex);
-        console.log(record.getData())
+        record.set("estado",1);
+        console.log("Se va a subir. ",record.getData())
         record.save({
             callback: function(record, operation, success) {
                 var responseObject = Ext.decode(operation.getResponse().responseText);
@@ -63,6 +64,42 @@ Ext.define('Admin.view.infraccion.InfraccionController', {
                 }
             }
         });
+    },
+    onSaveEnter:function(self, e){
+       var me =this;
+       if (e.getKey() == e.ENTER) {
+         me.update(self,e);
+       }
+    },
+    update:function(self,e){ 
+       var grid = self.up("grid");
+       var store = grid.getStore();
+       var records=store.getUpdatedRecords();
+       if(records.length>0){
+           var record = records[0];
+           record.set(self.name,self.getValue()); 
+           record.save({
+               callback: function(record, operation, success) {
+                   var responseObject = Ext.decode(operation.getResponse().responseText);
+                   // do something whether the save succeeded or failed
+                   if(!success){
+                       Ext.Msg.show({
+                           title: 'Atención',
+                           msg: responseObject.msg,
+                           buttons: Ext.Msg.OK,
+                           icon: Ext.Msg.ERROR                    
+                       });
+                   }else{
+                       var infraccion = responseObject.infraccion;
+                       var params = infraccion;
+                       console.log(infraccion);
+                       //Msg.info(responseObject.msg);
+
+                       grid.getStore().reload();
+                   }
+               }
+           });
+       }
     }
     
 });

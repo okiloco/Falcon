@@ -29,6 +29,10 @@ module.exports = function(app,io,router,db,schema){
 		return images.join(";");
 	});
 
+	schema.virtual("urls").get(function(){
+		return this.videos.concat(this.images);
+	});
+
 	schema.statics.listar = function(params,callback){
 		var result=[];
 
@@ -47,7 +51,7 @@ module.exports = function(app,io,router,db,schema){
 				infraccion["urlImages"] ="";
 		        
 		        infraccion.videos.forEach(function(docs,index,arr){
-		        	console.log("Video:",docs.video)
+		        	// console.log("Video:",docs.video)
 		        	db.video.findById(docs.video,(err,doc)=>{
 		        		// console.log("Video:",doc);
 		        		infraccion.videos[index]=doc;
@@ -55,7 +59,7 @@ module.exports = function(app,io,router,db,schema){
 		        });
 
 		        infraccion.images.forEach(function(docs,index,arr){
-		        	console.log("Imagen:",docs.image)
+		        	// console.log("Imagen:",docs.image)
 		        	db.image.findById(docs.image,(err,doc)=>{
 		        		// console.log("Imagen:",doc);
 		        		infraccion.images[index]=doc;
@@ -101,10 +105,10 @@ module.exports = function(app,io,router,db,schema){
 			.select('url')
 			.cursor()
 			.eachAsync(function(video) {
-				// video.estado=1;
+				video.estado=1;
 				arr_videos.push({"video":video._id});
 				video.save(function(){
-					console.log("Video: ",video);
+					// console.log("Video: ",video);
 				});
 			})
 			.then(() => {
@@ -118,10 +122,10 @@ module.exports = function(app,io,router,db,schema){
 				.select('url')
 				.cursor()
 				.eachAsync(function(image) {
-					// image.estado=1;
+					image.estado=1;
 					arr_images.push({"image":image._id});
 					image.save(function(){
-						console.log("Image: ",image);
+						//console.log("Image: ",image);
 					});
 				})
 				.then(() => {
@@ -131,7 +135,7 @@ module.exports = function(app,io,router,db,schema){
 						return;
 					}
 					//#Crear la Infracción
-					console.log(params);
+					//console.log(params);
 					db.infraccion.create(params,function(infraccion){
 						
 						infraccion.images = arr_images;
@@ -142,9 +146,11 @@ module.exports = function(app,io,router,db,schema){
 						infraccion.save(function(){
 							db.infraccion.listar({"_id":infraccion._id},function(docs){
 								if(params.estado){
-									console.log("Estado: ",params.estado);
+									var infraccion = docs[0];
+									infraccion.estado = params.estado;
+									console.log("Estado: ",infraccion.estado);
 									//#emit:[infraccion]
-									socket.emit("infraccion",docs[0]);
+									socket.emit("infraccion",infraccion);
 								}
 								console.log("Se creó la infraccion.")
 								res.send(JSON.stringify({"infraccion":docs[0],"success":true,"msg":"Infracción Registrada con éxito."}));
@@ -164,22 +170,22 @@ module.exports = function(app,io,router,db,schema){
 	
 	router.route("/infracciones/new/:id")
 	.put(function(req,res){
-		var params = req.params;
-		var body = req.body;
+		var params = req.body;
 
+		console.log("PUT::: ",params);
 		db.infraccion.find({"_id":params.id})
 		.then(function(docs){	
 			var infraccion = docs[0];
 			if(infraccion){
 				
-				infraccion.estado=0;
-				infraccion.direccion = (body.direccion!=undefined)?body.direccion:infraccion.direccion;
-				infraccion.placa = (body.placa!=undefined)?body.placa:infraccion.placa;
+				console.log("ESTADO::",params.estado);
+				infraccion.estado= (params.estado!=undefined)?params.estado:infraccion.estado;
+				infraccion.direccion = (params.direccion!=undefined)?params.direccion:infraccion.direccion;
+				infraccion.placa = (params.placa!=undefined)?params.placa:infraccion.placa;
 
 				infraccion.save(function(){
 					db.infraccion.listar({"_id":infraccion._id},function(docs){
 						socket.emit("infraccion", docs[0]);
-						console.log("_id:: ",infraccion._id);
 						res.send(JSON.stringify({"infraccion": docs[0],"success":true,"msg":"Infracción Actualizada con éxito."}));
 					});
 				});

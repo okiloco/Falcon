@@ -473,7 +473,7 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 			if(params._id){
 				this.findById(params._id,function(err,doc){
 					if(!doc){
-						if(callback!=undefined) callback(err,doc);
+						if(callback!=undefined){ callback(err,doc); return;}
 					
 					}
 					if(callback!=undefined) callback(err,doc);
