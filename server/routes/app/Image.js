@@ -1,6 +1,7 @@
 var dateFormat = require('dateformat');
 var streaming = require("../../js/videoStreaming");
 var md5 = require("md5");
+var path = require('path');
 //Image  
 module.exports = function(app,io,router,db,schema){
 	
@@ -15,7 +16,7 @@ module.exports = function(app,io,router,db,schema){
 			camera = streaming({
 				id_dispositivo:2,
 				address: config.camera_ip,
-				folder:'./public/images/',
+				folder:path.join(global.APP_PATH,'public','images'),
 				prefix:config.camera_id,
 				port: '80',
 				username: config.camera_user,
@@ -46,6 +47,8 @@ module.exports = function(app,io,router,db,schema){
 						count:count
 					}, function(err, image) {
 						if (!err){
+
+							console.log(image.url_image);
 							db.image.create({
 								"filename":image.filename,
 								"lote":image.lote,

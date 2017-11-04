@@ -44,7 +44,7 @@ module.exports = function(app,io,router,db,schema){
 		var camera = streaming({
 			id_dispositivo:2,
 			address: config.camera_ip,
-			folder:'./public/images/',
+			folder:path.join(global.APP_PATH,'public','images'),
 			prefix:config.camera_id,
 			port: '80',
 			username: config.camera_user,
@@ -55,7 +55,7 @@ module.exports = function(app,io,router,db,schema){
 		video = camera.createRecord({
 			resolution: '800x450',
 			videocodec:'h264',
-			folder:'./public/videos/',
+			folder:path.join(global.APP_PATH,'public','videos'),
 			prefix:config.camera_id,
 			audio:0,
 			fps:25
@@ -82,8 +82,6 @@ module.exports = function(app,io,router,db,schema){
 							"creator":global.user.id
 						},function(doc,err){
 							
-							var url_video_tmp =video.url_video_tmp; 
-							var url_video =video.url_video; 
 							video.on("video-convert",function(){
 								global.socket.emit("video-convert");
 							});

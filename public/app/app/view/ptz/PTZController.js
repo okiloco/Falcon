@@ -44,42 +44,42 @@ Ext.define('Admin.view.ptz.PTZController', {
     },
     recordVideo:function(btn,params,playing){
 
-	   var me = this;
-	   var vm = me.getViewModel();
-	   var timer = Ext.fly('timer');
-       var panel = btn.up("ptz");
-       var dataview_videos = panel.down("[name=video_viewer]");
+  	   var me = this;
+  	   var vm = me.getViewModel();
+	     var timer = Ext.fly('timer');
+      var panel = btn.up("ptz");
+      var dataview_videos = panel.down("[name=video_viewer]");
 
-		if(params.duration!=undefined){
-			var seg = params.duration;
-			vm.set("time",seg);
-			timer.setHtml("Grabando "+seg+"s");
-			
-			//Disparar Evento playing
-			btn.fireEvent("playing",btn,playing);
-			var interval = setInterval(function(){ 
-				seg--;
-				playing = (seg>=0);
-				vm.set("playing",playing);
-				
-				if(!playing){
-					timer.setHtml("");
-					me.stopVideo(btn,playing);
-				}else{
-					vm.set("time",seg);
-				}
-				timer.setHtml("Grabando "+vm.get("time")+"s");
-				//Disparar Evento playing
-				btn.fireEvent("playing",btn,playing);
-			}, 1000);
-			vm.set("interval",interval);
-		}else{
-			vm.set("playing",playing);
-			btn.fireEvent("playing",btn,playing);
-			timer.setHtml("Grabando ");
-		}
+  		if(params.duration!=undefined){
+  			var seg = params.duration;
+  			vm.set("time",seg);
+  			timer.setHtml("Grabando "+seg+"s");
+  			
+  			//Disparar Evento playing
+  			btn.fireEvent("playing",btn,playing);
+  			var interval = setInterval(function(){ 
+  				seg--;
+  				playing = (seg>=0);
+  				vm.set("playing",playing);
+  				
+  				if(!playing){
+  					timer.setHtml("");
+  					me.stopVideo(btn,playing);
+  				}else{
+  					vm.set("time",seg);
+  				}
+  				timer.setHtml("Grabando "+vm.get("time")+"s");
+  				//Disparar Evento playing
+  				btn.fireEvent("playing",btn,playing);
+  			}, 1000);
+  			vm.set("interval",interval);
+  		}else{
+  			vm.set("playing",playing);
+  			btn.fireEvent("playing",btn,playing);
+  			timer.setHtml("Grabando ");
+  		}
 
-		Ext.create('Ext.form.Panel', {
+		  Ext.create('Ext.form.Panel', {
 	       standardSubmit: false
 	    }).getForm().submit({
 	       url: Constants.URL_GRABAR_VIDEO,
@@ -301,6 +301,52 @@ Ext.define('Admin.view.ptz.PTZController', {
         var video = Ext.fly(id);
         video.addCls("video-not-found");
       });
+      this.hotkeys(self);
+    },
+    hotkeys:function(self){
+      
+        var map = new Ext.util.KeyMap({
+            target: Ext.getBody().id,
+            binding: [
+            {
+                key: "c",
+                ctrl:true,
+                shift:false,
+                fn: function(){
+                  var btn = self.down("[name=capture]");
+                  btn.click();
+                }
+            },
+            {
+                key: "o",
+                ctrl:true,
+                shift:false,
+                fn: function(){
+                  var btn = self.down("[name=8segundos]");
+                  btn.click();
+                }
+            },
+            {
+                key: "i",
+                ctrl:true,
+                shift:false,
+                fn: function(){
+                  var btn = self.down("[name=grabar]");
+                  btn.click();
+                }
+            },
+            {
+                key: "n",
+                ctrl:true,
+                shift:false,
+                fn: function(){
+                  var btn = self.down("[name=infraccion]");
+                  btn.click();
+                }
+            }
+            ]
+        });
+        console.log("keys ready!");
     },
     itemClick:function(dataview, record, item, index, e, eOpts){
     	var el = e.target;

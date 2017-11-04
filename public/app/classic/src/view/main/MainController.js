@@ -338,6 +338,7 @@ Ext.define('Admin.view.main.MainController', {
             console.log("window.location.hash",window.location.hash)
         }
     },
+    
     onMainViewBeforeRender:function() {
         
         var vm = this.getViewModel();

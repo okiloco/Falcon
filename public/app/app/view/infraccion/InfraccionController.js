@@ -41,7 +41,6 @@ Ext.define('Admin.view.infraccion.InfraccionController', {
     },
     upload:function(grid, rowIndex, colIndex){
     	var record = grid.getStore().getAt(rowIndex);
-        record.set("estado",1);
         console.log("Se va a subir. ",record.getData())
         record.save({
             callback: function(record, operation, success) {
@@ -101,5 +100,4 @@ Ext.define('Admin.view.infraccion.InfraccionController', {
            });
        }
     }
-    
 });

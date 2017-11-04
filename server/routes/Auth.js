@@ -190,4 +190,17 @@ module.exports = function(app,io,db){
 
 		});
 	});
+	app.get("/config",function(req,res){
+		Helper.readFile('./server/app.json').
+		then(function(config){
+			res.send({
+				"success":(!Helper.isEmpty(config)),
+				config
+			});
+		},function(err){
+			res.send({
+				"success":false
+			});
+		});
+	});
 }

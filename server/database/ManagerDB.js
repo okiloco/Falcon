@@ -824,6 +824,7 @@ ManagerDB.prototype.connect =  function(callback) {
 
 	mongoose.connection.on("error", function(error) {
 	    console.log("Connection to " + self.linkconex + " failed:" + error);
+	    global.socket.emit("mongo-connected",err);
 	});
 
 	mongoose.connection.on("disconnected", function() {

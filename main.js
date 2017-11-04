@@ -1,11 +1,20 @@
-const {app, BrowserWindow} = require('electron')
-
+const {app, BrowserWindow, dialog} = require('electron')
+const ElectronOnline = require('electron-online')
 const path = require('path')
 const url = require('url')
 var server = require('./server/app');
 var Constants = require("./server/helpers/Constants.js");
 var Helper = require("./server/helpers/helper");
-var app_config = './server/app.json';
+process.env['APP_PATH'] = app.getAppPath();
+global.APP_PATH = app.getAppPath();
+
+var app_config = path.join(global.APP_PATH,'server','app.json');
+
+let win;
+let splashscreen;
+let ready = false;
+let win_tmp;
+
 function loadConfig(callback){
 	Helper.readFile(app_config)
 	.then(function(obj){
@@ -20,15 +29,8 @@ function loadConfig(callback){
 		}
 	});
 }
-
-
-let win;
-let splashscreen;
-let ready = false;
-let win_tmp;
-function createWindow(options){
+function createWindow(options,callback){
 	options = options || {};
-
 
 	win = new BrowserWindow({backgroundColor: '#2e2c29',center:true, show: false, width:options.width || 1366,height: options.height || 768,background:"#18425A", title:'Falcon System', icon:__dirname+'/assests/icon.png'})
 
@@ -40,6 +42,7 @@ function createWindow(options){
 
 		win.on("closed",()=>{
 			win = null;
+			app.quit();
 		})
 		const ses = win.webContents.session;
 		
@@ -60,14 +63,12 @@ function createWindow(options){
 	  			}
 	     	}
 	    });
-
-	    var hasGP = false;
-	    var repGP;
+		if(callback!=undefined){
+			callback(win);
+		}
 	    resolve(win);
 	});
 }
-
-
 function SplashScreen(options){
 	splashscreen = new BrowserWindow({show: false, frame:false,backgroundColor: '#fff',center:true,width:400,height: 250,background:"#18425A", titleBarStyle: 'hidden', icon:__dirname+'/assests/icon.png'});
 	splashscreen.on("closed",()=>{
@@ -79,54 +80,65 @@ function SplashScreen(options){
     });
 }
 
-exports.server = server;
-
-exports.canGame = function(){
-    return "getGamepads" in win;
+function init(callback){
+	if(!Helper.isEmpty(config)){
+		console.log("Aplicación Iniciada.",process.env['APP_PATH'])
+		if(splashscreen!=undefined){
+			splashscreen.hide();
+		}
+		createWindow({url:'public/app/index.html#login'})
+		.then(win=>{
+			ready=true;
+		});
+	}else{
+		
+		const connection = new ElectronOnline();
+	    if(splashscreen!=undefined){
+			splashscreen.hide();
+		}
+	    
+		connection.on('online', () => {
+		  console.log('App is online!')
+		  console.log("La Aplicación está lista para ser Instalada.");
+		  if(!ready){
+			  createWindow({url:'public/app/index.html#wizard'})
+			  .then(win=>{
+			  	ready=true;
+			  });
+		  }
+		})
+		 
+		connection.on('offline', () => {
+		  	console.log('App is offline!');
+		  	if(!ready){
+			  	createWindow({url:'public/app/index.html#offline'})
+				  .then(win=>{
+			  	});
+			}
+		});
+	}
 }
 app.on("ready",function(_win){	
 	SplashScreen({"url":"public/app/splashscreen.html"});
-	loadConfig(function(config){
+
+	Helper.readFile(app_config)
+	.then(function(config){
+
 		server(config)
 		.then(function(){
-			console.log("Aplicación Iniciada.",__dirname)
-			splashscreen.hide();
-			createWindow({url:'public/app/index.html#login'})
-			.then(win=>{
-				ready=true;
-			});
+			init();
 		},
 		function(err){
-			const ElectronOnline = require('electron-online')
-			const connection = new ElectronOnline();
-		    splashscreen.hide();
-		    
-
-			connection.on('online', () => {
-			  console.log('App is online!')
-			  console.log("La Aplicación está lista para ser Instalada.");
-			  if(!ready){
-				  createWindow({url:'public/app/index.html#wizard'})
-				  .then(win=>{
-				  	ready=true;
-				  });
-			  }
-			})
-			 
-			connection.on('offline', () => {
-			  	console.log('App is offline!');
-			  	
-			  	if(!ready){
-			  		
-				  	createWindow({url:'public/app/index.html#offline'})
-					  .then(win=>{
-					  	
-				  	});
-				}
-			});
-
-			
+			createWindow({url:'public/app/index.html#error'})
+			.then(win=>{
+				console.log("Error al conectarse a  la base de Datos: ",err);
+			});	
 		});
+	},function(err){
+		// Helper.writeFile(app_config,obj);
+		if(callback!=undefined){
+			callback({});
+		}
 	});
 });
 
@@ -142,3 +154,16 @@ app.on("active",()=>{
 		createWindow()
 	}
 })
+
+/*
+* @Msg
+* config: {title,message}
+*/
+function Msg(config){
+	dialog.showMessageBox(win,config);
+}
+exports.APP_PATH = process.env['APP_PATH'];
+exports.Msg = Msg;
+
+const isReady = ()=> ready;
+exports.isReady = isReady;

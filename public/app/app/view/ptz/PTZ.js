@@ -2,6 +2,7 @@
 Ext.define('Admin.view.ptz.PTZ',{
     extend: 'Ext.panel.Panel',
     xtype: 'ptz',
+    id:'ptz-panel',
     requires: [
         'Admin.view.ptz.PTZController',
         'Admin.view.ptz.PTZModel',
@@ -32,7 +33,13 @@ Ext.define('Admin.view.ptz.PTZ',{
             xtype:'panel',
             region:'center',
             layout:'vbox',
+            id:'ptz-container',
             flex:1,
+            listeners:{
+                click:function(e){
+                    console.log(e)
+                }
+            },
             items:[
                 {
                     xtype:'dataview',
@@ -190,11 +197,13 @@ Ext.define('Admin.view.ptz.PTZ',{
                     iconCls:'fa fa-hand-paper-o',
                     iconAlign: 'top',
                     name: 'infraccion',
+                    tooltip:'Nueva Infracción<br>(CTRL+N)',
                     handler:'newInfraccion'
                 },
                 {
                     xtype: 'button',
                     text: 'Capturar <br> Nueva Imagen',
+                    tooltip:'Capturar Nueva Imagen<br>(CTRL+C)',
                     iconCls:'fa fa-camera',
                     iconAlign: 'top',
                     name: 'capture',
@@ -205,6 +214,7 @@ Ext.define('Admin.view.ptz.PTZ',{
                 {
                     xtype: 'button',
                     text: 'Iniciar <br> Grabación',
+                    tooltip:'Iniciar Grabación<br>(CTRL+I)',
                     iconCls:'fa fa-video-camera',
                     iconAlign: 'top',
                     enableToggle: true,
@@ -213,6 +223,7 @@ Ext.define('Admin.view.ptz.PTZ',{
                 {
                     xtype: 'button',
                     text: 'Grabar 8<br>  segundos',
+                    tooltip:'Grabar 8 segundos<br>(CTRL+O)',
                     iconCls:'fa fa-video-camera',
                     enableToggle: true,
                     iconAlign: 'top',

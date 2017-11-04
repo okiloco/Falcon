@@ -260,7 +260,12 @@ span#timer{
   content: "\f110" !important; 
   
 }
-
+.campreview{
+  
+}
+.campreview:focus{
+  border: 1px solid red;
+}
 
 
 /*f110 */

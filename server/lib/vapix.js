@@ -124,15 +124,19 @@ Camera.prototype.captureImage = function(options,callback){
   this.requestImage(options,function(err,data){
 
       self.lote = dateFormat(new Date(),"yyyymmdd");
-      var basepath = path.join('.',self.folder);
+      var basepath = self.folder;
       basepath = path.join(basepath,self.lote);
       if(!fs.existsSync(basepath)) {
         fs.mkdirSync(basepath);
       }
       self.filename = self.prefix+'_'+self.lote+'_'+options.count+'.jpg';
-      self.url_image = path.join(basepath,self.filename);
+      self.url_image = "./public/images/"+self.lote+"/"+self.filename;
 
-      var stream = fs.createWriteStream(self.url_image);
+      console.log(self.url_image);
+
+      self.path_image = path.join(basepath,self.filename);
+
+      var stream = fs.createWriteStream(self.path_image);
       stream.once('open', function(fd) {
         try{
           stream.write(data);

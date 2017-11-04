@@ -20,7 +20,6 @@ Ext.define('Admin.helpers.Constants', {
 	URL_DETENER_VIDEO:BASE_PATH+'app/video/stop',
 	URL_CAPTURAR_IMAGEN:BASE_PATH+'app/image/new',
 
-
 	//Usuarios
 	URL_USUARIOS:BASE_PATH+'app/users',
 
@@ -28,7 +27,7 @@ Ext.define('Admin.helpers.Constants', {
 	URL_GROUPS:BASE_PATH+'app/groups',
 
 	//Infracciones
-	URL_INFRACCIONES:BASE_PATH+'app/infracciones/new',
+	URL_INFRACCIONES:BASE_PATH+'app/infracciones',
 
 	//Imagenes
 	URL_IMAGES:BASE_PATH+'app/images',
@@ -41,11 +40,6 @@ Ext.define('Admin.helpers.Constants', {
 	URL_ORGANISMOS:BASE_PATH+'organismos',
 
 	URL_DISPOSITIVOS:BASE_PATH+'dispositivos',
-
-
-	//Backoffice
-	// URL_BACKOFFICE:'http://backof-dev.construsenales.co/service/falconwebservice/falconFileUpload',
-	URL_BACKOFFICE:'http://backoffice.construsenales.co/service/falconwebservice/falconFileUpload',
 
 	MAX_CAPTURES:4,
 	MAX_REC:4,

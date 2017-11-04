@@ -153,6 +153,7 @@ Ext.define('Admin.view.main.Main', {
                      reference: 'mainCardPanel',
                      cls: 'sencha-dash-right-main-container',
                      itemId: 'contentPanel',
+                     id:'contentPanel',
                      layout: {
                          type: 'card',
                          anchor: '100%'

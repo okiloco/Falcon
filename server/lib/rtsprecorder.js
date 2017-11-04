@@ -98,15 +98,23 @@ Recorder.prototype.record = function(options,callback){
 	var self = this;
 	this._action = options.action;
 
-	var basepath = path.join('.',this.folder);
+	var basepath = this.folder;
 	if (!fs.existsSync(basepath)) {
-      fs.mkdirSync(basepath);
+		try{
+      		fs.mkdirSync(basepath);
+		}catch(err){
+			console.log("Error al Crear Directorio base de Videos: ",err);
+		}
   	}
 	
 	var lote = dateFormat(new Date(),"yyyymmdd");
 	basepath = path.join(basepath,lote);
 	if (!fs.existsSync(basepath)) {
-  		fs.mkdirSync(basepath);
+		try{
+  			fs.mkdirSync(basepath);
+		}catch(err){
+			console.log("Error al Crear Directorio Videos: ",err);
+		}
 	}	
 	
 	this.lote = dateFormat(new Date(),"yyyymmdd");
@@ -116,8 +124,11 @@ Recorder.prototype.record = function(options,callback){
 	//CZBQ2_20171012_90 - IDDISPOSITIVO_LOTE_CONSECUTIVO
 	this.filename = this.prefix+'_'+this.lote+'_'+options.count+'.mp4';
 	this.filename_tmp = this.prefix+'_'+this.lote+'_'+options.count+'_temp.mp4';
-	this.url_video_tmp = path.join(basepath,this.filename_tmp);
-	this.url_video = path.join(basepath,this.filename);
+	
+	this.path_video_tmp = path.join(basepath,this.filename_tmp);
+	this.path_video = path.join(basepath,this.filename);
+	
+	this.url_video ='./public/videos/'+this.lote+"/"+this.filename;
 	
 	console.log(this.filename_tmp);
 
@@ -130,9 +141,9 @@ Recorder.prototype.record = function(options,callback){
 	}
 	this.once('readStart', function(){
 		if(self.playing){
-			if (!fs.existsSync(self.url_video_tmp)) {
+			if (!fs.existsSync(self.path_video_tmp)) {
 				
-				    self.writeStream = fs.createWriteStream(self.url_video_tmp);
+				    self.writeStream = fs.createWriteStream(self.path_video_tmp);
 	    			self.readStream.stdout.pipe(self.writeStream);
 
 
@@ -146,16 +157,16 @@ Recorder.prototype.record = function(options,callback){
 	    				self._readStarted = false;
 	    				self.playing = false;
 
-	    				var stream = new ffmpeg(self.url_video_tmp)
+	    				var stream = new ffmpeg(self.path_video_tmp)
 	    				.size('800x450')
 	    				.videoBitrate(800)
 	    				.videoCodec('libx264')
 	    				.fps(30)
-	    				.save(this.url_video)
+	    				.save(this.path_video)
 	    				.on('end', function() {
 	    				    console.log('Convert finished !');
                   self.emit("video-convert");
-	    						fs.unlink(self.url_video_tmp, function (err) {
+	    						fs.unlink(self.path_video_tmp, function (err) {
                     if (err) {
                         throw err;
                     }
@@ -165,9 +176,9 @@ Recorder.prototype.record = function(options,callback){
 	    					callback(self);
 	    				} 
 	    			});
-	    			console.log("Start record "+self.url_video_tmp+"\r\n");
+	    			console.log("Start record "+self.path_video_tmp+"\r\n");
 		  	}else{
-    			console.log("El video ya existe y no se puede reescribir.",self.url_video_tmp+"\r\n");
+    			console.log("El video ya existe y no se puede reescribir.",self.path_video_tmp+"\r\n");
 		  		if(callback!=undefined){
 		  			callback();
 		  		} 
@@ -229,8 +240,8 @@ Recorder.prototype.recordVideo = function(options) {
 
 		this.filename = this.prefix+'_'+this.lote+'_'+options.count+'.mp4';
 		this.filename_tmp = this.prefix+'_'+this.lote+'_'+options.count+'_temp.mp4';
-		this.url_video_tmp = path.join(basepath,this.filename_tmp);
-		this.url_video = path.join(basepath,this.filename);
+		this.path_video_tmp = path.join(basepath,this.filename_tmp);
+		this.path_video = path.join(basepath,this.filename);
 
 		/*var proc = new ffmpeg(
 			this.url
@@ -263,10 +274,10 @@ Recorder.prototype.recordVideo = function(options) {
 
 				stream.on('start', function(commandLine) {
 			    console.log('Spawned Ffmpeg with command: ' + commandLine);
-    	    var child = stream.ffmpegProc;
-    	    child.stderr.on('data', function(err) {
-  		   		console.log("Error: ",err);
-  	  	  });
+		    	    var child = stream.ffmpegProc;
+			    	    child.stderr.on('data', function(err) {
+		  		   		console.log("Error: ",err);
+		  	  	    });
     	    
 			  });
 		   	/*if(!self._readStarted){

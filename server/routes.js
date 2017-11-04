@@ -32,11 +32,13 @@ var path = require("path");
 var Helper = require("./helpers/helper");
 
 module.exports = function(app,db,io){
-	
-	const public_routes ='./server/routes';
-	const app_routes = './server/routes/app';
+	console.log("\t--->",global.APP_PATH)
+	const public_routes = path.join(global.APP_PATH,'server','routes');
+	const app_routes = path.join(global.APP_PATH,'server','routes','app');
 	var routes_map = {};
 	
+	console.log(public_routes,":",app_routes);
+
 	global.router = router;
 	/**
 	* @loadRoutes: base_path, prefix
@@ -46,23 +48,24 @@ module.exports = function(app,db,io){
 		return new Promise(function(resolve,reject){
 			prefix = prefix || '';
 			function readFiles(base_path,prefix){
-				fs.readdirSync(base_path).forEach(function(file){
-					file = './routes'+prefix+'/'+file;
-					var ext = path.extname(file);
-					var route;
-					if(ext!=null && ext=='.js'){
-						var name = path.parse(file).name.toLowerCase();
-						var controllerName=Helper.capitalize(name);
-						var schema;
-						var route_name;
-						
-						if(prefix==''){
-							console.log("Router public: ",name);
-							route = require(file);
-							//Instanciar ruta: publica
-							route(app,io,db,schema);
-						}else{
-							/*Listener para cuando se cree el Schema con el nombre especifico.*/
+				try{
+					fs.readdirSync(base_path).forEach(function(file){
+						file = path.join(global.APP_PATH,'server','routes',prefix,file);
+						var ext = path.extname(file);
+						var route;
+						if(ext!=null && ext=='.js'){
+							var name = path.parse(file).name.toLowerCase();
+							var controllerName=Helper.capitalize(name);
+							var schema;
+							var route_name;
+							
+							if(prefix==''){
+								console.log("Router public: ",name);
+								route = require(file);
+								//Instanciar ruta: publica
+								route(app,io,db,schema);
+							}else{
+								/*Listener para cuando se cree el Schema con el nombre especifico.*/
 								try{	
 									route = require(file);
 									db.on(name,function(schema){
@@ -79,9 +82,14 @@ module.exports = function(app,db,io){
 									reject(err);
 									console.log("No se pudo cargar: ",err);
 								}
+							}
 						}
-					}
-				});
+					});
+				}catch(err){
+					console.log("ERROR: ",err)
+					reject(err);
+					return;
+				}
 			}
 			readFiles(base_path,prefix);
 			resolve();
@@ -160,6 +168,7 @@ module.exports = function(app,db,io){
 		router.route(route_name).get(list);//Listar y Buscar
 		router.route(route_name).post(save);//crear registro nuevo y actualizar
 		router.route(route_name).put(update);//crear registro nuevo y actualizar
+		router.route(route_name+'/:_id').put(update);//busca un registro por Id
 		router.route(route_name+':_id').get(findById);//busca un registro por Id
 		router.route(route_name+'/:_id').get(findById);//busca un registro por Id
 		router.route(route_name+'/:_id').delete(remove);//Eliminar registro por Id
@@ -193,7 +202,7 @@ module.exports = function(app,db,io){
 	loadRoutes(public_routes)
 	.then(function(){
 		// console.log("rutas publicas cargadas.")
-		loadRoutes(app_routes,"/app")
+		loadRoutes(app_routes,"app")
 		.then(function(){
 			// console.log("routes privadas cargadas.");
 		});

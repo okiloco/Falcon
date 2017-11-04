@@ -15,6 +15,7 @@ Ext.define("Admin.utils.com.Menssage",{
 	},
 	
 	info: function(message){
+		console.log(message);
 		Ext.ventana.msg('Información',message);
 	},
 	
