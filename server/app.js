@@ -94,11 +94,7 @@ module.exports = function(config){
 			
 			db.connect()
 			.then(function(msg){
-				if(Helper.isEmpty(config)){
-					reject();
-				}else{
-					resolve(config);
-				}
+				resolve(msg);
 			},function(err){
 				reject(err);
 			});

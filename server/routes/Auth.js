@@ -131,16 +131,22 @@ module.exports = function(app,io,db){
 									for(var key in params){
 										obj[key] = params[key];
 									}
-									Helper.writeFile(app_config,obj,{spaces: 2, EOL: '\r\n'},function(err){
-										console.log("Archivo de configuración creado.")
+									Helper.writeFile(app_config,obj,{spaces: 2, EOL: '\r\n'})
+									.then(function(err){
+										console.log("Archivo de configuración creado.",err)
+										res.send(JSON.stringify({
+											"success":true,
+											"msg":"Archivo de configuración creado.",
+											user
+										}));
 									},function(){
+										res.send(JSON.stringify({
+											"success":false,
+											"msg":"No se pudo crear el archivo de configuración"
+										}));
 										console.log("No se pudo crear el archivo de configuración")
 									});
-									res.send(JSON.stringify({
-										"success":true,
-										"msg":"Usuario creado con éxito.",
-										user
-									}));
+									
 								});
 							});
 						});

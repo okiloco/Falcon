@@ -36,7 +36,7 @@ exports.createManagerDB = function(options,callback) {
 function ManagerDB(options){
 
 	var self = this;
-	this.url = './server/database/config.json';
+	this.url = path.join(global.APP_PATH,'server','database','config.json');
 	self.models = {};
 	self.schemas = {};
 	self.autoRefesh = true;
@@ -591,9 +591,15 @@ ManagerDB.prototype.load =  function(callback) {
 	var self = this;
 	return new Promise(function(resolve,reject){
 		jsonfile.readFile(self.url,function(err,config){
+
+			if(err){
+				console.log("Error al cargar archivo de base de datos.");
+				reject(err);
+				return;
+			}
 			self.setConfig(config);
 		
-			resolve();
+			resolve(config);
 			
 			// if(typeof(callback)!=undefined) callback();
 
@@ -682,6 +688,9 @@ ManagerDB.prototype.define =  function() {
 					});
 				}
 			});
+		},function(err){
+			console.log("Error al crear esquema");
+			reject(err);
 		});
 	});
 }
@@ -786,14 +795,13 @@ ManagerDB.prototype.connect =  function(callback) {
 		self.load()
 		.then(function(data){
 
-			console.log();
 			var state = mongoose.connection.readyState;
-
+			console.log("Status: ",state);
 			if(state==0){
 				mongoose.connect(self.linkconex,(err,res)=>{
 					if(err){
-						console.log('Error al conectarse a la base de datos.',err);
-						reject();
+						console.log('-> Error al conectarse a la base de datos.',err);
+						reject(err);
 						return;
 					}
 					/**
@@ -806,6 +814,7 @@ ManagerDB.prototype.connect =  function(callback) {
 						self.emit("ready");
 						resolve("Conectado a la base de datos.");
 					},function(){
+						console.log("Conectado a la base de datos. No hay esquemas para definir.")
 						reject("Conectado a la base de datos. No hay esquemas para definir.");
 					});
 				});
@@ -815,6 +824,8 @@ ManagerDB.prototype.connect =  function(callback) {
 				}
 				resolve("...ya está conectado a la base de datos.");
 			}
+		},function(err){
+			console.log("Error: ",err);
 		});
 	});
 	

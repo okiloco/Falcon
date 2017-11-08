@@ -125,7 +125,8 @@ app.on("ready",function(_win){
 	.then(function(config){
 
 		server(config)
-		.then(function(){
+		.then(function(msg){
+			console.log(msg);
 			init();
 		},
 		function(err){

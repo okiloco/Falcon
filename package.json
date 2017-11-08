@@ -4,8 +4,7 @@
   "main": "./index.js",
   "devDependencies": {
     "electron": "latest",
-    "electron-builder": "^19.27.3",
-    "electron-rebuild": "^1.6.0",
+    "electron-builder": "19.27.3",
     "nodemon": "^1.12.1"
   },
   "homepage": "./index.html",
@@ -42,14 +41,9 @@
   },
   "scripts": {
     "start": "electron .",
-    "postinstall": "electron-rebuild",
-    "electron-rebuild": "electron-rebuild",
     "pack": "build --dir",
     "dist": "build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject",
-    "electron": "electron .",
-    "serv": "node ./server/app.js"
+    "electron": "electron ."
   },
   "author": {
     "name": "Fabian Vargas",
