@@ -182,6 +182,17 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                            text: 'Limpiar',
                            name: 'limpiar',
                            handler:'limpiar'
+                        },
+                        '->',
+                        {
+                           xtype: 'button',
+                           enableToggle: true,
+                           iconCls:'x-fa fa-refresh',
+                           ui: 'header',
+                           listeners:{
+                               toggle:'onToggleSync'
+                           },
+                           tooltip: 'Sincronización Automática'
                         }
                      ]
                  }

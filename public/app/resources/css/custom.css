@@ -331,4 +331,17 @@ iframe {
     overflow: hidden;
     border: none;
 }
-/*f110 */
+.bell{
+  width: 50px;
+}
+
+.bell span.x-btn-inner.x-btn-inner-header-small{
+  background: red;
+  border-radius: 50%;
+  color: white;
+  font-weight: 600;
+  border: 1px solid red;
+  position: absolute;
+  left: 23px;
+  top: -6px;
+}

@@ -22,12 +22,10 @@ Ext.define('Admin.view.authentication.AuthenticationController', {
                     localStorage.user_id =res.user._id;
                     localStorage.username =res.user.username;
 
-                    socket.emit("get-infracciones",function(total){
-
-                    });
+                    socket.emit("get-infracciones");
                    
-                    //location.reload();
-                    me.redirectTo('ptz', true);
+                    location.reload();
+                    // me.redirectTo('ptz', true);
                 },
                 failure: function(f, action) {
                     Ext.Msg.show({

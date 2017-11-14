@@ -58,38 +58,6 @@ module.exports = function(app,io,router,db,schema){
 		});
 	}
 
-	async function getFiles(files){
-		var userfiles = [];
-
-		return new Promise(function(resolve,reject){
-
-			//files.forEach(function(file,index,arr){
-			for(let file of files){
-				var total = (arr.length -1);
-				var url = ("image" in file)?file.image.url:file.url;
-				console.log("\turl:",url);
-				if(url==undefined){
-					reject("Url indefinida.");
-					return;
-				}else{
-					console.log(file);
-				}
-				try{
-					const contents = fs.readFile(url);
-					userfiles.push(contents);
-					console.log(userfiles.length);
-					if(index == total){
-						console.log("Ultimo cargado!")
-						resolve(userfiles);
-					}
-				}catch(err){
-					reject(err);
-					return;					
-				}
-			}
-			//});
-		});
-	}
 	function subirArchivos(params){
 			
 		var formData = {
@@ -176,60 +144,20 @@ module.exports = function(app,io,router,db,schema){
 					return;
 				}
 			});
-			/*getFiles(files)
-			.then(function(userfiles){
-				if(userfiles.length>0){
-					
-
-					formData["userfile[]"] = userfiles;
-					formData["fecha"] = moment().tz(params.fecha.toString(),"America/Bogota").format('YYYY-MM-DD HH:mm:ss');
-					
-					request.post({
-					"url":Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE, 
-					formData: formData},
-					function(err, httpResponse, body) { 
-						
-						if(body!=undefined && body!=null){
-							var response = JSON.parse(body);
-							//console.log("response:: ",response.success);
-							if (err) {
-								console.log("[Error al enviar archivos]",err);
-							   	reject("Error al enviar archivos "+err);
-							   	return;
-							}
-							if(!response.success){
-							   	reject(response.msg);
-							   	return;
-						    }
-							
-							//Actualizar Infracción.
-							resolve(params);
-							actualizarInfraccion(params);
-						}else{
-							reject(`No se pudo cargar la Infracción ${params.codigo}<br>Revise la conexión a Internet.`);
-							return;
-						}
-					});
-				}else{
-					reject(`No se pudo subir la infracción: ${params.codigo}<br>Puede que los archivos no existan.`);
-					return;
-				}
-			},function(err){
-				reject("Error al adjuntar archivos "+err);
-			});	*/		
 		});
 	};
 
 	function transferAllFiles(infracciones){
 		var total = infracciones.length,
 		infraccion = {};
-
+		console.log("\t->transfer ",total);
 		return new Promise(function(resolve,reject){
 			if(total>0){
 				db.infraccion.listar({"estado":0},function(infracciones){
 					total=infracciones.length;
 
 					if(total>0){
+
 						infraccion = infracciones[0];
 						console.log("Transfer Infraccion: ",infraccion.codigo);
 						db.infraccion.listar({"_id":infraccion._id},function(docs){
@@ -241,6 +169,13 @@ module.exports = function(app,io,router,db,schema){
 									transferAllFiles(infracciones)
 									.then(function(){
 										//reject();
+									},function(){
+										console.log("se acabaron ya.")
+										countInfracciones()
+										.then(function(total){
+											socket.emit("count-infraccion",total);
+										});
+										resolve("Infracciones finalizadas.");
 									});
 								},function(){
 									//reject();

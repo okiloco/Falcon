@@ -342,10 +342,19 @@ Ext.define('Admin.view.main.MainController', {
             }
             console.log("window.location.hash",window.location.hash)
         }
+
+        var user = Ext.JSON.decode(localStorage.user);
+        if(user!=undefined){
+            socket.emit("get-infracciones");
+            vm.set("username",user.username);
+        }
         //Actualizar número de infracciones subidas.
         socket.on("count-infraccion",function(total){
             vm.set("total",total);
         });
+    },
+    getTotal:function(self){
+        socket.emit("get-infracciones");
     },
     loadModules:function(){
         var st = Ext.getStore('NavigationTree');

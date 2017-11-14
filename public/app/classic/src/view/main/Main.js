@@ -44,25 +44,28 @@ Ext.define('Admin.view.main.Main', {
                      handler: 'onToggleNavigationSize'
                  },
                  '->',
-                 {
+                 /*{
                     xtype: 'button',
                     enableToggle: true,
                     iconCls:'x-fa fa-refresh',
                     listeners:{
                         toggle:'onToggleSync'
                     },
-                    // ui: 'header',
-                    // href: '#profile',
-                    // hrefTarget: '_self',
                     tooltip: 'Sincronización Automática'
-                 },
+                 },*/
                  {
-                    xtype: 'button',
                     iconCls:'x-fa fa-bell',
+                    ui: 'header',
+                    href: '#infraccion',
+                    hrefTarget: '_self',
+                    cls:'bell',
                     bind:{
                         text:'{total}',
                         tooltip: 'Infracciones subidas al Backcoffice (Hoy) {total}'
                     },
+                    listeners:{
+                        click:'getTotal'
+                    }                    
                     // ui: 'header',
                     // href: '#profile',
                     // hrefTarget: '_self',

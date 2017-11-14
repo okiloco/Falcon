@@ -165,5 +165,14 @@ Ext.define('Admin.view.infraccion.InfraccionController', {
           console.log(err);
         }
       });
+    },
+    onToggleSync:function(self, pressed, eOpts){
+       global["sync"] = pressed;
+       console.log("sync: ",pressed);
+       try{
+            socket.emit("onsync",pressed);   
+       }catch(err){
+            console.log("Error Socket: ",err);        
+       }
     }
 });
