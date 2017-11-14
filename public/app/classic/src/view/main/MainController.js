@@ -345,16 +345,20 @@ Ext.define('Admin.view.main.MainController', {
 
         var user = Ext.JSON.decode(localStorage.user);
         if(user!=undefined){
-            if(socket!=undefined){
+            try{
                 socket.emit("get-infracciones");
+            }catch(err){
+                console.log(err);
             }
             vm.set("username",user.username);
         }
-        if(socket!=undefined){
+        try{
             //Actualizar número de infracciones subidas.
             socket.on("count-infraccion",function(total){
                 vm.set("total",total);
             });
+        }catch(err){
+            console.log(err);
         }
     },
     getTotal:function(self){
