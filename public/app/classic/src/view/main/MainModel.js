@@ -7,6 +7,7 @@ Ext.define('Admin.view.main.MainModel', {
         instaled:false,
     	defaultToken:'ptz',
         currentView: null,
+        total:null,
         picture:'resources/images/user-profile/2.png',
         user:localStorage.user,
         username:localStorage.getItem("username"),

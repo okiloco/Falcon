@@ -44,9 +44,9 @@ Ext.define('Admin.view.ptz.PTZController', {
     },
     recordVideo:function(btn,params,playing){
 
-  	   var me = this;
-  	   var vm = me.getViewModel();
-	     var timer = Ext.fly('timer');
+	    var me = this;
+      var vm = me.getViewModel();
+      var timer = Ext.fly('timer');
       var panel = btn.up("ptz");
       var dataview_videos = panel.down("[name=video_viewer]");
 
@@ -87,29 +87,28 @@ Ext.define('Admin.view.ptz.PTZController', {
 	       params:params,
 	       success: function(form, action) {
 	       		console.log("Video terminado. ",playing,btn.name);
-            global.socket.on("video-convert",function(params){ 
-              dataview_videos.getStore().reload();
-            });
+            
+            
             dataview_videos.getStore().reload();
 	       		Msg.info(action.result.msg);
            },
            failure: function(form, action) {
-               switch (action.failureType) {
-                   case Ext.form.action.Action.CLIENT_INVALID:
-                       Ext.Msg.alert('Failure', 'Form fields may not be submitted with invalid values');
-                       break;
-                   case Ext.form.action.Action.CONNECT_FAILURE:
-                       Ext.Msg.alert('Failure', 'Ajax communication failed');
-                       break;
-                   case Ext.form.action.Action.SERVER_INVALID:
-	                  me.stopVideo(btn,false);	
-	                  Ext.Msg.show({
-	                      title: 'Error',
-	                      msg: action.result.msg,
-	                      buttons: Ext.Msg.OK,
-	                      icon: Ext.Msg.ERROR,
-	                      fn:me.clearSesion                    
-	                  });
+              switch (action.failureType) {
+                case Ext.form.action.Action.CLIENT_INVALID:
+                   Ext.Msg.alert('Failure', 'Form fields may not be submitted with invalid values');
+                   break;
+                case Ext.form.action.Action.CONNECT_FAILURE:
+                   Ext.Msg.alert('Failure', 'Ajax communication failed');
+                   break;
+                case Ext.form.action.Action.SERVER_INVALID:
+                  me.stopVideo(btn,false);	
+                  Ext.Msg.show({
+                      title: 'Error',
+                      msg: action.result.msg,
+                      buttons: Ext.Msg.OK,
+                      icon: Ext.Msg.ERROR                 
+                  });
+                break;
               }
            }
 	    });
@@ -206,42 +205,48 @@ Ext.define('Admin.view.ptz.PTZController', {
     	var view = this.getView();
     	all = all || false;
 
-	 	Ext.Array.each(view.down("toolbar[dock=top]").query("button"), function(btn, index, total) {
-	 		if(!all){
-		 		if(btn.enableToggle && btn !=self){
-	    	      btn.setDisabled(pressed);
-		 		}
-		 	}else{
-		 		if(btn.enableToggle){
-		 			btn.setDisabled(pressed);
-		 			btn.toggle(pressed);
-		 		}
-		 	}
+  	 	Ext.Array.each(view.down("toolbar[dock=top]").query("button"), function(btn, index, total) {
+  	 		if(!all){
+  		 		if(btn.enableToggle && btn !=self){
+  	    	      btn.setDisabled(pressed);
+  		 		}
+  		 	}else{
+  		 		if(btn.enableToggle){
+  		 			btn.setDisabled(pressed);
+  		 			btn.toggle(pressed);
+  		 		}
+  		 	}
 	    });
     },
     newInfraccion:function(self){
     	var vm = this.getViewModel();
+      var me = this;
     	var panel = self.up("ptz");
     	var form = panel.down("infraccionform");
     	var infraccion = vm.get("infraccion");
     	var captureimages = form.up("panel").down("[name=captureimages]");
 
     	if(captureimages.getStore().getCount()>0){
-    		Ext.Msg.show({
-    		    title: 'Atención',
-    		    msg: 'Hay evidencias sin confirmar.<br>Por favor apruebe o cancele las evidencias, antes de continuar.',
-    		    buttons: Ext.Msg.OK,
-    		    icon: Ext.Msg.INFO                    
-    		});
+          me.confirmInfraccion(self);
     	}else{
     		captureimages.getStore().removeAll();
     		vm.set("infraccion",null);
     		form.reset();
+        form.down("[name=placa]").focus();
     	}
 
     },
-	confirmInfraccion:function(self){
+    onEnter:function(self, e){
+      var me = this;
+      if (e.getKey() == e.ENTER) {
+        me.confirmInfraccion(self);
+      }
+    },  
+	 confirmInfraccion:function(self){
     	var vm = this.getViewModel();
+      var me =this;
+
+      console.log(me);
     	var panel = self.up("ptz");
     	var form = panel.down("infraccionform");
     	var params = form.getForm().getFieldValues();
@@ -252,29 +257,37 @@ Ext.define('Admin.view.ptz.PTZController', {
         if(dataview_images.getStore().getCount()>0 && dataview_videos.getStore().getCount()>0){
 
           console.log(infraccion.getData());
-        	infraccion.save({
-    		    callback: function(record, operation, success) {
-    		    	var responseObject = Ext.decode(operation.getResponse().responseText);
-    		        // do something whether the save succeeded or failed
-    		        if(!success){
-    		        	Ext.Msg.show({
-    		        	    title: 'Atención',
-    		        	    msg: responseObject.msg,
-    		        	    buttons: Ext.Msg.OK,
-    		        	    icon: Ext.Msg.ERROR                    
-    		        	});
-    		        }else{
-    		        	var infraccion = responseObject.infraccion;
-    		        	var params = infraccion;
-    		        	console.log(infraccion);
-    		        	Msg.info(responseObject.msg);
 
-                  dataview_images.getStore().reload();
-                  dataview_videos.getStore().reload();
-                  form.getForm().reset();
-    		        }
-    		    }
-    		});
+          if(form.getForm().isValid()){
+          	infraccion.save({
+      		    callback: function(record, operation, success) {
+      		    	var responseObject = Ext.decode(operation.getResponse().responseText);
+      		        // do something whether the save succeeded or failed
+      		        if(!success){
+      		        	Ext.Msg.show({
+      		        	    title: 'Atención',
+      		        	    msg: responseObject.msg,
+      		        	    buttons: Ext.Msg.OK,
+      		        	    icon: Ext.Msg.ERROR                    
+      		        	});
+      		        }else{
+      		        	var infraccion = responseObject.infraccion;
+      		        	var params = infraccion;
+      		        	console.log(infraccion);
+      		        	Msg.info(responseObject.msg);
+
+                    dataview_images.getStore().reload();
+                    dataview_videos.getStore().reload();
+                    form.getForm().reset();
+
+                    form.down("[name=placa]").focus();
+
+      		        }
+      		    }
+      		  });
+          }else{
+            form.down("[name=placa]").focus();
+          }
         }else{
             Ext.Msg.show({
                 title: 'Atención',
@@ -292,16 +305,50 @@ Ext.define('Admin.view.ptz.PTZController', {
     	}, this);
     },
     onRender:function(self){
-    	// global.IP_CAMERA = camera.camera_ip+"/mjpg/video.mjpg";
-    	console.log(global.IP_CAMERA);
-      /*var socket = Ext.create("Admin.socket.Socket");
-      socket.connect(function(){
-      });*/
-      global.socket.on("video-not-found",function(id){ 
-        var video = Ext.fly(id);
-        video.addCls("video-not-found");
-      });
+    	var form = self.down("infraccionform"),
+      placa = form.down("[name=placa]");
+      placa.focus(false,true);
       this.hotkeys(self);
+      var dataview_videos = self.down("[name=video_viewer]");
+      
+      socket.on("uploaded",function(id){ 
+        var infraccion = self.down("infraccion");
+        if(infraccion!=undefined){
+          var grid = infraccion.down("grid");
+          grid.getStore().reload();
+        }
+      });
+
+      socket.on("video-preview",function(id,exist){
+        dataview_videos.getStore().load({
+          callback: function(records, operation, success){
+            var video = Ext.fly(id);
+            if(video!=undefined){
+              video.addCls("video-not-found");
+              /*if(exist){
+                video.addCls("video-not-found");
+              }else{
+                video.removeCls("video-not-found");
+              }*/
+              console.log("video-preview",id,video);  
+            }
+          }
+        });
+      });
+
+      socket.on("video-convert",function(id){ 
+        // var video =Ext.ComponentQuery.query('#'+id);
+          dataview_videos.getStore().load({
+            callback:function(records, operation, success) {
+              var video = Ext.fly(id);
+              if(video!=undefined){
+                video.removeCls("video-not-found");
+                console.log("video-preview",id,video);
+              }
+            }
+        });
+      });
+      
     },
     hotkeys:function(self){
       
@@ -359,103 +406,31 @@ Ext.define('Admin.view.ptz.PTZController', {
     	vm.set("camera",{"image":record.get("url")});
     	viewer.refresh();
 
-    	Ext.create('Ext.menu.Menu', {
-    	    // width: 270,
-    	    margin: '10px 10px 10px 0px',
-    	    cls:'x-menu action-tools',
-    	    padding:'0',
-    	    bodyStyle:'border-radius:7px;',
-    	    frame:false,
-    	    plain:true,
-    	    layout:{
-    	    	type:'hbox'
-    	    },
-    	    defaults:{
-    	        pakcage:'center',
-    	        cls:'item-menu',
-    	        xtype:'menuitem',
-    	        scope:me,
-    	        width:'auto'
-    	    },
-    	    items: [
-    	    {
-    	        text: 'Eliminar',
-    	        iconCls:'fa fa-trash',
-    	        handler:function(){
-    	        	var vm = this.getViewModel();
-    	        	Ext.Msg.confirm('Atención', 'Desea Eliminar la Imagen?', function(buttonId, text, v) {
-    	        		if(buttonId == 'yes') {
-    	        			Ext.Ajax.request({
-    	        				scope: this,
-    	        				url: Constants.URL_IMAGES,
-    	        				method:"DELETE",
-    	        				params: {
-    	        					id:record.get("id")
-    	        				},
-    	        				success: function(response) {
-    	        					var responseObject = Ext.decode(response.responseText);
-    	        					Msg.info(responseObject.msg);
-    	        					dataview.getStore().reload();	
-    	        				},
-    	        				failure: function(response) {
-    	        					Ext.Msg.show({
-    	        						title: 'Error',
-    	        						msg: 'Error al procesar la petición.',
-    	        						buttons: Ext.Msg.OK,
-    	        						icon: Ext.Msg.ERROR
-    	        					});
-    	        				}
-    	        			});
-    	        		}
-    	        	}, this);
-
-    	        }
-    	    },/*{
-    	        text: 'Principal',
-    	        iconCls:'fa fa-check',
-    	        // handler:'onWizard'
-    	    },*/{
-    	        text: 'Ver',
-    	        iconCls:'fa fa-eye',
-    	        handler:function(self){
-			    	var vm = this.getViewModel();
-			    	Ext.create('Ext.window.Window', {
-			    	    title: 'Vista previa',
-			    	    height: 400,
-			    	    width: 800,
-			    	    // layout: 'fit',
-			    	    modal: true,
-			    	    constrainHeader: true,
-			    	    resizable: false,
-			    	    maximizable: true,
-			    	    bodyCls:'iframe-win',
-			    	    bodyStyle: "padding-right:5px;padding-left:5px;",
-	    	            layout: 'anchor', 
-			    	    items : [{
-		    	            xtype : "box",
-		    	            autoEl : {
-		    	                tag : "iframe",
-		    	                src : vm.get("camera").image,
-		    	                width: 400,
-                                height: 380,
-                                style: 'height: 100%; width: 100%; border: none',
-
-		    	            }
-		    	        }],
-		    	        listeners:{
-		    	        	afterrender:function(self){
-		    	        		console.log(self);
-		    	        	}
-		    	        }
-			    	    /*html: [
-			    	    	'<div class="embed-container" style="background:red;scale:1;">',
-			    	    		'<iframe src="'+ vm.get("camera").image +'" frameborder="0" scrolling="no" width="560" height="20" style="height:300px;width:300px;" frameborder="0"></iframe>',
-		    	    		'</div>'
-			    	    ].join("")*/
-			    	}).show();
-			    }
-    	    }]
-    	}).showBy(Ext.get(el),'c-bl',[-10,10]);
+      Ext.create('Ext.window.Window', {
+          title: 'Vista previa',
+          height: 600,
+          width: '80%',
+          layout: 'fit',
+          modal: true,
+          constrainHeader: true,
+          resizable: false,
+          maximizable: true,
+          bodyCls:'iframe-win',
+          bodyStyle: "padding-right:5px;padding-left:5px;",
+          items : [{
+                xtype : "box",
+                autoEl : {
+                    tag : "img",
+                    src : vm.get("camera").image,
+                    style: 'height: 100%; width: 100%; border: none'
+                }
+            }],
+            listeners:{
+              afterrender:function(self){
+                console.log(self);
+              }
+            }
+      }).show();
     },
     onPlayVideo:function(dataview, record, item, index, e, eOpts){
        var me = this;

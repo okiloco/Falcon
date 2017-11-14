@@ -15,11 +15,13 @@ Ext.define('Admin.view.main.MainController', {
     },
 
     lastView: null,
+
+    
     onToggleSync:function(self, pressed, eOpts){
        global["sync"] = pressed;
        console.log("sync: ",pressed);
        try{
-        socket.emit("onsync",pressed);   
+            socket.emit("onsync",pressed);   
        }catch(err){
             console.log("Error Socket: ",err);        
        }
@@ -313,8 +315,11 @@ Ext.define('Admin.view.main.MainController', {
     onKeyUp:function(key,event){
     },
     //@fvargs: Renderizar Vista.
-    onMainViewRender:function() {
+    onMainViewRender:function(self) {
         var vm = this.getViewModel();
+
+        var treelist = self.down("treelist");
+
         if (!window.location.hash) {
             if(localStorage.user_id!=undefined){
                 this.redirectTo(vm.get("defaultToken"));
@@ -337,13 +342,55 @@ Ext.define('Admin.view.main.MainController', {
             }
             console.log("window.location.hash",window.location.hash)
         }
+        //Actualizar número de infracciones subidas.
+        socket.on("count-infraccion",function(total){
+            vm.set("total",total);
+        });
     },
-    
-    onMainViewBeforeRender:function() {
+    loadModules:function(){
+        var st = Ext.getStore('NavigationTree');
+        var data = [
+            {
+                text: 'PTZ',
+                iconCls: 'x-fa fa-desktop',
+                rowCls: 'nav-tree-badge nav-tree-badge-new',
+                viewType: 'ptz',
+                routeId: 'ptz', // routeId defaults to viewType
+                leaf: true
+            },
+            {
+                text: 'Infracciones',
+                iconCls: 'fa fa-tasks',
+                viewType: 'infraccion',
+                routeId: 'infraccion',
+                hidden:true,
+                leaf: true
+            }
+        ];
+
+        if(localStorage.user!=undefined){
+            if(JSON.parse(localStorage.user).usergroup.name=="Super User"){
+                data.push({
+                    text: 'Usuarios',
+                    iconCls: 'x-fa fa-user',
+                    viewType: 'users',
+                    routeId: 'users',
+                    hide:true,
+                    leaf: true
+                });
+            }
+        }
+        st.setRoot({
+            expanded: true,
+            children: data
+        });
+    },
+    onMainViewBeforeRender:function(self) {
         
         var vm = this.getViewModel();
 
-
+        console.log(self)
+        this.loadModules();
         
         console.log("Render",localStorage);
         if(localStorage.user_id!=undefined){

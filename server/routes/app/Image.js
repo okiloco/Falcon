@@ -7,10 +7,17 @@ module.exports = function(app,io,router,db,schema){
 	
 	var config;
 	var camera;
+	schema.statics.listar = function(params,callback){
+		params["creator"] = global.user._id;
+		db.image.search(params,function(err,docs){
+			if(callback!=undefined){
+				callback(docs);		
+			} 
+		});
+	}
 
 	function init(){
 		config=global.config;
-		console.log(config);
 		if(config!=undefined){
 
 			camera = streaming({
@@ -72,5 +79,37 @@ module.exports = function(app,io,router,db,schema){
 			break;
 		}	
 	});
+
+	router.get("/stream",(req,res)=>{
+
+		var params = req.query,
+		action = params.action;
+
+		config=global.config;
+		camera = streaming({
+			id_dispositivo:2,
+			address: config.camera_ip,
+			folder:path.join(global.APP_PATH,'public','images'),
+			prefix:config.camera_id,
+			port: '3128',
+			username: config.camera_user,
+			password: config.camera_password,
+			db:db
+		});
+
+		camera.move(params,action, function(err, image) {
+			res.send(JSON.stringify({
+				success:true,
+				msg:err
+			}));
+		});
+	});
+
+	router.route("/images").get(function(req,res){
+		db.image.listar(req.query,function(docs){
+			res.send(JSON.stringify({data:docs,success:true}));
+		});
+	});	
+
 	return router;
 };

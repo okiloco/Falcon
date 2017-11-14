@@ -56,6 +56,18 @@ Ext.define('Admin.view.main.Main', {
                     // hrefTarget: '_self',
                     tooltip: 'Sincronización Automática'
                  },
+                 {
+                    xtype: 'button',
+                    iconCls:'x-fa fa-bell',
+                    bind:{
+                        text:'{total}',
+                        tooltip: 'Infracciones subidas al Backcoffice (Hoy) {total}'
+                    },
+                    // ui: 'header',
+                    // href: '#profile',
+                    // hrefTarget: '_self',
+                    
+                 },
                  /*{
                      xtype: 'segmentedbutton',
                      margin: '0 16 0 0',

@@ -8,32 +8,7 @@ Ext.define('Admin.store.NavigationTree', {
     }],
 
     root: {
-        expanded: true,
-        children: [
-            {
-                text: 'PTZ',
-                iconCls: 'x-fa fa-desktop',
-                rowCls: 'nav-tree-badge nav-tree-badge-new',
-                viewType: 'ptz',
-                routeId: 'ptz', // routeId defaults to viewType
-                leaf: true
-            },
-            {
-                text: 'Usuarios',
-                iconCls: 'x-fa fa-user',
-                viewType: 'users',
-                routeId: 'users',
-                hidden:true,
-                leaf: true
-            },
-            {
-                text: 'Infracciones',
-                iconCls: 'fa fa-tasks',
-                viewType: 'infraccion',
-                routeId: 'infraccion',
-                hidden:true,
-                leaf: true
-            },
+        
 
             /*,
                 {
@@ -114,7 +89,7 @@ Ext.define('Admin.store.NavigationTree', {
                 viewType: 'charts',
                 leaf: true
             }*/
-        ]
+        
     },
     listeners:{
         load:function(store, records, successful, operation, node, eOpts ){

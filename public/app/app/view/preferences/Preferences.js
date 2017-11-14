@@ -35,7 +35,6 @@ Ext.define('Admin.view.preferences.Preferences',{
                             bind:{
                                 store:'{organismostore}'
                             },
-                            allowBlank : false,
                             queryMode: 'local',
                             displayField: 'name',
                             valueField: 'codigo',
@@ -60,8 +59,7 @@ Ext.define('Admin.view.preferences.Preferences',{
                             },
                             queryMode: 'local',
                             displayField: 'name',
-                            valueField: 'codigo',
-                            allowBlank : false
+                            valueField: 'codigo'
                         }
                     ]
                 },
@@ -92,8 +90,10 @@ Ext.define('Admin.view.preferences.Preferences',{
                         },
                         { 
                             name:'camera_password',
+                            inputType: 'password',
                             fieldLabel:'Contraseña Camara'
                         }
+
                     ]
                 },
                 {
@@ -112,6 +112,51 @@ Ext.define('Admin.view.preferences.Preferences',{
                             fieldLabel:'Nombre Vehiculo'
                         }
                     ]
+                },
+                {
+                    title:'Joystick',
+                    defaults:{
+                        labelAlign:'top',
+                        width:'100%'
+                    },
+                    items:[
+                        {   
+                            xtype:'sliderfield',
+                            fieldLabel:'Sensibilidad Zoom',
+                            increment: 1,
+                            minValue: 1,
+                            maxValue: 100,
+                            name:'zoom_sensibility'
+
+                        },
+                        {   
+                            xtype:'sliderfield',
+                            fieldLabel:'Sensibilidad Moviemiento',
+                            increment: 1,
+                            minValue: 1,
+                            maxValue: 100,
+                            name:'movement_sensibility',
+
+                        },
+                        {   
+                            xtype:'sliderfield',
+                            fieldLabel:'Moviemiento zona muerta',
+                            increment: 1,
+                            minValue: 1,
+                            maxValue: 100,
+                            name:'movement_dead_zone',
+
+                        },                        
+                        {   
+                            xtype:'sliderfield',
+                            fieldLabel:'Zoom zona muerta',
+                            increment: 1,
+                            minValue: 1,
+                            maxValue: 100,
+                            name:'zoom_dead_zone',
+
+                        }
+                    ]
                 }
             ]
         }
@@ -121,22 +166,27 @@ Ext.define('Admin.view.preferences.Preferences',{
             text: 'Guardar',
             formBind: true, 
             disabled: true,
+            ui: 'soft-green',
             handler: function(self) {
 
                 var form = self.up('form');
+                
 
                 if (form.isValid()) {
                     form.submit({
                         url:Constants.URL_CONFIG_APP,
                         waitMsg: 'Procesando solicitud...',
                         success: function(f, action) {
-                        
-                            Ext.Msg.show({
-                                title: 'Información',
-                                msg: action.result.msg,
-                                buttons: Ext.Msg.OK,
-                                icon: Ext.Msg.INFO                    
-                            });
+                            
+                            var response = action.result;
+                            global.config = response.config;
+                            IP_CAMERA = global.config.camera_ip;
+                            
+                            Ext.Msg.confirm('Atención', 'Desea recargar la aplicación para cargar la nueva configuración de la cámara?', function(buttonId, text, v) {
+                                if(buttonId == 'yes') {
+                                    location.reload();
+                                }
+                            }, this);
                         },
                         failure: function(f, action) {
 

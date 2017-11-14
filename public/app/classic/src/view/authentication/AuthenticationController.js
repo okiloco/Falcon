@@ -21,6 +21,11 @@ Ext.define('Admin.view.authentication.AuthenticationController', {
                     localStorage.user =JSON.stringify(res.user);
                     localStorage.user_id =res.user._id;
                     localStorage.username =res.user.username;
+
+                    socket.emit("get-infracciones",function(total){
+
+                    });
+                   
                     //location.reload();
                     me.redirectTo('ptz', true);
                 },

@@ -128,6 +128,7 @@ module.exports = function(app,io,db){
 									delete params.password;
 									delete params.email;
 									delete params.username;
+
 									for(var key in params){
 										obj[key] = params[key];
 									}
@@ -181,12 +182,16 @@ module.exports = function(app,io,db){
 					config[key]=params[key];
 				}
 			}
+			for(var key in params){
+				config[key] = params[key];
+			}
+
 			Helper.writeFile('./server/app.json',config).
-			then(function(config){
+			then(function(){
 				res.send({
 					"success":true,
-					"msg":"Configuración Actualizada.<br>Se debe cerrar la sesión e iniciar nuevamente, para reflejar los cambios.",
-					config
+					"msg":"Configuración Actualizada con éxito.",
+					"config":config
 				});
 			},function(err){
 				res.send({

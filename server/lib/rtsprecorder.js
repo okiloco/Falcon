@@ -141,11 +141,12 @@ Recorder.prototype.record = function(options,callback){
 	}
 	this.once('readStart', function(){
 		if(self.playing){
+
+
 			if (!fs.existsSync(self.path_video_tmp)) {
 				
 				    self.writeStream = fs.createWriteStream(self.path_video_tmp);
 	    			self.readStream.stdout.pipe(self.writeStream);
-
 
 	    			console.log("duration: ",this.timeLimit);
 	    			setTimeout(function(){
@@ -163,25 +164,30 @@ Recorder.prototype.record = function(options,callback){
 	    				.videoCodec('libx264')
 	    				.fps(30)
 	    				.save(this.path_video)
-	    				.on('end', function() {
+	    				.on('end', function(){
 	    				    console.log('Convert finished !');
-                  self.emit("video-convert");
-	    						fs.unlink(self.path_video_tmp, function (err) {
-                    if (err) {
-                        throw err;
-                    }
-                  });
-    				  });
+                  			self.emit("video-convert");
+    						fs.unlink(self.path_video_tmp, function (err) {
+		                    	if (err) {
+		                        	throw err;
+		                    	}
+		                  	});
+    				  	});
 	    				if(callback!=undefined){
 	    					callback(self);
 	    				} 
 	    			});
 	    			console.log("Start record "+self.path_video_tmp+"\r\n");
 		  	}else{
-    			console.log("El video ya existe y no se puede reescribir.",self.path_video_tmp+"\r\n");
-		  		if(callback!=undefined){
-		  			callback();
-		  		} 
+    			console.log("El video ya existe y no se puede reescribir, intente nuevamente.",self.path_video_tmp+"\r\n");
+				fs.unlink(self.path_video_tmp, function (err) {
+                	if (err) {
+                    	throw err;
+                	}
+                	if(callback!=undefined){
+                		callback();
+                	} 
+              	});
 		  	}
 		}
 	});

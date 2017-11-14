@@ -208,20 +208,19 @@ span#timer{
 }
 #closevideo i{
  color:  #fff;
- font-size: 50px;
+ font-size: 30px;
  margin: 0px 5px;
  cursor:pointer;
 }
 #closevideo{
   color: white;
-  width: 50px;
-  height: 50px;
+  width: 30px;
+  height: 30px;
   z-index: 999999999;
   float: right;
   position: absolute;
-  right: 10px;
-  top: 8px;
-  background: red;
+  right: 5px;
+  top: 0px;
 }
 
 .imgpreview{
@@ -267,5 +266,69 @@ span#timer{
   border: 1px solid red;
 }
 
+/*Image viewwer*/
 
+.image-viewwer div{
+  display: block;
+}
+.image-viewwer{
+
+}
+.image-items{
+  background: #ececec;
+  min-height: 20%;
+  margin: 5px;
+  overflow: hidden;
+  height: 80px;
+}
+.image-items div{
+  float: left;
+  margin-left: 10px;
+  margin-top: 5px;
+  display: inline-block;
+}
+.image-items .item{
+  border:1px solid #ccc;
+  max-height: 90px;
+  cursor: pointer;
+  z-index: 999999;
+  background: #ccc;
+  position: relative;
+}
+.image-preview{
+  height: 400px;
+  background: #000;
+  margin: 5px;
+}
+.video{
+  display: block;
+}
+.hit-area{
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 999999;
+  position: absolute!important;
+  left: -10px;
+  top: -5px;
+  height: 100%;
+  width: 100%;
+}
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+}
+
+iframe {
+    width: 960px;
+    height: 100%;
+    overflow: hidden;
+    border: none;
+}
 /*f110 */

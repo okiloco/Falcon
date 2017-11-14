@@ -13,7 +13,8 @@
 		"movil_name":"CARRITO1"
 	},
 	"organismo":"BQA",
-	"camera_id":"CZBQ01",
+	"camera_id":"CZBQ
+	01",
 	"camera_ip":"192.168.1.155",
 	"camera_user":"root",
 	"camera_password":"root",
@@ -37,6 +38,10 @@ Ext.define('Admin.model.preferences.Preferences', {
         'camera_user',
         'camera_password',
         'movil_name',
-        'movil_plate'
+        'movil_plate',
+        'movement_dead_zone',
+        'movement_sensibility',
+        'zoom_dead_zone',
+        'zoom_sensibility'
     ]
 });

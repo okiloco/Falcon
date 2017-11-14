@@ -25,10 +25,13 @@ function Streaming(options) {
   function requestImage(options,callback){
     var image = camera.captureImage(options,callback);
   }
-  
+  function move(options,action,callback){
+    var mov = camera.move(options,action,callback);
+  }
   return {
     requestImage:requestImage,
-  	createRecord:createRecord
+  	createRecord:createRecord,
+    move:move
   }
 
 }

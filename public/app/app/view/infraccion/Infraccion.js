@@ -31,24 +31,24 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                   clicksToEdit: 2
                })
             ],
-            /*listeners:{
-                select :function( self, record, index, eOpts){
-                    console.log(record);  
-                } 
-            },*/
+            listeners:{
+                afterrender:'onRender'
+            },
             columns:[
                 {
                     dataIndex:"codigo",
-                    text:"Codigo"
+                    text:"Codigo",
+                    width:150
                 },
                 {
                     dataIndex:"lote",
-                    text:"Lote"
+                    text:"Lote",
+                    width:80
                 },
                 {
                     dataIndex:"placa",
                     text:"Placa",
-                    width:150,
+                    width:80,
                     editor: Ext.create('Ext.form.field.Text',{
                         emptyText:'Placa',
                         name:'placa',
@@ -102,13 +102,22 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                 {
                     xtype: 'actioncolumn',
                     cls: 'content-column',
+                    align:'center',
                     width: 450,
                     items: [
                         {
                             xtype: 'button',
-                            iconCls: 'fa fa-upload',
+                            iconCls: 'x-fa fa-ban fa-upload',
                             tooltip: 'Subir Infracción',
+                            align:'center',
                             handler:'upload',                       
+                        },
+                        {
+                            xtype: 'button',
+                            iconCls: 'x-fa fa-pencil fa-eye',
+                            tooltip: 'Ver evidencias',
+                            align:'center',
+                            handler:'evidencias'                     
                         }
                     ],
                     cls: 'content-column',
@@ -181,7 +190,7 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                 scope:this,
                 cellkeydown:function( self, td, cellIndex, record, tr, rowIndex, e, eOpts ){
                     var grid = self.up("grid");
-                    record.set("changed",(!record.get("changed")));
+                    record.set("changed",(!(record.get("changed"))));
                     console.log(record.get("changed"));
                 }
              }             

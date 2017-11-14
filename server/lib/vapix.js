@@ -116,7 +116,24 @@ Camera.prototype.requestImage = function(options, callback) {
     callback(err, body);
   });
 };
+/*$.get("http://"+IP_CAMERA+"/axis-cgi/com/ptz.cgi?camera=1&continuouszoommove=0");
+$.get("http://"+IP_CAMERA+"/axis-cgi/com/ptz.cgi?camera=1&continuouspantiltmove=-1,-3");*/
 
+Camera.prototype.move = function(options,action,callback) {
+  options["camera"] = 1;
+
+  console.log("options: ",options);
+  var GET_request = this.generateGET(options);
+  var path = 'http://' +this.address + '/axis-cgi/com/ptz.cgi' + GET_request;
+
+  var mjpg = new MjpegConsumer();
+  console.log(path);
+  request(path, {'auth': this.auth}).pipe(mjpg);
+  if(callback!=undefined){
+    callback();
+  }
+  return mjpg;
+};
 //Fachada para Imagenes
 Camera.prototype.captureImage = function(options,callback){
 

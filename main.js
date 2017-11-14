@@ -140,6 +140,9 @@ app.on("ready",function(_win){
 		if(callback!=undefined){
 			callback({});
 		}
+		createWindow({url:'public/app/index.html#error'})
+		.then(win=>{
+		});
 	});
 });
 

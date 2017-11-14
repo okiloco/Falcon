@@ -13,10 +13,16 @@ module.exports = function(app,io,router,db,schema){
 	//Ejemplo de Virtual
 	var config;
 	var video;
+	var socket;
 	/*schema.virtual("alias").get(function(){
 		return this.username+"-lord";
 	});*/
-	
+	io.on("connect",function(_socket){
+		if(socket==undefined){
+			socket = _socket;
+			console.log("Video listener Socket!");
+		}
+	});
 	function convertVideo(urlVideo,urlVideoDestino){
 		
 		return new Promise(function(resolve,reject){
@@ -82,8 +88,11 @@ module.exports = function(app,io,router,db,schema){
 							"creator":global.user.id
 						},function(doc,err){
 							
+
+							socket.emit("video-preview",doc._id,fs.existsSync(video.url_video));
+
 							video.on("video-convert",function(){
-								global.socket.emit("video-convert");
+								socket.emit("video-convert",doc._id);
 							});
 
                             res.send(JSON.stringify({
@@ -103,7 +112,6 @@ module.exports = function(app,io,router,db,schema){
 	.get(function(req,res,content){
 		var params = req.params,
 		action = params.action;
-		var range = req.headers.range;
 
 		switch(action){
 			case 'stop':
@@ -115,28 +123,38 @@ module.exports = function(app,io,router,db,schema){
 				});
 			break;
 			case 'preview':
-			db.video.findById(req.query.id,function(err,doc){
-				// 
-				var filename = doc.url;
-				// var filename = "public/videos/20171017/movie.mp4";
-				// var readStream = fs.createReadStream(filename);
-				var total;
+				db.video.findById(req.query.id,function(err,doc){
+					var filename = doc.url;
+					console.log("preview video:",filename);
+					
+					if (!fs.existsSync(filename)) {
+						console.log("El archivo no existe.");
+						global.socket.emit("video-not-found",req.query.id);
+						return;
+					}else{
+						res.writeHead(200,{'Content-Type':'video/mp4'	
+						});
+						fs.createReadStream(filename).pipe(res);
+					}
 
-				console.log("video:",filename)
-				if (!fs.existsSync(filename)) {
-					console.log("El archivo no existe.");
-					global.socket.emit("video-not-found",req.query.id);
-				}else{
-					res.writeHead(200,{'Content-Type':'video/mp4'	
-					});
-					fs.createReadStream(filename).pipe(res);
-				}
-
-			});
-		break;	
+				});
+			break;	
 		}
 	});
-	
+
+	schema.statics.listar = function(params,callback){
+		params["creator"] = global.user._id;
+		db.video.search(params,function(err,docs){
+			if(callback!=undefined){
+				callback(docs);		
+			} 
+		});
+	}
+	router.route("/videos").get(function(req,res){
+		db.video.listar(req.query,function(docs){
+			res.send(JSON.stringify({data:docs,success:true}));
+		});
+	});	
 	const HTML_PATH = 'public/index.html';
 	const SIZE_INDEX = fs.statSync(HTML_PATH).size;
 

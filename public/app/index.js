@@ -56,8 +56,21 @@ function __init(){
 			socket.on("infraccion-error",function(err){
 				Msg.info(err);
 			});
+			socket.on("count-infraccion",function(total){
+				console.log("Total infracciones: "+total);
+			});
+
+			
 			socket.on("uploaded",function(msg){
-				Msg.info(msg);
+				
+				try{
+					var component =Ext.ComponentQuery.query('infraccion')[0];
+					var grid = component.down("grid");
+					grid.getStore().reload();
+					Msg.info(msg);
+				}catch(err){
+					Msg.info(msg);
+				}
 			});
 			socket.on("infraccion-update",function(err){
 				Msg.info("Infracción actualizada con éxito.");
@@ -65,6 +78,7 @@ function __init(){
 			socket.on("upload-fail",function(err){
 				Msg.info(err);
 			});
+			
 			//Sincronización automática.
 			var sync;
 			socket.on('online', (msg,status) => {

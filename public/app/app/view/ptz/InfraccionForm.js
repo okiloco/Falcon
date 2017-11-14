@@ -35,7 +35,13 @@ Ext.define('Admin.view.ptz.InfraccionForm',{
                     emptyText: 'Placa',
                     regex: /^((AU){1}|([A-Z]{3})([\d]{3}))+$/,
                     regexText: 'Debe ser una placa Válida.',
-                    allowBlank:false
+                    maxLength:6,
+                    allowBlank:false,                    
+                    listeners: {
+                        change:function(self,newVal,oldVal){
+                            self.setValue(newVal.toUpperCase());
+                        }
+                    }
                 },
                 {
                     xtype: 'textfield',
@@ -43,17 +49,26 @@ Ext.define('Admin.view.ptz.InfraccionForm',{
                     emptyText: 'Dirección',
                     regex: /^((VIA)|(TRV)|(AV)|(CL)|(KR)|(KM)){1}(\s)((\d)+[A-Z]?)+(-)((\d)+[A-Z]?)+$/,
                     regexText: 'Debe ser una dirección Válida.',
-                    allowBlank:false
+                    allowBlank:false,
+                    listeners: {
+                        change:function(self,newVal,oldVal){
+                           self.setValue(newVal.toUpperCase());
+                        },
+                        specialkey:'onEnter'
+                    },
                 },
                 {
                     xtype:'checkboxfield',
                     boxLabel: 'Confirmar',
                     name: 'estado',
+                    value:1,
                     inputValue: '1'
                 }
             ]
         }    
     ],
+    cls: 'wizardone',
+    colorScheme: 'blue',
     buttons:[
         {
             xtype:'button',
@@ -62,7 +77,6 @@ Ext.define('Admin.view.ptz.InfraccionForm',{
             // iconCls:'save-icon',
             formBind:true,                         
             handler:'confirmInfraccion',
-            cls: 'ux-action-btn'
         }
         /*{
             xtype:'button',

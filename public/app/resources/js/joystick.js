@@ -3,32 +3,6 @@
 
        var toggle=false;
         var down = [];
-        $(document).keydown(function(e) {
-            down[e.keyCode] = true;
-        }).keyup(function(e) {
-            if (down[16] && down[78]) {
-                alert('Nueva Infraccion');
-            }
-            if (down[16] && down[67]) {
-                alert('Captura Imagen');
-            }
-            if (down[16] && down[79]) {
-                alert('Video de 8 segundos');
-            }
-            if (down[16] && down[73]) {
-                if (toggle===false) {
-                    alert('Iniciar video');
-                    toggle=true;
-                }else{
-                    alert('Detener video');
-                    toggle=false;
-                }
-            }
-            down[e.keyCode] = false;
-        });
-   
-
-    
         
         var hasGP = false;
         var repGP;  
@@ -43,7 +17,7 @@
 
         var once_zoom = function(zoom_value) {
             if(once_zoom.done) return;
-            $.get("http://"+IP_CAMERA+"/axis-cgi/com/ptz.cgi?camera=1&continuouszoommove=0");
+            $.get(BASE_PATH+"app/stream?camera=1&continuouszoommove=0");
             once_zoom.done = true;
             zoom_value=0;
             console.log('Reset_Zoom');
@@ -51,7 +25,7 @@
 
         var once = function() {
             if(once.done) return;
-            $.get("http://"+IP_CAMERA+"/axis-cgi/com/ptz.cgi?camera=1&continuouspantiltmove=0,0");
+            $.get(BASE_PATH+"app/stream?camera=1&continuouspantiltmove=0,0");
             pan_value=0;
             once.done = true;
             console.log('Reset View');
@@ -67,29 +41,25 @@
                 var j3_pad =2;
                 var j2_pad =1;
                 var j1_pad =0;
-                var movement_sensibility = document.getElementById("movementRange").value;
-                var movement_dead_zone = document.getElementById("movemetDZRange").value;
-                var zoom_sensibility = document.getElementById("zoomRange").value;
-                var zoom_dead_zone = document.getElementById("zoomDZRange").value;
+
+                var movement_sensibility = (global.config!=undefined)?(global.config.movement_sensibility || 1):1;
+                var movement_dead_zone = ((global.config!=undefined)?(global.config.movement_dead_zone || 1):1)/10;
+                var zoom_sensibility = (global.config!=undefined)?(global.config.zoom_sensibility || 1):1;
+                var zoom_dead_zone = ((global.config!=undefined)?(global.config.zoom_dead_zone || 1):1)/10;
+
+                console.log(
+                movement_sensibility,
+                movement_dead_zone,
+                zoom_sensibility,
+                zoom_dead_zone,
+                )
                 // var movement_dead_zone=0.02;
                 // var movement_sensibility = 80;
                 // var zoom_dead_zone = 0.4;
                 // var zoom_sensibility = 1000;
 
-                if (gp.buttons[j1_pad].pressed) {
-                    console.log('Captura Imagen 1');
-                }
-                if (gp.buttons[j2_pad].pressed) {
-                    console.log('Captura Imagen 2');
-                }
-                if (gp.buttons[j3_pad].pressed) {
-                    console.log('Captura Imagen 3');
-                }
-                if (gp.buttons[j4_pad].pressed) {
-                    console.log('Captura Imagen 4');
-                }
                 if (gp.buttons[left_pad].pressed) {
-                    $.get("http://"+IP_CAMERA+"/axis-cgi/com/ptz.cgi?camera=1&move=home&speed=100")
+                    $.get(BASE_PATH+"app/stream?camera=1&move=home&speed=100")
                     pan_value=0;
                     til_value=-47;
                     zoom_value=0;
@@ -97,7 +67,7 @@
                     console.log('home');
                 }
                 if (gp.buttons[rigth_pad].pressed) {
-                    $.get("http://"+IP_CAMERA+"/axis-cgi/com/ptz.cgi?camera=1&zoom=40");
+                    $.get(BASE_PATH+"app/stream?camera=1&zoom=40");
                     pan_value=0;
                     til_value=-47;
                     zoom_value=0;
@@ -135,18 +105,18 @@
                             pan_continous=0;
                         }              
                         
-                        $.get("http://"+IP_CAMERA+"/axis-cgi/com/ptz.cgi?camera=1&continuouspantiltmove="+pan_value+","+pan_continous);
+                        $.get(BASE_PATH+"app/stream?camera=1&continuouspantiltmove="+pan_value+","+pan_continous);
                            
 
                         once.done = false;
                         }
                         else if (gp.axes[i] ===0  && gp.axes[i+1] <=-movement_dead_zone) {
                             pan_continous=Math.abs(gp.axes[i+1])*movement_sensibility;
-                            $.get("http://"+IP_CAMERA+"/axis-cgi/com/ptz.cgi?camera=1&continuouspantiltmove=0,"+pan_continous);
+                            $.get(BASE_PATH+"app/stream?camera=1&continuouspantiltmove=0,"+pan_continous);
                             once.done = false;
                         }else if (gp.axes[i]===0 && gp.axes[i+1] >=movement_dead_zone) {
                             pan_continous=-Math.abs(gp.axes[i+1])*movement_sensibility;
-                            $.get("http://"+IP_CAMERA+"/axis-cgi/com/ptz.cgi?camera=1&continuouspantiltmove=0,"+pan_continous);
+                            $.get(BASE_PATH+"app/stream?camera=1&continuouspantiltmove=0,"+pan_continous);
                             once.done = false;
                         }
                     if (gp.axes[i]===0 && gp.axes[i+1]===0) {
@@ -156,22 +126,22 @@
                  html+= "Stick "+(Math.ceil(i/2)+1)+": "+gp.axes[i]+"<br/>";
                  if ((Math.ceil(i/2)+1)===2) {
                             if (gp.axes[i]>zoom_dead_zone) {
-                                        zoom_value=zoom_value + gp.axes[i] * zoom_sensibility;
+                                        zoom_value=zoom_value + gp.axes[i] * (zoom_sensibility);
                                     if (zoom_value >=100 ) {
                                         zoom_value=99;
                                         }
                                     console.log('Zoom '+zoom_value);
-                                    $.get("http://"+IP_CAMERA+"/axis-cgi/com/ptz.cgi?camera=1&continuouszoommove="+zoom_value);
+                                    $.get(BASE_PATH+"app/stream?camera=1&continuouszoommove="+zoom_value);
                                     once_zoom.done = false;
                                     zoom_value=0;
                                 
                              }else if (gp.axes[i]<-zoom_dead_zone) {
-                                zoom_value=zoom_value - Math.abs(gp.axes[i]) * zoom_sensibility;
+                                zoom_value=zoom_value - Math.abs(gp.axes[i]) * (zoom_sensibility);
                                  if (zoom_value <=-100 ) {
                                         zoom_value=-99;
                                         }
                                 console.log('Zoom out'+zoom_value);
-                                $.get("http://"+IP_CAMERA+"/axis-cgi/com/ptz.cgi?camera=1&continuouszoommove="+zoom_value);
+                                $.get(BASE_PATH+"app/stream?camera=1&continuouszoommove="+zoom_value);
                                 once_zoom.done = false;
                                 zoom_value=0;
                              }
@@ -197,7 +167,7 @@
                     hasGP = true;
                     $("#gamepadPrompt").html("Gamepad connected!");
                     console.log("connection event");
-                    repGP = window.setInterval(reportOnGamepad,500);
+                    repGP = window.setInterval(reportOnGamepad,100);
                 });
      
                 $(window).on("gamepaddisconnected", function() {

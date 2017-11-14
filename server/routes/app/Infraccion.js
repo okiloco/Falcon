@@ -16,7 +16,27 @@ const connection = new ElectronOnline();
 module.exports = function(app,io,router,db,schema){
 	
 	let socket;	
+	function countInfracciones(params){
+		params = params || {};
+		var lote = dateFormat(new Date(),"yyyymmdd");
 
+		return new Promise(function(resolve,reject){
+			console.log("get Infracciones",params);
+			if(global.user!=undefined){
+
+				params["creator"] = global.user.id;
+				params["lote"] = lote;
+				params["estado"] = 1;
+
+				db.infraccion.listar(params)
+				.then(function(docs){
+					resolve(docs.length);			
+				});
+			}else{
+				reject(0);
+			}
+		});
+	}
 	function actualizarInfraccion(params){
 
 		console.log("Se va a actualizar la infracción ",params.codigo);
@@ -25,16 +45,53 @@ module.exports = function(app,io,router,db,schema){
 			var infraccion = docs[0];
 			infraccion.estado=1;
 			infraccion.save(function(err,doc){
-				if(err){
-					socket.emit("infraccion-error",err);
-				}else{
-					socket.emit("infraccion-update",doc);
+				try{
+					if(err){
+						socket.emit("infraccion-error",err);
+					}else{
+						socket.emit("infraccion-update",doc);
+					}
+				}catch(err){
+					console.log("Error Socket. ",err);
 				}
 			});
 		});
 	}
+
+	async function getFiles(files){
+		var userfiles = [];
+
+		return new Promise(function(resolve,reject){
+
+			//files.forEach(function(file,index,arr){
+			for(let file of files){
+				var total = (arr.length -1);
+				var url = ("image" in file)?file.image.url:file.url;
+				console.log("\turl:",url);
+				if(url==undefined){
+					reject("Url indefinida.");
+					return;
+				}else{
+					console.log(file);
+				}
+				try{
+					const contents = fs.readFile(url);
+					userfiles.push(contents);
+					console.log(userfiles.length);
+					if(index == total){
+						console.log("Ultimo cargado!")
+						resolve(userfiles);
+					}
+				}catch(err){
+					reject(err);
+					return;					
+				}
+			}
+			//});
+		});
+	}
 	function subirArchivos(params){
-		
+			
 		var formData = {
 			"urlVideos":params.urlVideos,
 			"urlImages":params.urlImages,
@@ -50,8 +107,12 @@ module.exports = function(app,io,router,db,schema){
 			"placa":params.placa,
 			"userfile[]":[]
 		};
+		if(params==undefined){
+			reject("No se pasaron parametros.");
+			return;
+		}
 		var files  = params.urls;
-		var userfiles =[];
+		var userfiles = [];
 		
 		return new Promise(function(resolve,reject){
 
@@ -59,35 +120,40 @@ module.exports = function(app,io,router,db,schema){
 				reject("No hay conexión a Internet.");
 				return;
 			}
-			
-			console.log("Se va a subir los Archivos.");
-
-			files.forEach(function(file){
-				var url = file.url;
+			console.log("Se va a subir los Archivos.",params);
+			files.forEach(function(file,index,arr){
+				var url = ("image" in file)?file.image.url:file.url;
+				var total = (arr.length-1)
 				try{
-					if(url!=undefined){
-						userfiles.push(fs.createReadStream(url));
-					}
+					var readStream = fs.createReadStream(url);
+					let size = fs.lstatSync(url).size;
+					let bytes = 0;
+					userfiles.push(readStream);
+					console.log(index,total);
+					readStream.on('data', (chunk) => {
+					    console.log(bytes += chunk.length, size);
+					    if(bytes==size){
+					    	console.log("Read end ",url);
+					    }
+				    });
 				}catch(err){
-					console.log("[Error al leer archivos]",url,"Error:",err);
-					reject(err);
-					return;					
+					console.log("Error en la url",file)
+					return;
 				}
 			});
 
-			if(userfiles.length>0){
+			formData["userfile[]"] = userfiles;
+			formData["fecha"] = moment().tz(params.fecha.toString(),"America/Bogota").format('YYYY-MM-DD HH:mm:ss');
+			request.post({
+			"url":Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE, 
+			formData: formData},
+			function(err, httpResponse, body) { 
 				
-				formData["userfile[]"] = userfiles;
-				formData["fecha"] = moment().tz(params.fecha.toString(),"America/Bogota").format('YYYY-MM-DD HH:mm:ss');
-				
-				request.post({
-				"url":Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE, 
-				formData: formData},
-				function(err, httpResponse, body) { 
-					
-					if(body!=undefined){
+				console.log("BODY:: ",body)
+				if(body!=undefined && body!=null){
+					try{
 						var response = JSON.parse(body);
-						console.log("response:: ",response.success);
+						//console.log("response:: ",response.success);
 						if (err) {
 							console.log("[Error al enviar archivos]",err);
 						   	reject("Error al enviar archivos "+err);
@@ -99,19 +165,100 @@ module.exports = function(app,io,router,db,schema){
 					    }
 						
 						//Actualizar Infracción.
-						resolve(params);
 						actualizarInfraccion(params);
-					}else{
-						reject(`No se pudo cargar la Infracción ${params.codigo}<br>Revise la conexión a Internet.`);
+						resolve(response);
+					}catch(err){
+						reject(err);
 						return;
+					}
+				}else{
+					reject(`No se pudo cargar la Infracción ${params.codigo}<br>Revise la conexión a Internet.`);
+					return;
+				}
+			});
+			/*getFiles(files)
+			.then(function(userfiles){
+				if(userfiles.length>0){
+					
+
+					formData["userfile[]"] = userfiles;
+					formData["fecha"] = moment().tz(params.fecha.toString(),"America/Bogota").format('YYYY-MM-DD HH:mm:ss');
+					
+					request.post({
+					"url":Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE, 
+					formData: formData},
+					function(err, httpResponse, body) { 
+						
+						if(body!=undefined && body!=null){
+							var response = JSON.parse(body);
+							//console.log("response:: ",response.success);
+							if (err) {
+								console.log("[Error al enviar archivos]",err);
+							   	reject("Error al enviar archivos "+err);
+							   	return;
+							}
+							if(!response.success){
+							   	reject(response.msg);
+							   	return;
+						    }
+							
+							//Actualizar Infracción.
+							resolve(params);
+							actualizarInfraccion(params);
+						}else{
+							reject(`No se pudo cargar la Infracción ${params.codigo}<br>Revise la conexión a Internet.`);
+							return;
+						}
+					});
+				}else{
+					reject(`No se pudo subir la infracción: ${params.codigo}<br>Puede que los archivos no existan.`);
+					return;
+				}
+			},function(err){
+				reject("Error al adjuntar archivos "+err);
+			});	*/		
+		});
+	};
+
+	function transferAllFiles(infracciones){
+		var total = infracciones.length,
+		infraccion = {};
+
+		return new Promise(function(resolve,reject){
+			if(total>0){
+				db.infraccion.listar({"estado":0},function(infracciones){
+					total=infracciones.length;
+
+					if(total>0){
+						infraccion = infracciones[0];
+						console.log("Transfer Infraccion: ",infraccion.codigo);
+						db.infraccion.listar({"_id":infraccion._id},function(docs){
+							var infraccion = docs[0];
+							
+							if(docs.length>0){
+								transferFiles(infraccion)
+								.then(function(){
+									transferAllFiles(infracciones)
+									.then(function(){
+										//reject();
+									});
+								},function(){
+									//reject();
+								});
+							}else{
+								console.log("Infracciones finalizadas.");
+								resolve("Infracciones finalizadas.");
+							}
+						});
+					}else{
+						reject();
 					}
 				});
 			}else{
-				reject(`No se pudo subir la infracción: ${params.codigo}<br>Puede que los archivos no existan.`);
-				return;
+				reject();
 			}
 		});
-	};
+	}
 	function transferFiles(params){
 
 		return new Promise(function(resolve,reject){
@@ -123,7 +270,11 @@ module.exports = function(app,io,router,db,schema){
 				if(!("length" in params)){
 					subirArchivos(params)
 					.then(function(doc){
-						socket.emit("uploaded",`Infracción ${params.codigo} subida con éxito.`);
+						try{
+							socket.emit("uploaded",`Infracción ${params.codigo} subida con éxito.`);
+						}catch(err){
+							console.log("ERROR Socket emit: uploaded: ",err);
+						}
 						resolve();
 					}, function(err){
 						console.log(err);
@@ -133,13 +284,25 @@ module.exports = function(app,io,router,db,schema){
 				}else{
 
 					if(sync){
-						params.forEach(function(doc,index,arr){
+						//params.forEach(function(doc,index,arr){
 
-							var total = (arr.length - 1);
-							db.infraccion.listar({"_id":doc._id},function(docs){
+							var total = (params.length - 1);
+							db.infraccion.listar({"estado":0},function(docs){
 								
-								var infraccion = docs[0];
-								subirArchivos(infraccion)
+								if(docs.length>0){
+									//var infraccion = docs[0];
+									transferAllFiles(docs);
+								}else{
+									console.log("No hay infracciones para subir.");
+									reject("No hay infracciones para subir.");
+									return;
+								}
+								/*transferFiles(infraccion)
+								.then(function(){
+									console.log()
+								});*/
+								// socket.emit("infraccion",infraccion);
+								/*subirArchivos(infraccion)
 								.then(function(doc){
 									if(index == total){
 										socket.emit("uploaded",`Se subieron (${total}) infracciones.`);
@@ -149,9 +312,9 @@ module.exports = function(app,io,router,db,schema){
 									console.log(err)
 									socket.emit("infraccion-error",err);
 									return;
-								});
+								});*/
 
-							});
+							//});
 						});
 					}else{
 						reject("Las infracciones se cargaran en otro momento.");
@@ -173,6 +336,10 @@ module.exports = function(app,io,router,db,schema){
 			transferFiles(params)
 			.then(function(){
 				console.log("Tranferencia exitosa.");
+				countInfracciones()
+				.then(function(total){
+					socket.emit("count-infraccion",total);
+				});
 			},function(err){
 				socket.emit("message",err);
 				console.log(err);
@@ -187,6 +354,10 @@ module.exports = function(app,io,router,db,schema){
 					if(docs.length>0){
 						transferFiles(docs)
 						.then(function(){
+							countInfracciones()
+							.then(function(total){
+								socket.emit("count-infraccion",total);
+							});
 							console.log("Tranferencia exitosa.");
 						},function(err){
 							console.log(err);
@@ -199,7 +370,15 @@ module.exports = function(app,io,router,db,schema){
 				});
 			}
 		});
+		socket.on("get-infracciones",function(params){
+			console.log("get-infracciones:")
+			countInfracciones(params)
+			.then(function(total){
+				socket.emit("count-infraccion",total);
+			});
+		});
 	});
+
 	schema.virtual("urlVideos").get(function(){
 		var videos = this.videos.map(function(doc){
 			if(doc){
@@ -213,7 +392,7 @@ module.exports = function(app,io,router,db,schema){
 	schema.virtual("urlImages").get(function(){
 		var images = this.images.map(function(doc){
 			if(doc){
-				return doc.url;
+				return ("image" in doc)?doc.image.url:doc.url;
 			}else{
 				return;
 			}
@@ -226,38 +405,43 @@ module.exports = function(app,io,router,db,schema){
 	schema.statics.listar = function(params,callback){
 		var result=[];
 
-		db.infraccion.query(params,function(err,query){
-			
-			var cursor = query
-			.populate('creator')
-			.populate('videos.video')
-			.populate('images.image')
-			//.select('urlVideos urlImages videos video images image')
-			.cursor()
-			.eachAsync(function(infraccion) {
+		return new Promise(function(resolve,reject){
+			db.infraccion.query(params,function(err,query){
+				
+				var cursor = query
+				.populate('creator')
+				.populate('videos.video')
+				.populate('images.image')
+				//.select('urlVideos urlImages videos video images image')
+				.cursor()
+				.eachAsync(function(infraccion) {
 
-				infraccion["urlVideos"] ="";
-				infraccion["urlImages"] ="";
-		        
-		        infraccion.videos.forEach(function(docs,index,arr){
-		        	db.video.findById(docs.video,(err,doc)=>{
-		        		infraccion.videos[index]=doc;
-		        	});
-		        });
+					infraccion["urlVideos"] ="";
+					infraccion["urlImages"] ="";
+			        
+			        infraccion.videos.forEach(function(docs,index,arr){
+			        	db.video.findById(docs.video,(err,doc)=>{
+			        		infraccion.videos[index]=doc;
+			        	});
+			        });
 
-		        infraccion.images.forEach(function(docs,index,arr){
-		        	db.image.findById(docs.image,(err,doc)=>{
-		        		infraccion.images[index]=doc;
-		        	});
-		        });
-		        result.push(infraccion);
-	      	})
-	    	.then(res => {
-	    		callback(result);
-	    	});				
+			        infraccion.images.forEach(function(docs,index,arr){
+			        	db.image.findById(docs.image,(err,doc)=>{
+			        		infraccion.images[index]=doc;
+			        	});
+			        });
+			        result.push(infraccion);
+		      	})
+		    	.then(res => {
+		    		if(callback!=undefined){
+		    			callback(result);
+		    		}
+	    			resolve(result);
+		    	});				
+			});
 		});
 	}
-
+	
 	router.route("/infracciones")
 	.get(function(req,res){
 		var params = req.query || {};
@@ -266,8 +450,25 @@ module.exports = function(app,io,router,db,schema){
 		});
 	});
 
+	router.route("/evidencias/:_id")
+	.get(function(req,res){
+		db.infraccion.listar({"_id":req.params._id},function(docs){
+			var infraccion = docs[0];
+			res.send(JSON.stringify({data:infraccion.urls,success:true}));
+		});
+	});
+
 	//@infracciones/:id
 	
+	router.route("/infracciones/count")
+	.get(function(req,res){
+
+		countInfracciones(req.query)
+		.then(function(total){
+			res.send(JSON.stringify({"total":total,"success":true}));
+		});
+	});
+
 	router.route("/infracciones")
 	.post(function(req,res){
 		var params = req.body;
@@ -285,7 +486,7 @@ module.exports = function(app,io,router,db,schema){
 			var arr_images = [];
 
 			//#Recorrer Videos
-			db.video.find({"estado":0,"lote":lote})
+			db.video.find({"estado":0})
 			.select('url')
 			.cursor()
 			.eachAsync(function(video) {
@@ -302,7 +503,7 @@ module.exports = function(app,io,router,db,schema){
 					return;
 				}
 				//#Recorrer Imagenes	
-				db.image.find({"estado":0,"lote":lote})
+				db.image.find({"estado":0})
 				.select('url')
 				.cursor()
 				.eachAsync(function(image) {
@@ -366,9 +567,12 @@ module.exports = function(app,io,router,db,schema){
 				infraccion.save(function(){
 					db.infraccion.listar({"_id":infraccion._id},function(docs){
 						//Emitir evento creación de la infracción
-						socket.emit("infraccion", docs[0]);
 						console.log("Se actualizó la infraccion.")
 						res.send(JSON.stringify({"infraccion": docs[0],"success":true,"msg":"Infracción Actualizada con éxito."}));
+						if(!(("placa" in params) || ("direccion" in params))){
+							socket.emit("infraccion", docs[0]);
+							return;
+						}
 					});
 				});
 			}else{

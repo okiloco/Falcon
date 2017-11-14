@@ -69,7 +69,7 @@ Ext.define('Admin.view.ptz.PTZ',{
                         '</div>',
                         '<div id="imageviewer">',
                             '<div id="videopreview" class="videopreview videopreview-hidden">',
-                                '<div id="closevideo"><i class="fa fa-window-close" aria-hidden="true"></i></div>',
+                                '<div id="closevideo"><i class="x-fa fa fa-close" aria-hidden="true"></i></div>',
                                 '<video controls  width="100%" height="100%">',
                                     '<source src="" type="video/mp4">',
                                 '</video>',

@@ -3,12 +3,22 @@ Ext.define('Admin.view.infraccion.InfraccionModel', {
     alias: 'viewmodel.infraccion-infraccion',
     data: {
         name: 'Admin',
-        infraccion:{}
+        infraccion:{},
+        current:0
     },
     stores:{
 		infraccionStore: Ext.create('Admin.store.infraccion.infraccionStore'),
 		organismostore: Ext.create('Admin.store.infraccion.organismoStore'),
-	    dispositivostore: Ext.create('Admin.store.infraccion.dispositivoStore')
+	    dispositivostore: Ext.create('Admin.store.infraccion.dispositivoStore'),
+        
+        evidenciaStore: {
+            model: 'Base',
+            autoLoad: false,
+            data:[],
+            listeners: {
+                // load: 'onLoadistadoinfraccionrechazadasstore'
+            }
+        },
     }
 
 });

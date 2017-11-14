@@ -231,6 +231,37 @@
                 // peek at / modify the manifest object
             //};
         };
+
+        $.fn.resizeiframe=function(config){
+          if(config==undefined){
+            config={
+            }
+          }
+            $(this).load(function() {
+               var height = config.height || $(this).height();
+                console.log(height)
+                $(this).height(height);
+                $(this).contents().find("img").height(height); 
+               
+                  var vids = $(this).contents().find("video"); 
+                  if($(this).attr("controls")!=undefined){
+                    $.each(vids, function(){
+                        this.removeAttribute('controls');
+                        $(this).width("100%");
+                        this.autoplay = false;
+                    });  
+                  }
+                  var imgs = $(this).contents().find("img"); 
+                  $.each(imgs, function(){
+                    $(this).width("100%");
+                    $(this).css({"margin":"0px 20px 0px 20px;"});
+                  });
+            });
+            $(this).click(function() {
+                $(this).height(height);
+            });
+
+        }
     </script>
     <script type="text/javascript" src="resources/js/FloatWin.js"></script>
     

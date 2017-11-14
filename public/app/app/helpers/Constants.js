@@ -28,6 +28,7 @@ Ext.define('Admin.helpers.Constants', {
 
 	//Infracciones
 	URL_INFRACCIONES:BASE_PATH+'app/infracciones',
+	URL_EVIDENCIAS:BASE_PATH+'app/evidencias',
 
 	//Imagenes
 	URL_IMAGES:BASE_PATH+'app/images',

@@ -40,6 +40,13 @@ Ext.define('Admin.view.users.UserForm', {
 			emptyText: 'Correo'
 		},
 		{
+		    xtype: 'textfield',
+		    emptyText: 'Contraseña',
+		    inputType: 'password',
+		    name: 'password',
+		    allowBlank : false
+		},
+		{
 			xtype: 'combo',
 			name: 'usergroup',
 			emptyText: 'Grupo',
