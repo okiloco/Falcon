@@ -1,6 +1,7 @@
 var md5 = require("md5");
 var Helper = require("../helpers/helper");
-var app_config = './server/app.json';
+var path = require("path");
+var app_config = path.join(global.APP_PATH,'server','app.json');
 //const service = require("../services/index");
 module.exports = function(app,io,db){
 	//Evento Constructor User - Se dispara cuando el Schema user ha sido instanciado.
@@ -170,7 +171,7 @@ module.exports = function(app,io,db){
 
 		var params = req.body;
 
-		Helper.readFile('./server/app.json').
+		Helper.readFile(app_config).
 		then(function(config){
 
 			for(var key in config){
@@ -186,7 +187,7 @@ module.exports = function(app,io,db){
 				config[key] = params[key];
 			}
 
-			Helper.writeFile('./server/app.json',config).
+			Helper.writeFile(app_config,config).
 			then(function(){
 				res.send({
 					"success":true,
@@ -202,7 +203,7 @@ module.exports = function(app,io,db){
 		});
 	});
 	app.get("/config",function(req,res){
-		Helper.readFile('./server/app.json').
+		Helper.readFile(app_config).
 		then(function(config){
 			res.send({
 				"success":(!Helper.isEmpty(config)),
