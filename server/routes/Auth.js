@@ -1,13 +1,8 @@
 var md5 = require("md5");
 var Helper = require("../helpers/helper");
-<<<<<<< HEAD
 var Constants = require("../helpers/Constants");
 const path = require('path');
 var app_config = Constants.URL_APP_CONFIG;
-=======
-var path = require("path");
-var app_config = path.join(global.APP_PATH,'server','app.json');
->>>>>>> 545639ec9e854f44e67fb111197914f367593f6c
 //const service = require("../services/index");
 module.exports = function(app,io,db){
 	//Evento Constructor User - Se dispara cuando el Schema user ha sido instanciado.
@@ -199,10 +194,6 @@ module.exports = function(app,io,db){
 			for(var key in params){
 				config[key] = params[key];
 			}
-<<<<<<< HEAD
-=======
-
->>>>>>> 545639ec9e854f44e67fb111197914f367593f6c
 			Helper.writeFile(app_config,config).
 			then(function(){
 				res.send({

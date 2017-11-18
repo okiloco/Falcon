@@ -344,28 +344,14 @@ Ext.define('Admin.view.main.MainController', {
 
         var user = Ext.JSON.decode(localStorage.user);
         if(user!=undefined){
-<<<<<<< HEAD
+
             socket.emit("get-infracciones");
-=======
-            try{
-                socket.emit("get-infracciones");
-            }catch(err){
-                console.log(err);
-            }
-            vm.set("username",user.username);
-        }
-        try{
->>>>>>> 545639ec9e854f44e67fb111197914f367593f6c
             //Actualizar número de infracciones subidas.
             socket.on("count-infraccion",function(total){
                 vm.set("total",total);
             });
-<<<<<<< HEAD
+
             vm.set("username",user.username);
-=======
-        }catch(err){
-            console.log(err);
->>>>>>> 545639ec9e854f44e67fb111197914f367593f6c
         }
     },
     getTotal:function(self){
