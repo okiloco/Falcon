@@ -35,7 +35,6 @@ app.use(function(req, res, next) {
 module.exports = function(config){
 	
 	global.config = config;
-	
 	io.on("connect",function(socket){
 		if(!initialized){
 			
@@ -71,6 +70,9 @@ module.exports = function(config){
 	console.log("Iniciando Aplicación");
 	return new Promise(function(resolve,reject){
 		
+		//Arrancar Servidor
+		var port = process.env.PORT || 3000;
+		
 		app.use(bodyParser.json());//para peticiones aplication/json
 		app.use(bodyParser.urlencoded({extended:true}));
 		app.use(session({
@@ -88,8 +90,7 @@ module.exports = function(config){
 		var routes = require("./routes");
 		app.use("/app",routes(app,db,io));
 		
-		//Arrancar Servidor
-		var port = process.env.PORT || 3000;
+		
 		server.listen(port,function(){
 			
 			db.connect()

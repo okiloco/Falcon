@@ -6,6 +6,7 @@ var md5 = require("md5");
 var request = require('request');
 var formData = require('form-data');
 var fs = require('fs');
+var path = require('path');
 var moment = require('moment-timezone');
 var request = require('request');
 var formData = require('form-data');
@@ -49,7 +50,7 @@ module.exports = function(app,io,router,db,schema){
 					if(err){
 						socket.emit("infraccion-error",err);
 					}else{
-						socket.emit("infraccion-update",doc);
+						//socket.emit("infraccion-update",doc);
 					}
 				}catch(err){
 					console.log("Error Socket. ",err);
@@ -59,7 +60,7 @@ module.exports = function(app,io,router,db,schema){
 	}
 
 	function subirArchivos(params){
-			
+		console.log("Params:: ",params)	
 		var formData = {
 			"urlVideos":params.urlVideos,
 			"urlImages":params.urlImages,
@@ -82,6 +83,7 @@ module.exports = function(app,io,router,db,schema){
 		var files  = params.urls;
 		var userfiles = [];
 		
+		// console.log("Archivos:",files);
 		return new Promise(function(resolve,reject){
 
 			if(connection.status=='OFFLINE'){
@@ -90,22 +92,22 @@ module.exports = function(app,io,router,db,schema){
 			}
 			console.log("Se va a subir los Archivos.",params);
 			files.forEach(function(file,index,arr){
-				var url = ("image" in file)?file.image.url:file.url;
-				var total = (arr.length-1)
+				var file = path.join(Constants.URL_APP_RESOURCES,file);
+				var total = (arr.length-1);
 				try{
-					var readStream = fs.createReadStream(url);
-					let size = fs.lstatSync(url).size;
+					var readStream = fs.createReadStream(file);
+					let size = fs.lstatSync(file).size;
 					let bytes = 0;
 					userfiles.push(readStream);
 					console.log(index,total);
 					readStream.on('data', (chunk) => {
 					    console.log(bytes += chunk.length, size);
 					    if(bytes==size){
-					    	console.log("Read end ",url);
+					    	console.log("Read end ",file);
 					    }
 				    });
 				}catch(err){
-					console.log("Error en la url",file)
+					console.log("Error en la ruta ",file)
 					return;
 				}
 			});
@@ -317,7 +319,7 @@ module.exports = function(app,io,router,db,schema){
 	schema.virtual("urlVideos").get(function(){
 		var videos = this.videos.map(function(doc){
 			if(doc){
-				return doc.url;
+				return ("video" in doc)?doc.video.url:doc.url;
 			}else{
 				return;
 			}
@@ -335,7 +337,15 @@ module.exports = function(app,io,router,db,schema){
 		return images.join(";");
 	});
 	schema.virtual("urls").get(function(){
-		return this.videos.concat(this.images);
+		var videos = this.videos.map(function(doc){
+			return ("video" in doc)?doc.video.url:doc.url;
+		});
+		var images = this.images.map(function(doc){
+			return ("image" in doc)?doc.image.url:doc.url;
+		});
+		var urls = videos.concat(images);
+
+		return urls;
 	});
 	schema.statics.listar = function(params,callback){
 		var result=[];
@@ -356,13 +366,13 @@ module.exports = function(app,io,router,db,schema){
 			        
 			        infraccion.videos.forEach(function(docs,index,arr){
 			        	db.video.findById(docs.video,(err,doc)=>{
-			        		infraccion.videos[index]=doc;
+			        		infraccion.videos[index]=(doc);
 			        	});
 			        });
 
 			        infraccion.images.forEach(function(docs,index,arr){
 			        	db.image.findById(docs.image,(err,doc)=>{
-			        		infraccion.images[index]=doc;
+			        		infraccion.images[index]=(doc);
 			        	});
 			        });
 			        result.push(infraccion);
@@ -371,6 +381,7 @@ module.exports = function(app,io,router,db,schema){
 		    		if(callback!=undefined){
 		    			callback(result);
 		    		}
+		    		console.log("Result:: ",result);
 	    			resolve(result);
 		    	});				
 			});
@@ -409,7 +420,7 @@ module.exports = function(app,io,router,db,schema){
 		var params = req.body;
 		var lote = dateFormat(new Date(),"yyyymmdd");
 		var config = global.config;
-
+		var estado = params.estado;
 		db.infraccion.find({"lote":lote})
 		.then(function(results){
 			var count = (results.length + 1);
@@ -426,7 +437,8 @@ module.exports = function(app,io,router,db,schema){
 			.cursor()
 			.eachAsync(function(video) {
 				video.estado=1;
-				arr_videos.push({"video":video._id});
+				// arr_videos.push({"video":video._id});
+				arr_videos.push(video._id);
 				video.save(function(){
 					// console.log("Video: ",video);
 				});
@@ -443,7 +455,8 @@ module.exports = function(app,io,router,db,schema){
 				.cursor()
 				.eachAsync(function(image) {
 					image.estado=1;
-					arr_images.push({"image":image._id});
+					// arr_images.push({"image":image._id});
+					arr_images.push(image._id);
 					image.save(function(){
 						//console.log("Image: ",image);
 					});
@@ -456,24 +469,26 @@ module.exports = function(app,io,router,db,schema){
 					}
 					//#Crear la Infracción
 					//console.log(params);
-					db.infraccion.create(params,function(infraccion){
-						
-						infraccion.images = arr_images;
-						infraccion.videos = arr_videos;
-						infraccion.creator = global.user.id;
-						infraccion.estado=0;
+
+					var infraccion = params;
+					infraccion["images"] = arr_images;
+					infraccion["videos"] = arr_videos;
+					infraccion["creator"] = global.user.id;
+					infraccion["estado"]=0;
+
+					console.log("Estado:: ",estado);
+					db.infraccion.create(infraccion,function(infraccion){
 						//#Guardar Cambios en infraccion
-						infraccion.save(function(){
-							db.infraccion.listar({"_id":infraccion._id},function(docs){
-								if(params.estado){
-									var infraccion = docs[0];
-									infraccion.estado = params.estado;
-									//Emitir evento creación de la infracción
-									socket.emit("infraccion",infraccion);
-								}
-								console.log("Se creó la infraccion.")
-								res.send(JSON.stringify({"infraccion":docs[0],"success":true,"msg":"Infracción Registrada con éxito."}));
-							});
+						db.infraccion.listar({"_id":infraccion._id},function(docs){
+							if(estado){
+								var infraccion = docs[0];
+								infraccion.estado = params.estado;
+
+								//Emitir evento creación de la infracción
+								socket.emit("infraccion",infraccion);
+							}
+							console.log("Se creó la infraccion.")
+							res.send(JSON.stringify({"infraccion":docs[0],"success":true,"msg":"Infracción Registrada con éxito."}));
 						});
 					});
 				});

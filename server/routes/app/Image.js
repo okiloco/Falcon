@@ -1,7 +1,11 @@
 var dateFormat = require('dateformat');
 var streaming = require("../../js/videoStreaming");
+var Constants = require("../../helpers/Constants.js");
 var md5 = require("md5");
-var path = require('path');
+var fs = require('fs'),
+    http = require('http'),
+    url = require('url'),
+    path = require('path');
 //Image  
 module.exports = function(app,io,router,db,schema){
 	
@@ -23,7 +27,7 @@ module.exports = function(app,io,router,db,schema){
 			camera = streaming({
 				id_dispositivo:2,
 				address: config.camera_ip,
-				folder:path.join(global.APP_PATH,'public','images'),
+				folder:path.join(Constants.URL_APP_RESOURCES,'images'),
 				prefix:config.camera_id,
 				port: '80',
 				username: config.camera_user,
@@ -37,13 +41,13 @@ module.exports = function(app,io,router,db,schema){
 	router.get("/image/:action",(req,res)=>{
 		var params = req.params,
 		action = params.action;
-		var lote = dateFormat(new Date(),"yyyymmdd");
 		
-		//Iniciar configuración camara
-		init();	
 
 		switch(action){
 			case 'new':
+				//Iniciar configuración camara
+				init();
+				var lote = dateFormat(new Date(),"yyyymmdd");	
 				db.image.find({"lote":lote})
 				.then(function(results){
 					var count = (results.length + 1);
@@ -75,6 +79,30 @@ module.exports = function(app,io,router,db,schema){
 							}));
 						}
 					});
+				});
+			break;
+			case 'preview':
+
+				if(!req.query.id){
+					res.writeHead(200,{'Content-Type':'image/jpg'	
+					});
+					fs.createReadStream(filename).pipe(res);
+					return;
+				}
+				db.image.findById(req.query.id,function(err,doc){
+					var filename = path.join(Constants.URL_APP_RESOURCES,doc.url);
+					//console.log("preview image:",filename);
+					
+					if (!fs.existsSync(filename)) {
+						console.log("El archivo no existe.");
+						global.socket.emit("image-not-found",req.query.id);
+						return;
+					}else{
+						res.writeHead(200,{'Content-Type':'image/jpg'	
+						});
+						fs.createReadStream(filename).pipe(res);
+					}
+
 				});
 			break;
 		}	
@@ -109,7 +137,8 @@ module.exports = function(app,io,router,db,schema){
 		db.image.listar(req.query,function(docs){
 			res.send(JSON.stringify({data:docs,success:true}));
 		});
-	});	
+	});
+	
 
 	return router;
 };

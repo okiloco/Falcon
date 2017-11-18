@@ -2,3 +2,5 @@ node_modules/
 dist/
 public/images/
 public/videos/
+resources/
+settings/

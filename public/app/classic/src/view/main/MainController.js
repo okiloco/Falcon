@@ -20,10 +20,9 @@ Ext.define('Admin.view.main.MainController', {
     onToggleSync:function(self, pressed, eOpts){
        global["sync"] = pressed;
        console.log("sync: ",pressed);
-       try{
+       var user = Ext.JSON.decode(localStorage.user);
+       if(user!=undefined){
             socket.emit("onsync",pressed);   
-       }catch(err){
-            console.log("Error Socket: ",err);        
        }
     },
     onClickUser:function(self,el){
@@ -345,16 +344,12 @@ Ext.define('Admin.view.main.MainController', {
 
         var user = Ext.JSON.decode(localStorage.user);
         if(user!=undefined){
-            if(socket!=undefined){
-                socket.emit("get-infracciones");
-            }
-            vm.set("username",user.username);
-        }
-        if(socket!=undefined){
+            socket.emit("get-infracciones");
             //Actualizar número de infracciones subidas.
             socket.on("count-infraccion",function(total){
                 vm.set("total",total);
             });
+            vm.set("username",user.username);
         }
     },
     getTotal:function(self){

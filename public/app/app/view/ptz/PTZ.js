@@ -159,7 +159,7 @@ Ext.define('Admin.view.ptz.PTZ',{
                         '<tpl for=".">',
                             '<div style="margin-bottom: 10px;" class="thumb-wrap">',
                               /*'<input class="check x-form-type-checkbox" type="checkbox" name="vehicle" value="Bike"><span>Imagen Principal</span></input>',*/
-                              '<img class="image {[this.getClass(values)]}" src="{url}" />',
+                              '<img class="image {[this.getClass(values)]}" src="http://localhost:3000/app/image/preview?id={id}" />',
                             '</div>',
                         '</tpl>',
                         {

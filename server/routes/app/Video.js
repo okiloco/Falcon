@@ -1,5 +1,6 @@
 var dateFormat = require('dateformat');
 var streaming = require("../../js/videoStreaming");
+var Constants = require("../../helpers/Constants.js");
 var md5 = require("md5");
 var ffmpeg = require('fluent-ffmpeg');
 var ffmpeg = require('fluent-ffmpeg');
@@ -50,7 +51,7 @@ module.exports = function(app,io,router,db,schema){
 		var camera = streaming({
 			id_dispositivo:2,
 			address: config.camera_ip,
-			folder:path.join(global.APP_PATH,'public','images'),
+			folder:path.join(Constants.URL_APP_RESOURCES,'images'),
 			prefix:config.camera_id,
 			port: '80',
 			username: config.camera_user,
@@ -61,7 +62,7 @@ module.exports = function(app,io,router,db,schema){
 		video = camera.createRecord({
 			resolution: '800x450',
 			videocodec:'h264',
-			folder:path.join(global.APP_PATH,'public','videos'),
+			folder:path.join(Constants.URL_APP_RESOURCES,'videos'),
 			prefix:config.camera_id,
 			audio:0,
 			fps:25
@@ -89,10 +90,11 @@ module.exports = function(app,io,router,db,schema){
 						},function(doc,err){
 							
 
-							socket.emit("video-preview",doc._id,fs.existsSync(video.url_video));
+							io.sockets.emit("video-preview",doc._id,fs.existsSync(path.join(Constants.URL_APP_RESOURCES,video.url_video)));
 
 							video.on("video-convert",function(){
-								socket.emit("video-convert",doc._id);
+								console.log("on video-convert.",doc._id);
+								io.sockets.emit("video-convert",doc._id);
 							});
 
                             res.send(JSON.stringify({
@@ -124,12 +126,13 @@ module.exports = function(app,io,router,db,schema){
 			break;
 			case 'preview':
 				db.video.findById(req.query.id,function(err,doc){
-					var filename = doc.url;
-					console.log("preview video:",filename);
+					console.log("preview video: ",err,doc);
+					var filename = path.join(Constants.URL_APP_RESOURCES,doc.url);
+					//console.log("preview video:",filename);
 					
 					if (!fs.existsSync(filename)) {
 						console.log("El archivo no existe.");
-						global.socket.emit("video-not-found",req.query.id);
+						io.sockets.emit("video-not-found",req.query.id);
 						return;
 					}else{
 						res.writeHead(200,{'Content-Type':'video/mp4'	

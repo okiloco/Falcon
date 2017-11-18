@@ -184,7 +184,7 @@ module.exports = function(app,db,io){
 		var schema = model.getSchema();
 		var lang = schema.lang;
 		var route_name = pluralize(lang || "es",name);
-		route_name = path.join('/',route_name);
+		route_name = '/'+route_name;
 		routes_map["paths"] = routes_map["paths"] || [];
 		if(!routeExist(name)){
 			routes_map["paths"].push({"name":name,"path":route_name});

@@ -5,9 +5,8 @@ const path = require('path')
 var Helper = remote.require("./server/helpers/helper.js");
 var Constants = remote.require("./server/helpers/Constants.js");
 global.APP_PATH = main.APP_PATH;
+global.USER_DATA = main.USER_DATA;
 global.BASE_PATH=Constants.URL_BASE;
-
-var app_config = path.join(global.APP_PATH,'server','app.json');
 global.IP_CAMERA ='';
 
 function subirInfracciones(params){
@@ -19,15 +18,22 @@ function __init(){
 
 	console.log("isReady:: ",main.isReady());
 	if(main.isReady()){
-		Helper.readFile(app_config)
-		.then(function(config){
+		main.loadConfig((err,config)=>{
 
+			if(err){
+				global.instaled = false;
+				localStorage.clear();
+				return;
+			}
 			if(!Helper.isEmpty(config)){
 				global.config = config;
 				global.IP_CAMERA = config.camera.camera_ip;
 				global.instaled = true;
 			}else{
 				global.instaled = false;
+				if(localStorage.user!=undefined){
+					localStorage.clear();
+				}
 				return;
 			}
 			//Conectarse al Socket que controla el proceso del Cliente.
@@ -47,8 +53,8 @@ function __init(){
 			//Evento cuando se crea o actualiza una infracción.
 			socket.on("infraccion",function(infraccion){
 				var params = infraccion;
-				var urls = infraccion.videos.concat(infraccion.images);
-				params["urls"] = urls;
+				// var urls = infraccion.videos.concat(infraccion.images);
+				// params["urls"] = urls;
 			    console.log("infracción Lista para subirse.",params);
 			    //Subir la Infracción al Backoffice
 			    subirInfracciones(params);
@@ -103,8 +109,6 @@ function __init(){
 				Msg.info(msg);
 			});
 			console.log("FalconSystem",global.instaled);
-		},function(err){
-			global.instaled = false;
 		});
 	}else{
 		global.ERROR={

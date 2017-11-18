@@ -142,12 +142,19 @@ Camera.prototype.captureImage = function(options,callback){
 
       self.lote = dateFormat(new Date(),"yyyymmdd");
       var basepath = self.folder;
+      if (!fs.existsSync(basepath)) {
+        try{
+              fs.mkdirSync(basepath);
+        }catch(err){
+          console.log("Error al Crear Directorio base de Videos: ",err);
+        }
+      }
       basepath = path.join(basepath,self.lote);
       if(!fs.existsSync(basepath)) {
         fs.mkdirSync(basepath);
       }
       self.filename = self.prefix+'_'+self.lote+'_'+options.count+'.jpg';
-      self.url_image = "./public/images/"+self.lote+"/"+self.filename;
+      self.url_image = path.join("images",self.lote,self.filename);
 
       console.log(self.url_image);
 

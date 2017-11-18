@@ -18,6 +18,7 @@ Ext.define('Admin.model.infraccion.Infraccion', {
        "images",
        "videos",
        "estado",
+       "urls",
         {
           name:"estado_desc",
           convert:function(v,record){

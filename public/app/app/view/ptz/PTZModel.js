@@ -10,26 +10,6 @@ Ext.define('Admin.view.ptz.PTZModel', {
         socket:null,
         playing:false,
         images:[
-        	{
-        		name:'Imagen 01',
-        		url:Constants.URL_ICON_IMAGEN_EMPTY,
-        		iconCls:"empty"
-        	},
-        	{
-        		name:'Imagen 02',
-        		url:Constants.URL_ICON_IMAGEN_EMPTY,
-        		iconCls:"empty"
-        	},
-        	{
-        		name:'Imagen 03',
-        		url:Constants.URL_ICON_IMAGEN_EMPTY,
-        		iconCls:"empty"
-        	},
-        	{
-        		name:'Imagen 04',
-        		url:Constants.URL_ICON_IMAGEN_EMPTY,
-        		iconCls:"empty"
-        	}
         ],
     },
     stores:{

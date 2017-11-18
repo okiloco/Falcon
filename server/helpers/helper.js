@@ -35,16 +35,27 @@ module.exports = {
 	readFile:function(file){
 		return new Promise(function(resolve,reject){
 			var app_config = jsonfile.readFile(file,function(err,obj){
-				if(err){ resolve({}); }
+				if(err){ 
+					//global.Msg("Error", "Error al cargar Archvo."+file);
+					reject(err); 
+					return; 
+				}
+				// global.Msg("message","Archvo cargado con éxito."+file+JSON.stringify(obj));
 				resolve(obj);
 			});
 		});
 	},
 	writeFile:function(file,obj){
+		// global.Msg("Write",JSON.stringify(obj));
 		return new Promise(function(resolve,reject){
 			var app_config = jsonfile.writeFile(file,obj,function(err){
-				if(err){ reject(err); return;}
-				resolve();
+				console.log("writeFile",file)
+				if(err){ 
+					//global.Msg("Error", "Error al escribir Archvo."+file);
+					reject(err); 
+					return;
+				}
+				resolve(obj);
 			});
 		});
 	} 

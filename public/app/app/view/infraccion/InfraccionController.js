@@ -136,7 +136,7 @@ Ext.define('Admin.view.infraccion.InfraccionController', {
                        var infraccion = responseObject.infraccion;
                        var params = infraccion;
                        console.log(infraccion);
-                       //Msg.info(responseObject.msg);
+                       Msg.info(responseObject.msg);
 
                        grid.getStore().reload();
                    }

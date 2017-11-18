@@ -1,38 +1,74 @@
-const {app, BrowserWindow, dialog} = require('electron')
-const ElectronOnline = require('electron-online')
 const path = require('path')
 const url = require('url')
+var fs = require('fs');
+
+const {app, BrowserWindow, dialog} = require('electron')
+
+global.APP_PATH = app.getAppPath();
+global.USER_DATA = isDev()?__dirname:path.join(app.getPath("appData"),app.getName());
+process.env['USER_DATA'] = global.USER_DATA;
+
+const ElectronOnline = require('electron-online')
 var server = require('./server/app');
+
 var Constants = require("./server/helpers/Constants.js");
 var Helper = require("./server/helpers/helper");
-process.env['APP_PATH'] = app.getAppPath();
-global.APP_PATH = app.getAppPath();
-
-var app_config = path.join(global.APP_PATH,'server','app.json');
 
 let win;
 let splashscreen;
 let ready = false;
 let win_tmp;
 
+function isDev() {
+  return process.mainModule.filename.indexOf('app.asar') === -1;
+}
+dialog.showErrorBox("Atención",global.USER_DATA);
+
 function loadConfig(callback){
-	Helper.readFile(app_config)
+
+	if (!fs.existsSync(Constants.URL_APP_SETTINGS)) {
+		dialog.showErrorBox("Atención",Constants.URL_APP_SETTINGS);
+		try{
+      		fs.mkdirSync(Constants.URL_APP_SETTINGS);
+      		fs.mkdirSync(Constants.URL_APP_RESOURCES);
+      		Helper.writeFile(Constants.URL_APP_CONFIG,{});
+      		console.log("path creado:",Constants.URL_APP_SETTINGS);
+		}catch(err){
+			dialog.showErrorBox("Error",Constants.URL_APP_SETTINGS);
+			if(callback!=undefined){
+				callback(err);
+			}
+			return;
+		}
+  	}else{
+  		if (!fs.existsSync(Constants.URL_APP_CONFIG)) {
+  			try{
+      			Helper.writeFile(Constants.URL_APP_CONFIG,{});
+      			console.log("Archivo configuración creado:",Constants.URL_APP_SETTINGS);
+      		}catch(err){
+      			dialog.showErrorBox("Error",err+":"+Constants.URL_APP_CONFIG);
+      			if(callback!=undefined){
+					callback(err);
+				}
+      			return;
+      		}
+      	}
+  	}
+	Helper.readFile(Constants.URL_APP_CONFIG)
 	.then(function(obj){
-		// Helper.writeFile(app_config,obj);
 		if(callback!=undefined){
-			callback(obj);
+			callback(null,obj);
 		}
 	},function(err){
-		// Helper.writeFile(app_config,obj);
 		if(callback!=undefined){
-			callback({});
+			callback(err);
 		}
 	});
 }
 function createWindow(options,callback){
 	options = options || {};
 
-	win = new BrowserWindow({backgroundColor: '#2e2c29',center:true, show: false, width:options.width || 1366,height: options.height || 768,background:"#18425A", title:'Falcon System', icon:__dirname+'/assests/icon.png'})
+	win = new BrowserWindow({backgroundColor: '#2e2c29',center:true, show: false, width:options.width || 1366,height: options.height || 768,background:"#18425A", title:'Falcon System', icon:path.join(__dirname,'assests','icon.png')})
 
 	// mainWindow = new BrowserWindow({width: WINDOW_WIDTH, height: WINDOW_HEIGHT, x: x, y: y});
 	return new Promise(function(resolve,reject){
@@ -82,7 +118,7 @@ function SplashScreen(options){
 
 function init(callback){
 	if(!Helper.isEmpty(config)){
-		console.log("Aplicación Iniciada.",process.env['APP_PATH'])
+		console.log("Aplicación Iniciada.",config)
 		if(splashscreen!=undefined){
 			splashscreen.hide();
 		}
@@ -98,13 +134,14 @@ function init(callback){
 		}
 	    
 		connection.on('online', () => {
-		  console.log('App is online!')
-		  console.log("La Aplicación está lista para ser Instalada.");
+		  
 		  if(!ready){
-			  createWindow({url:'public/app/index.html#wizard'})
-			  .then(win=>{
-			  	ready=true;
-			  });
+		  	console.log('App is online!')
+		  	console.log("La Aplicación está lista para ser Instalada.")	
+		  	createWindow({url:'public/app/index.html#wizard'})
+		  	.then(win=>{
+		  		ready=true;
+		  	});
 		  }
 		})
 		 
@@ -120,13 +157,10 @@ function init(callback){
 }
 app.on("ready",function(_win){	
 	SplashScreen({"url":"public/app/splashscreen.html"});
-
-	Helper.readFile(app_config)
-	.then(function(config){
+	loadConfig((err,config) => {
 
 		server(config)
 		.then(function(msg){
-			console.log(msg);
 			init();
 		},
 		function(err){
@@ -134,14 +168,6 @@ app.on("ready",function(_win){
 			.then(win=>{
 				console.log("Error al conectarse a  la base de Datos: ",err);
 			});	
-		});
-	},function(err){
-		// Helper.writeFile(app_config,obj);
-		if(callback!=undefined){
-			callback({});
-		}
-		createWindow({url:'public/app/index.html#error'})
-		.then(win=>{
 		});
 	});
 });
@@ -163,11 +189,14 @@ app.on("active",()=>{
 * @Msg
 * config: {title,message}
 */
-function Msg(config){
-	dialog.showMessageBox(win,config);
-}
-exports.APP_PATH = process.env['APP_PATH'];
-exports.Msg = Msg;
+
+
+global.Msg = dialog.showErrorBox;
+exports.USER_DATA = process.env['USER_DATA'];
+exports.APP_PATH  = global.APP_PATH;
+exports.Msg = global.Msg;
 
 const isReady = ()=> ready;
 exports.isReady = isReady;
+exports.loadConfig = loadConfig;
+

@@ -53,6 +53,7 @@ function ManagerDB(options){
 		self.port = self.active_group.port;
 		self.linkconex = "mongodb://"+self.host+':'+self.port+'/'+self.dbname;
 		self.conn = mongoose.connection;
+		// global.Msg("Msg", self.linkconex);
 	}
 	//para emitir eventos ilimitados
 	this.setMaxListeners(0);
@@ -590,19 +591,16 @@ ManagerDB.prototype.create = function({name,options},callback){
 ManagerDB.prototype.load =  function(callback) {
 	var self = this;
 	return new Promise(function(resolve,reject){
-		jsonfile.readFile(self.url,function(err,config){
-
-			if(err){
-				console.log("Error al cargar archivo de base de datos.");
-				reject(err);
-				return;
-			}
-			self.setConfig(config);
 		
-			resolve(config);
-			
-			// if(typeof(callback)!=undefined) callback();
 
+		Helper.readFile(self.url)
+		.then(function(config){
+			self.setConfig(config);
+			resolve(config);
+		},function(err){
+			console.log("Error al cargar archivo de base de datos.");
+			reject(err);
+			
 		});	
 	});
 }
@@ -672,15 +670,19 @@ ManagerDB.prototype.define =  function() {
 			
 			//Cargar Schemas de la base de Datos y generar Modelos
 			console.log("Cargando Schemas...");
+			// global.Msg("Atención","Cargando Schemas...");
 			model.find(function(e,docs){
 				if(docs.length>0)
 				{
+					// global.Msg("Atención","defineSchemas: "+docs.length);
 					self.defineSchemas(docs)
 					.then(function(){
+						// global.Msg("Atención","END defineSchemas: "+docs.length);
 						self.autoRefesh = true;
 						resolve();
 					});
 				}else{
+					// global.Msg("Atención","defineCoreSchemas");
 					self.defineCoreSchemas()
 					.then(function(){
 						self.autoRefesh = true;
@@ -689,6 +691,7 @@ ManagerDB.prototype.define =  function() {
 				}
 			});
 		},function(err){
+			// global.Msg("Error","Error al crear esquema");
 			console.log("Error al crear esquema");
 			reject(err);
 		});
@@ -702,6 +705,7 @@ ManagerDB.prototype.defineCoreSchemas = function(callback){
 	var model = self.getModel("schema");
 		
 	return new Promise(function(resolve,reject){
+
 		self.defineSchemas(schemas)
 		.then(function(){
 			console.log("Se crearon los esquemas del core.");
@@ -715,7 +719,7 @@ ManagerDB.prototype.defineSchemas =  function(schemas) {
 	var count =1;
 	return new Promise(function(resolve,reject){
 
-		schemas.forEach(function (doc,index) {
+		schemas.forEach(function (doc,index,arr) {
 
 			//Registrar los esquemas en collection Schemas
 			self.register(doc.name,doc.config,doc.lang,function(){
@@ -735,7 +739,8 @@ ManagerDB.prototype.defineSchemas =  function(schemas) {
 							sch.emit("define",m);
 						}
 
-						if(count==(schemas.length)){
+						// global.Msg("index: ", index+"="+(arr.length-1));
+						if(index==(arr.length-1)){
 							resolve();
 						}
 						count++;
@@ -792,61 +797,62 @@ ManagerDB.prototype.refresh =  function(refresh, callback) {
 ManagerDB.prototype.connect =  function(callback) {
 	var self = this;
 	return new Promise(function(resolve,reject){
-		self.load()
-		.then(function(data){
 
+
+		Helper.readFile(self.url)
+		.then(function(config){
+			
+			self.setConfig(config);
+			
 			var state = mongoose.connection.readyState;
 			console.log("Status: ",state);
-			if(state==0){
-				mongoose.connect(self.linkconex,(err,res)=>{
-					if(err){
-						console.log('-> Error al conectarse a la base de datos.',err);
-						reject(err);
-						return;
-					}
-					/**
-					* Definir los schemas de la base de datos
-					*/
-					// return;
-					self.define()
-					.then(function(){
-						console.log("ManagerDB Ready.")
-						self.emit("ready");
-						resolve("Conectado a la base de datos.");
-					},function(){
-						console.log("Conectado a la base de datos. No hay esquemas para definir.")
-						reject("Conectado a la base de datos. No hay esquemas para definir.");
-					});
-				});
-			}else if(state==1){
-				if(callback!=undefined){
-					callback(doc)
-				}
-				resolve("...ya está conectado a la base de datos.");
-			}
+			
+			mongoose.connect(self.linkconex,{ useMongoClient: true });
+
+			mongoose.connection.once("connected", function() {
+			    /**
+			    * Definir los schemas de la base de datos
+			    */
+			    // return;
+			    // global.Msg("connected", self.linkconex);
+			    self.define()
+			    .then(function(){
+			    	console.log("ManagerDB Ready.")
+			    	self.emit("ready");
+			    	// global.Msg("Wii!!", "Defined Schemas.");
+			    	resolve("Conectado a la base de datos.");
+			    },function(){
+			    	console.log("Conectado a la base de datos. No hay esquemas para definir.")
+			    	reject("Conectado a la base de datos. No hay esquemas para definir.");
+			    	// global.Msg("Error!!", "Conectado a la base de datos. No hay esquemas para definir.");
+			    });
+			    console.log("Connected to " + self.linkconex);
+			});
+
+			mongoose.connection.on("error", function(error) {
+			    console.log("Connection to " + self.linkconex + " failed:" + error);
+			    global.socket.emit("mongo-connected",err);
+			    reject(err);
+			    return;
+			});
+
+			mongoose.connection.on("disconnected", function() {
+			    console.log("Disconnected from " + self.linkconex);
+			});
+
+			process.on("SIGINT", function() {
+			    mongoose.connection.close(function() {
+			        console.log("Disconnected from " + self.linkconex + " through app termination");
+			        process.exit(0);
+			    });
+			});
+			
 		},function(err){
-			console.log("Error: ",err);
-		});
-	});
-	
-	mongoose.connection.on("connected", function() {
-	    console.log("Connected to " + self.linkconex);
-	});
+			console.log("Error al cargar archivo de base de datos.");
+			reject(err);
+			
+		});	
 
-	mongoose.connection.on("error", function(error) {
-	    console.log("Connection to " + self.linkconex + " failed:" + error);
-	    global.socket.emit("mongo-connected",err);
-	});
-
-	mongoose.connection.on("disconnected", function() {
-	    console.log("Disconnected from " + self.linkconex);
-	});
-
-	process.on("SIGINT", function() {
-	    mongoose.connection.close(function() {
-	        console.log("Disconnected from " + self.linkconex + " through app termination");
-	        process.exit(0);
-	    });
 	});
 }
 /**

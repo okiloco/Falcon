@@ -128,7 +128,8 @@ Recorder.prototype.record = function(options,callback){
 	this.path_video_tmp = path.join(basepath,this.filename_tmp);
 	this.path_video = path.join(basepath,this.filename);
 	
-	this.url_video ='./public/videos/'+this.lote+"/"+this.filename;
+	//this.url_video ='./public/videos/'+this.lote+"/"+this.filename;
+	this.url_video = path.join('videos',this.lote,this.filename);
 	
 	console.log(this.filename_tmp);
 

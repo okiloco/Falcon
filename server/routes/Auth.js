@@ -1,6 +1,8 @@
 var md5 = require("md5");
 var Helper = require("../helpers/helper");
-var app_config = './server/app.json';
+var Constants = require("../helpers/Constants");
+const path = require('path');
+var app_config = Constants.URL_APP_CONFIG;
 //const service = require("../services/index");
 module.exports = function(app,io,db){
 	//Evento Constructor User - Se dispara cuando el Schema user ha sido instanciado.
@@ -96,6 +98,7 @@ module.exports = function(app,io,db){
 				db.group.findOne({name:"Super User"},function(err,doc){
 					if(!doc){
 						console.log("No existe el grupo.")
+						// global.Msg("Atención","No existe el grupo.");
 						db.module.create({
 							config:"{\"title\": \"Usuarios\",\"config\": {\"className\":\"Admin.view.users.Users\",\"alias\":\"users\",\"iconCls\":\"fa fa-folder\"}}",
 							name:"Usuarios"
@@ -132,19 +135,13 @@ module.exports = function(app,io,db){
 									for(var key in params){
 										obj[key] = params[key];
 									}
-									Helper.writeFile(app_config,obj,{spaces: 2, EOL: '\r\n'})
-									.then(function(err){
+									Helper.writeFile(app_config,obj)
+									.then(function(){
 										console.log("Archivo de configuración creado.",err)
-										res.send(JSON.stringify({
-											"success":true,
-											"msg":"Archivo de configuración creado.",
-											user
-										}));
-									},function(){
-										res.send(JSON.stringify({
-											"success":false,
-											"msg":"No se pudo crear el archivo de configuración"
-										}));
+										resolve(obj);
+									},function(err){
+										reject("No se pudo crear el archivo de configuración.");
+										global.Msg("Error",err);
 										console.log("No se pudo crear el archivo de configuración")
 									});
 									
@@ -152,25 +149,37 @@ module.exports = function(app,io,db){
 							});
 						});
 					}else{
-						res.send(JSON.stringify({
-							"success":true,
-							"msg":"Puede que el Sistema ya está instalado<br>Inicar Sesión como Super Administrador.",
-						}));
+						reject("Puede que el Sistema ya este instalado<br>Inicar Sesión como Super Administrador.")
+						// res.send(JSON.stringify({
+						// 	"success":true,
+						// 	"msg":"Puede que el Sistema ya está instalado<br>Inicar Sesión como Super Administrador.",
+						// }));
 					}
 				});
 			});
 		}
 
 		install(params)
-		.then(function(){
-			console.log("Instalación completada.")
+		.then(function(obj){
+			// global.Msg("Atención","Archivo de configuración creado.");
+			res.send(JSON.stringify({
+				"success":true,
+				"msg":"Archivo de configuración creado.",
+				"user":obj
+			}));
+		},function(err){
+			// global.Msg("Atención","No se pudo crear el archivo de configuración");
+			res.send(JSON.stringify({
+				"success":false,
+				"msg":err
+			}));
 		});
 	});
 	app.post("/config",function(req,res){
 
 		var params = req.body;
 
-		Helper.readFile('./server/app.json').
+		Helper.readFile(app_config).
 		then(function(config){
 
 			for(var key in config){
@@ -185,8 +194,7 @@ module.exports = function(app,io,db){
 			for(var key in params){
 				config[key] = params[key];
 			}
-
-			Helper.writeFile('./server/app.json',config).
+			Helper.writeFile(app_config,config).
 			then(function(){
 				res.send({
 					"success":true,
@@ -202,7 +210,7 @@ module.exports = function(app,io,db){
 		});
 	});
 	app.get("/config",function(req,res){
-		Helper.readFile('./server/app.json').
+		Helper.readFile(app_config).
 		then(function(config){
 			res.send({
 				"success":(!Helper.isEmpty(config)),

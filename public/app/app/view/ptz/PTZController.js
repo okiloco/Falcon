@@ -64,7 +64,11 @@ Ext.define('Admin.view.ptz.PTZController', {
   				
   				if(!playing){
   					timer.setHtml("");
-  					me.stopVideo(btn,playing);
+  					//me.stopVideo(btn,playing);
+            vm.set("playing",false);
+            me.enableButtons(self,playing,true);
+            //Disparar Evento playing
+            //self.fireEvent("playing",self,playing);
   				}else{
   					vm.set("time",seg);
   				}
@@ -310,7 +314,7 @@ Ext.define('Admin.view.ptz.PTZController', {
       placa.focus(false,true);
       this.hotkeys(self);
       var dataview_videos = self.down("[name=video_viewer]");
-      
+
       socket.on("uploaded",function(id){ 
         var infraccion = self.down("infraccion");
         if(infraccion!=undefined){
@@ -320,30 +324,30 @@ Ext.define('Admin.view.ptz.PTZController', {
       });
 
       socket.on("video-preview",function(id,exist){
-        dataview_videos.getStore().load({
-          callback: function(records, operation, success){
-            var video = Ext.fly(id);
-            if(video!=undefined){
-              video.addCls("video-not-found");
-              /*if(exist){
-                video.addCls("video-not-found");
-              }else{
-                video.removeCls("video-not-found");
-              }*/
-              console.log("video-preview",id,video);  
-            }
-          }
-        });
+       console.log("video preview: "+id);
+       
+         dataview_videos.getStore().load({
+           callback:function(records, operation, success) {
+             var video = Ext.fly(id);
+             console.log("video preview: "+id,video);
+             if(video!=undefined){
+               video.removeCls("video-not-found");
+               console.log("video-preview",id,video);
+             }
+           }
+       });
+        
       });
 
       socket.on("video-convert",function(id){ 
         // var video =Ext.ComponentQuery.query('#'+id);
+           //Msg.info("video convert"+id);
           dataview_videos.getStore().load({
             callback:function(records, operation, success) {
               var video = Ext.fly(id);
               if(video!=undefined){
                 video.removeCls("video-not-found");
-                console.log("video-preview",id,video);
+                console.log("video-convert",id,video);
               }
             }
         });
@@ -421,7 +425,8 @@ Ext.define('Admin.view.ptz.PTZController', {
                 xtype : "box",
                 autoEl : {
                     tag : "img",
-                    src : vm.get("camera").image,
+                    // src : vm.get("camera").image,
+                    src: BASE_PATH+"app/image/preview?id="+record.get("id"),
                     style: 'height: 100%; width: 100%; border: none'
                 }
             }],
@@ -453,7 +458,8 @@ Ext.define('Admin.view.ptz.PTZController', {
 
 
        source = video.down('source');
-       source.dom.src = record.get("url");
+       //source.dom.src = record.get("url");
+       source.dom.src = BASE_PATH+"app/video/preview?id="+record.get("id");
        el.load();
        el.play(); 
        // panel.collapse(Ext.Component.DIRECTION_TOP,true);
@@ -492,13 +498,6 @@ Ext.define('Admin.view.ptz.PTZController', {
     },
     onLoadVideo:function(store,records,success,eOpts){
         var me =this.getView();
-        var dataview = me.down("[name=video_viewer]");
-        Ext.Array.each(Ext.query("video"), function(item, index, total) {
-            var video = Ext.get(item);
-            var el = video.el.dom;  
-            el.addEventListener("error",function(event){
-                console.log("Error al cargar video.");
-            });
-        });
+
     }
 });

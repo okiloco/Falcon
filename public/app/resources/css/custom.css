@@ -344,4 +344,6 @@ iframe {
   position: absolute;
   left: 23px;
   top: -6px;
+  padding: 0px 1px;
+  width: 20px;
 }
