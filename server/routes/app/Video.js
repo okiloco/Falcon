@@ -72,6 +72,21 @@ module.exports = function(app,io,router,db,schema){
 		.then(function(results){
 			params["count"] = (results.length + 1);
 			console.log("Consecutivo ",params["count"]);
+
+           	video.on("playing",function(playing,seg){
+				console.log("on video-playing.",playing,seg);
+				io.sockets.emit("video-playing",playing,seg);
+			});	
+			video.on("start-record",function(){
+				console.log("on start record.");
+				io.sockets.emit("start-record");
+			});
+
+			video.on("video-start-convert",function(){
+				console.log("on video-start-convert.");
+				io.sockets.emit("video-start-convert");
+			});	
+
 		 	video.record(params,function(rec){
 				console.log("end.");
 				video.stop(function(){
@@ -81,8 +96,8 @@ module.exports = function(app,io,router,db,schema){
 							msg:"No se pudo grabar el video.<br>Revise la conexión con la camara.<br>Puede que el video no pueda rescribirse."
 						}));
 					}else{
-                       
 						db.video.create({
+							"estado":-1,
 							"filename":video.filename,
 							"lote":video.lote,
 							"url":video.url_video,
@@ -94,15 +109,18 @@ module.exports = function(app,io,router,db,schema){
 
 							video.on("video-convert",function(){
 								console.log("on video-convert.",doc._id);
-								io.sockets.emit("video-convert",doc._id);
+								doc.estado = 0;
+								doc.save(function(err,doc){
+									io.sockets.emit("video-convert",doc._id);
+								});
 							});
 
                             res.send(JSON.stringify({
    								success:true,
-   								msg:'Video creado con éxito',
+   								msg:'Video creado con éxito.<br>Por favor, espere mientras el video se codifica.',
    								video:doc
    							}));
-						});			
+						});
 					}
 				});
 		 	});
@@ -147,7 +165,10 @@ module.exports = function(app,io,router,db,schema){
 
 	schema.statics.listar = function(params,callback){
 		params["creator"] = global.user._id;
-		db.video.search(params,function(err,docs){
+		db.video.find({
+			$or:[{"estado":params.estado},{"estado":-1}],
+			$and:[{"creator":global.user._id}]
+		},function(err,docs){
 			if(callback!=undefined){
 				callback(docs);		
 			} 

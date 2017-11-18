@@ -68,7 +68,7 @@ Ext.define('Admin.view.infraccion.InfraccionController', {
     },
     evidencias:function(grid, rowIndex, colIndex){
     	var record = grid.getStore().getAt(rowIndex);
-
+     
       Ext.create('Ext.window.Window', {
           title: 'Vista previa',
           height: 600,

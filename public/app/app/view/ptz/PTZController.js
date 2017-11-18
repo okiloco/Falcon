@@ -50,38 +50,7 @@ Ext.define('Admin.view.ptz.PTZController', {
       var panel = btn.up("ptz");
       var dataview_videos = panel.down("[name=video_viewer]");
 
-  		if(params.duration!=undefined){
-  			var seg = params.duration;
-  			vm.set("time",seg);
-  			timer.setHtml("Grabando "+seg+"s");
-  			
-  			//Disparar Evento playing
-  			btn.fireEvent("playing",btn,playing);
-  			var interval = setInterval(function(){ 
-  				seg--;
-  				playing = (seg>=0);
-  				vm.set("playing",playing);
-  				
-  				if(!playing){
-  					timer.setHtml("");
-  					//me.stopVideo(btn,playing);
-            vm.set("playing",false);
-            me.enableButtons(self,playing,true);
-            //Disparar Evento playing
-            //self.fireEvent("playing",self,playing);
-  				}else{
-  					vm.set("time",seg);
-  				}
-  				timer.setHtml("Grabando "+vm.get("time")+"s");
-  				//Disparar Evento playing
-  				btn.fireEvent("playing",btn,playing);
-  			}, 1000);
-  			vm.set("interval",interval);
-  		}else{
-  			vm.set("playing",playing);
-  			btn.fireEvent("playing",btn,playing);
-  			timer.setHtml("Grabando ");
-  		}
+  		me.fireEvent("playing",btn,playing,params.duration);
 
 		  Ext.create('Ext.form.Panel', {
 	       standardSubmit: false
@@ -154,9 +123,9 @@ Ext.define('Admin.view.ptz.PTZController', {
 
     	if(playing){
 			   console.log(vm.get("time"));
-    		   sign.removeCls("recIndicator-hidden");
+    		  sign.removeCls("recIndicator-hidden");
     	}else{
-    		   sign.addCls("recIndicator-hidden");
+	      sign.addCls("recIndicator-hidden");
 			  clearInterval(vm.get("interval"));
     	}
     },
@@ -246,7 +215,7 @@ Ext.define('Admin.view.ptz.PTZController', {
         me.confirmInfraccion(self);
       }
     },  
-	 confirmInfraccion:function(self){
+	  confirmInfraccion:function(self){
     	var vm = this.getViewModel();
       var me =this;
 
@@ -309,8 +278,13 @@ Ext.define('Admin.view.ptz.PTZController', {
     	}, this);
     },
     onRender:function(self){
+
+      var me = this;
+      var vm = me.getViewModel();
+
     	var form = self.down("infraccionform"),
       placa = form.down("[name=placa]");
+
       placa.focus(false,true);
       this.hotkeys(self);
       var dataview_videos = self.down("[name=video_viewer]");
@@ -321,6 +295,35 @@ Ext.define('Admin.view.ptz.PTZController', {
           var grid = infraccion.down("grid");
           grid.getStore().reload();
         }
+      });
+
+      me.on("playing",function(btn,playing,duration){
+        var timer = Ext.fly('timer');
+        if(duration!=undefined){ 
+          timer.setHtml("Grabando");
+          btn.fireEvent("playing",btn,playing);
+        }
+        socket.on("start-record",function(){
+            console.log("start record.");
+            btn.fireEvent("playing",btn,playing);
+        });
+        socket.on("video-playing",function(playing,seg){
+
+          console.log("on video-playing: ",playing,seg);
+
+          if(!playing){
+            timer.setHtml("");
+            me.enableButtons(btn,playing,true);
+            //Disparar Evento playing
+            btn.fireEvent("playing",btn,playing);
+          }else{
+            if(duration!=undefined){
+              vm.set("time",seg);
+              timer.setHtml("Grabando "+vm.get("time")+"s");
+            }
+          }
+
+        });
       });
 
       socket.on("video-preview",function(id,exist){

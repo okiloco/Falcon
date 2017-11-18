@@ -37,12 +37,11 @@ Ext.define('Admin.view.infraccion.Evidencia', {
 				var images = record.get("images").map(function(val){
 					return {
 						"id":("image" in val)?val.image.id:val.id,
-						"url":BASE_PATH+("image" in val)?val.image.url:val.url,
+						"url":BASE_PATH+(("image" in val)?val.image.url:val.url),
 						"filename":("image" in val)?val.image.filename:val.filename
 					}
 				});
 				self.getStore().loadData(images);
-				// $('iframe').resizeiframe();
 			}
 		},
 		itemClick:function(dataview, record, item, index, e, eOpts){

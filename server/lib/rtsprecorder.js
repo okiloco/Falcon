@@ -56,8 +56,9 @@ Recorder.prototype.setConfig = function(options){
 	console.log("timeLimit: ",this.timeLimit);
 	//para emitir eventos ilimitados
 	this.setMaxListeners(0);
+	this.maxDuration = 600;
 	if(options.duration==undefined){
-		options["duration"] = 600;
+		options["duration"] = this.maxDuration;
 	}
 	for(var key in options){
 		
@@ -148,17 +149,39 @@ Recorder.prototype.record = function(options,callback){
 				
 				    self.writeStream = fs.createWriteStream(self.path_video_tmp);
 	    			self.readStream.stdout.pipe(self.writeStream);
-
-	    			console.log("duration: ",this.timeLimit);
-	    			setTimeout(function(){
-	    			  console.log("time out.");
-	    			  self.emit("end");
-	    			},((self.timeLimit)*1000));
+	    			
+    				var seg = self.timeLimit;
+				  	var interval;
+				  	if(this.timeLimit!=this.maxDuration){
+					  	interval = setInterval(function(){ 
+		  	  				self.playing = (seg>0);
+	    				  	if(!self.playing){
+		  	  					console.log("time out.");
+			    			    self.emit("end");
+		  	  					clearInterval(interval);
+		  	  				}
+			  				self.emit("playing",self.playing,seg);
+		  	  				console.log("seg: ",seg);
+					  		seg--;
+					  	}, 1000);
+				  	}else{
+				  		self.emit("playing",self.playing,seg);
+				  		try{
+			    			setTimeout(function(){
+			    			  console.log("time out.");
+			    			  self.emit("end");
+			    			},((self.timeLimit)*1000));
+			    		}catch(err){
+			    			throw err;
+			    		}
+				  	}
+	    			console.log("duration: ",(self.timeLimit)*1000);
 
 	    			this.once("end",function(){
 	    				self._readStarted = false;
 	    				self.playing = false;
 
+	    				self.emit("video-start-convert");
 	    				var stream = new ffmpeg(self.path_video_tmp)
 	    				.size('800x450')
 	    				.videoBitrate(800)
@@ -174,10 +197,13 @@ Recorder.prototype.record = function(options,callback){
 		                    	}
 		                  	});
     				  	});
+
 	    				if(callback!=undefined){
 	    					callback(self);
 	    				} 
 	    			});
+
+	    			self.emit("start-record");
 	    			console.log("Start record "+self.path_video_tmp+"\r\n");
 		  	}else{
     			console.log("El video ya existe y no se puede reescribir, intente nuevamente.",self.path_video_tmp+"\r\n");
@@ -367,6 +393,7 @@ exports.createRecorder = function(options,db) {
 		movieWidth: 1280, //width of video 
 		movieHeight: 720, //height of video 
 		maxDirSize: 1024*20, //max size of folder with videos (MB), when size of folder more than limit folder will be cleared 
+		
 		//maxTryReconnect: 5 //max count for reconnects    
 	};
 
