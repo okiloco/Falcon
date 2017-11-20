@@ -59,7 +59,6 @@ module.exports = function(app,io,router,db,schema){
 					}, function(err, image) {
 						if (!err){
 
-							console.log(image.url_image);
 							db.image.create({
 								"filename":image.filename,
 								"lote":image.lote,
@@ -91,8 +90,6 @@ module.exports = function(app,io,router,db,schema){
 				}
 				db.image.findById(req.query.id,function(err,doc){
 					var filename = path.join(Constants.URL_APP_RESOURCES,doc.url);
-					//console.log("preview image:",filename);
-					
 					if (!fs.existsSync(filename)) {
 						console.log("El archivo no existe.");
 						global.socket.emit("image-not-found",req.query.id);

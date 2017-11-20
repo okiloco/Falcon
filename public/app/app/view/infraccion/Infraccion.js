@@ -110,7 +110,11 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                             iconCls: 'x-fa fa-ban fa-upload',
                             tooltip: 'Subir Infracción',
                             align:'center',
-                            handler:'upload',                       
+                            handler:'upload',
+                            getClass:function(val,meta,record){
+                                var estado = (record.get("estado")==1);
+                                return (estado)?"x-hide-display":"x-grid-center-icon x-fa fa-ban fa-upload";
+                            }                       
                         },
                         {
                             xtype: 'button',
@@ -123,8 +127,8 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                     cls: 'content-column',
                     text: 'Acciones'                   
                 }
-             ],
-             dockedItems:[
+            ],
+            dockedItems:[
                  {
                      xtype:"toolbar",
                      items:[
@@ -172,6 +176,12 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                             emptyText:"Lote"
                         },
                         {
+                            xtype:'checkboxfield',
+                            boxLabel: 'Subidos',
+                            name: 'estado',
+                            inputValue: '1'
+                        },
+                        {
                            xtype: 'button',
                            text: 'Filtrar',
                            name: 'filtrar',
@@ -196,15 +206,15 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                         }
                      ]
                  }
-             ],
-             listeners:{
+            ],
+            listeners:{
                 scope:this,
                 cellkeydown:function( self, td, cellIndex, record, tr, rowIndex, e, eOpts ){
                     var grid = self.up("grid");
                     record.set("changed",(!(record.get("changed"))));
                     console.log(record.get("changed"));
                 }
-             }             
+            }             
         }
      ] 
 });

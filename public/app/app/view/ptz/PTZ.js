@@ -109,7 +109,7 @@ Ext.define('Admin.view.ptz.PTZ',{
                                 '<div class="video_viewer">',
                                     '<div class="container">',
                                         '<tpl for=".">',
-                                            '<div class="item" id={id}>',
+                                            '<div class="item {[this.getClass(values)]}" id={id}>',
                                                 '<video width="150" height="80" class="video-player">',
                                                     '<source src="http://localhost:3000/app/video/preview?id={id}" type="video/mp4">',
                                                 '</video>',
@@ -121,7 +121,12 @@ Ext.define('Admin.view.ptz.PTZ',{
                                     '</div>',
                                 '</div>',
                                 '<div class="video_viewer-footer">',
-                                '</div>'
+                                '</div>',
+                                {
+                                    getClass:function(values){
+                                        return (values.estado=="-1")?"video-not-found":"";
+                                    }
+                                }
                             ),
                             listeners:{
                                 itemclick:'onPlayVideo'

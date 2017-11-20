@@ -3,7 +3,7 @@ Ext.define('Admin.store.infraccion.organismoStore', {
     alias: 'store.organismostore',
     model: 'Admin.model.Base',
     storeId: 'organismoStore',
-    autoLoad: true,
+    autoLoad: false,
     pageSize: 20,
     proxy: {
         type: 'ajax',

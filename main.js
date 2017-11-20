@@ -26,11 +26,15 @@ dialog.showErrorBox("Atención",global.USER_DATA);
 
 function loadConfig(callback){
 
+	if (!fs.existsSync(Constants.URL_APP_RESOURCES)) {
+		fs.mkdirSync(Constants.URL_APP_RESOURCES);
+	}
+
 	if (!fs.existsSync(Constants.URL_APP_SETTINGS)) {
 		dialog.showErrorBox("Atención",Constants.URL_APP_SETTINGS);
 		try{
       		fs.mkdirSync(Constants.URL_APP_SETTINGS);
-      		fs.mkdirSync(Constants.URL_APP_RESOURCES);
+      		
       		Helper.writeFile(Constants.URL_APP_CONFIG,{});
       		console.log("path creado:",Constants.URL_APP_SETTINGS);
 		}catch(err){

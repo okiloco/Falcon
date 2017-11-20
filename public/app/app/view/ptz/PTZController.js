@@ -249,8 +249,8 @@ Ext.define('Admin.view.ptz.PTZController', {
       		        	console.log(infraccion);
       		        	Msg.info(responseObject.msg);
 
-                    dataview_images.getStore().reload();
-                    dataview_videos.getStore().reload();
+                    dataview_images.getStore().removeAll();
+                    dataview_videos.getStore().removeAll();
                     form.getForm().reset();
 
                     form.down("[name=placa]").focus();
@@ -262,12 +262,7 @@ Ext.define('Admin.view.ptz.PTZController', {
             form.down("[name=placa]").focus();
           }
         }else{
-            Ext.Msg.show({
-                title: 'Atención',
-                msg: 'Debe tomar evidencias de video e imagenes.',
-                buttons: Ext.Msg.OK,
-                icon: Ext.Msg.ERROR                    
-            });
+            form.down("[name=placa]").focus();
         }
     },
     cancelarInfraccion:function(self){
@@ -327,34 +322,17 @@ Ext.define('Admin.view.ptz.PTZController', {
       });
 
       socket.on("video-preview",function(id,exist){
-       console.log("video preview: "+id);
-       
-         dataview_videos.getStore().load({
-           callback:function(records, operation, success) {
-             var video = Ext.fly(id);
-             console.log("video preview: "+id,video);
-             if(video!=undefined){
-               video.removeCls("video-not-found");
-               console.log("video-preview",id,video);
-             }
-           }
-       });
-        
+        console.log("video preview: "+id);
       });
 
-      socket.on("video-convert",function(id){ 
-        // var video =Ext.ComponentQuery.query('#'+id);
-           //Msg.info("video convert"+id);
-          dataview_videos.getStore().load({
-            callback:function(records, operation, success) {
-              var video = Ext.fly(id);
-              if(video!=undefined){
-                video.removeCls("video-not-found");
-                console.log("video-convert",id,video);
-              }
-            }
-        });
+      socket.on("tranfer-pending-files",function(pending){ 
+          dataview_videos.getStore().reload();
       });
+      socket.on("video-convert",function(id){ 
+          socket.emit("on-tranfer-pending-files");
+      });
+
+
       
     },
     hotkeys:function(self){

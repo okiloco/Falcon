@@ -7,15 +7,18 @@ Ext.define('Admin.view.infraccion.InfraccionController', {
     	toolbar=grid.down('toolbar[dock=top]'),
     	valid=true;
     	Ext.Array.each(toolbar.query('field'),function(item,index){
-    		/*if(!item.isValid()){
-    			valid=false;
-    		}*/
     		if(item.getSubmitValue()!=null && item.getSubmitValue()!=''){
     			params[item.name]=item.getSubmitValue();
     		}
+        if(item.name=="estado"){
+          console.log(item.getSubmitValue())
+           params[item.name]=(item.getValue())?1:0;
+        }
     	});
+
+      console.log(params);
     	if(valid){
-    		params["estado"] = 0;
+    		//params["estado"] = 0;
     		grid.getStore().getProxy().extraParams=params;
     		grid.getStore().loadPage(1);
     	}else{
@@ -116,11 +119,16 @@ Ext.define('Admin.view.infraccion.InfraccionController', {
            var record = records[0];
            record.set(self.name,self.getValue());
 
+           if(record.get("estado")!=0){
+              Ext.Msg.show({
+                  title: 'Atención',
+                  msg: "La infracción ya ha sido subida y no puede ser modificada.",
+                  buttons: Ext.Msg.OK,
+                  icon: Ext.Msg.ERROR                    
+              });
+              return;
+           }
            record["estado"] = 0; 
-           console.log("-->Id::",record.get("id"));
-
-
-
            record.save({
                callback: function(record, operation, success) {
                    var responseObject = Ext.decode(operation.getResponse().responseText);

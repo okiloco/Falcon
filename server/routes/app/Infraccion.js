@@ -22,7 +22,7 @@ module.exports = function(app,io,router,db,schema){
 		var lote = dateFormat(new Date(),"yyyymmdd");
 
 		return new Promise(function(resolve,reject){
-			console.log("get Infracciones",params);
+			console.log("get Infracciones");
 			if(global.user!=undefined){
 
 				params["creator"] = global.user.id;
@@ -45,6 +45,20 @@ module.exports = function(app,io,router,db,schema){
 		.then(function(docs){
 			var infraccion = docs[0];
 			infraccion.estado=1;
+
+			infraccion.images.forEach(function(doc,index,arr){
+				db.image.findById(doc.image,function(err,doc){
+					doc.estado=1;
+					doc.save();
+				});
+			});
+			infraccion.videos.forEach(function(doc,index,arr){
+				db.video.findById(doc.video,function(err,doc){
+					doc.estado=1;
+					doc.save();
+				});
+			});
+
 			infraccion.save(function(err,doc){
 				try{
 					if(err){
@@ -60,7 +74,6 @@ module.exports = function(app,io,router,db,schema){
 	}
 
 	function subirArchivos(params){
-		console.log("Params:: ",params)	
 		var formData = {
 			"urlVideos":params.urlVideos,
 			"urlImages":params.urlImages,
@@ -90,7 +103,7 @@ module.exports = function(app,io,router,db,schema){
 				reject("No hay conexión a Internet.");
 				return;
 			}
-			console.log("Se va a subir los Archivos.",params);
+			console.log("Se va a subir los Archivos.",files);
 			files.forEach(function(file,index,arr){
 				var file = path.join(Constants.URL_APP_RESOURCES,file);
 				var total = (arr.length-1);
@@ -99,7 +112,6 @@ module.exports = function(app,io,router,db,schema){
 					let size = fs.lstatSync(file).size;
 					let bytes = 0;
 					userfiles.push(readStream);
-					console.log(index,total);
 					readStream.on('data', (chunk) => {
 					    console.log(bytes += chunk.length, size);
 					    if(bytes==size){
@@ -116,13 +128,13 @@ module.exports = function(app,io,router,db,schema){
 			formData["fecha"] = moment().tz(params.fecha.toString(),"America/Bogota").format('YYYY-MM-DD HH:mm:ss');
 			request.post({
 			"url":Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE, 
-			formData: formData},
+			"formData": formData},
 			function(err, httpResponse, body) { 
 				
-				console.log("BODY:: ",body)
 				if(body!=undefined && body!=null){
 					try{
 						var response = JSON.parse(body);
+						console.log("response:: ",response);
 						//console.log("response:: ",response.success);
 						if (err) {
 							console.log("[Error al enviar archivos]",err);
@@ -148,14 +160,16 @@ module.exports = function(app,io,router,db,schema){
 			});
 		});
 	};
-
-	function transferAllFiles(infracciones){
+	
+	function transferAllFiles(infracciones,estado){
 		var total = infracciones.length,
 		infraccion = {};
+		if(estado==undefined){estado=0;}
+
 		console.log("\t->transfer ",total);
 		return new Promise(function(resolve,reject){
 			if(total>0){
-				db.infraccion.listar({"estado":0},function(infracciones){
+				db.infraccion.listar({"estado":estado},function(infracciones){
 					total=infracciones.length;
 
 					if(total>0){
@@ -168,7 +182,7 @@ module.exports = function(app,io,router,db,schema){
 							if(docs.length>0){
 								transferFiles(infraccion)
 								.then(function(){
-									transferAllFiles(infracciones)
+									transferAllFiles(infracciones,estado)
 									.then(function(){
 										//reject();
 									},function(){
@@ -236,7 +250,7 @@ module.exports = function(app,io,router,db,schema){
 								}
 								/*transferFiles(infraccion)
 								.then(function(){
-									console.log()
+									console.long()
 								});*/
 								// socket.emit("infraccion",infraccion);
 								/*subirArchivos(infraccion)
@@ -263,12 +277,41 @@ module.exports = function(app,io,router,db,schema){
 			}
 		});
 	}
+	function crearInfraccion(params){
+		var infraccion = params;
+		infraccion["creator"] = global.user.id;
+		console.log("Estado:: ",params.estado," Confirm:: ",params.confirm);
+		
+		return new Promise(function(resolve,reject){
+			db.infraccion.create(infraccion,function(infraccion){
+				//#Guardar Cambios en infraccion
+				db.infraccion.listar({"_id":infraccion._id},function(docs){
+					if(params.confirm){
+						var infraccion = docs[0];
+						infraccion.estado = params.estado;
+
+						db.infraccion.listar({"estado":-1})
+						.then(function(docs){
+							if(docs.length==0){
+								//Emitir evento creación de la infracción
+								socket.emit("infraccion",infraccion);
+							}			
+							resolve({"infraccion":docs[0],"success":true,"msg":"Infracción Registrada con éxito."});
+						});
+					}else{
+						resolve({"infraccion":docs[0],"success":true,"msg":"Infracción puesta en espera."});
+					}
+					console.log("Se creó la infraccion.");
+				});
+			});
+		});
+	}
 	io.on("connect",function(_socket){
 
 		socket = _socket;
 
 		socket.on("new-infraccion",function(params){
-			console.log("Nueva Infracción recibida.",params);
+			console.log("Nueva Infracción recibida.");
 
 			transferFiles(params)
 			.then(function(){
@@ -314,6 +357,23 @@ module.exports = function(app,io,router,db,schema){
 				socket.emit("count-infraccion",total);
 			});
 		});
+
+		socket.on("on-tranfer-pending-files",function(){
+			var estado = -1;
+			db.infraccion.listar({"estado":estado},function(docs){
+				var pending = (docs.length>0);
+				if(pending){
+					transferAllFiles(docs,estado)
+					.then(function(){
+						socket.emit("tranfer-pending-files",pending);
+					});
+				}else{
+					socket.emit("tranfer-pending-files",pending);
+					console.log("No hay infracciones pendientes...");
+				}
+			});
+		});
+		
 	});
 
 	schema.virtual("urlVideos").get(function(){
@@ -381,13 +441,14 @@ module.exports = function(app,io,router,db,schema){
 		    		if(callback!=undefined){
 		    			callback(result);
 		    		}
-		    		console.log("Result:: ",result);
 	    			resolve(result);
 		    	});				
 			});
 		});
 	}
 	
+	
+
 	router.route("/infracciones")
 	.get(function(req,res){
 		var params = req.query || {};
@@ -420,13 +481,14 @@ module.exports = function(app,io,router,db,schema){
 		var params = req.body;
 		var lote = dateFormat(new Date(),"yyyymmdd");
 		var config = global.config;
-		var estado = params.estado;
+		
 		db.infraccion.find({"lote":lote})
 		.then(function(results){
 			var count = (results.length + 1);
 			params["codigo"] = config.camera_id+"_"+lote+"_"+count;
 			params["dispositivo"] = config.camera_id;
 			params["lote"] = lote;
+			params["confirm"]=(params.estado==1);
 
 			var arr_videos = [];
 			var arr_images = [];
@@ -445,16 +507,16 @@ module.exports = function(app,io,router,db,schema){
 			})
 			.then(() => {
 				console.log("Se terminaron los videos.");
-				if(arr_videos.length==0){
+				/*if(arr_videos.length==0){
 					res.send(JSON.stringify({"success":false,"msg":"No se han grabado videos."}));
 					return;
-				}
+				}*/
 				//#Recorrer Imagenes	
 				db.image.find({"estado":0})
 				.select('url')
 				.cursor()
 				.eachAsync(function(image) {
-					image.estado=1;
+					image.estado=(arr_videos.length>0)?1:0;
 					// arr_images.push({"image":image._id});
 					arr_images.push(image._id);
 					image.save(function(){
@@ -467,30 +529,40 @@ module.exports = function(app,io,router,db,schema){
 						res.send(JSON.stringify({"success":false,"msg":"No se han capturado imagenes."}));
 						return;
 					}
-					//#Crear la Infracción
-					//console.log(params);
 
-					var infraccion = params;
-					infraccion["images"] = arr_images;
-					infraccion["videos"] = arr_videos;
-					infraccion["creator"] = global.user.id;
-					infraccion["estado"]=0;
-
-					console.log("Estado:: ",estado);
-					db.infraccion.create(infraccion,function(infraccion){
-						//#Guardar Cambios en infraccion
-						db.infraccion.listar({"_id":infraccion._id},function(docs){
-							if(estado){
-								var infraccion = docs[0];
-								infraccion.estado = params.estado;
-
-								//Emitir evento creación de la infracción
-								socket.emit("infraccion",infraccion);
+					//#Crear la Infracción con estado incompleta -1
+					if(arr_videos.length==0){
+						var videos_count = 0;
+						db.video.find({"estado":-1})
+						.cursor()
+						.eachAsync(function(video) {
+							arr_videos.push(video._id);
+						})
+						.then(() => {
+							if(arr_videos.length==0){
+								console.log("No se han grabado videos.")
+								res.send(JSON.stringify({"success":false,"msg":"No se han grabado videos."}));
+								return;
 							}
-							console.log("Se creó la infraccion.")
-							res.send(JSON.stringify({"infraccion":docs[0],"success":true,"msg":"Infracción Registrada con éxito."}));
+
+							params["estado"]=-1;
+							params["images"] = arr_images;
+							params["videos"] = arr_videos;
+							crearInfraccion(params)
+							.then(function(result){
+								res.send(JSON.stringify(result));
+							});
 						});
-					});
+					}else{
+						//#Crear la Infracción con estado pendiente 0
+						params["images"] = arr_images;
+						params["videos"] = arr_videos;
+						params["estado"] = 0;
+						crearInfraccion(params)
+						.then(function(result){
+							res.send(JSON.stringify(result));
+						});
+					}
 				});
 			});
 		});
@@ -505,7 +577,6 @@ module.exports = function(app,io,router,db,schema){
 	.put(function(req,res){
 		var params = req.body;
 
-		console.log("PUT::: ",params);
 		db.infraccion.find({"_id":params.id})
 		.then(function(docs){	
 			var infraccion = docs[0];

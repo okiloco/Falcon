@@ -458,14 +458,14 @@ ManagerDB.prototype.createSchema = function(name, options,lang,callback){
 			if(params._id){
 				query = this.findById(params._id,function(err,doc){
 					if(callback!=undefined) callback(err,query);
-					console.log("query: ",params);
+					console.log("query "+name+":",params);
 					return query;
 				});
 			}else{
 				params = this.getFieldsMap(params);
 				query = this.find(params,function(err,docs){
 					if(callback!=undefined) callback(err,query);
-					console.log("query: ",params);
+					console.log("query "+name+":",params);
 					return query;
 				});
 			}
