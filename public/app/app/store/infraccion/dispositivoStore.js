@@ -3,7 +3,7 @@ Ext.define('Admin.store.infraccion.dispositivoStore', {
     alias: 'store.dispositivostore',
     model: 'Admin.model.Base',
     storeId: 'dispositivostore',
-    autoLoad: false,
+    autoLoad: true,
     pageSize: 20,
     proxy: {
         type: 'ajax',

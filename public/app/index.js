@@ -18,13 +18,9 @@ function __init(){
 
 	console.log("isReady:: ",main.isReady());
 	if(main.isReady()){
-		main.loadConfig((err,config)=>{
 
-			if(err){
-				global.instaled = false;
-				localStorage.clear();
-				return;
-			}
+		Helper.readFile(Constants.URL_APP_CONFIG)
+		.then(function(config){
 			if(!Helper.isEmpty(config)){
 				global.config = config;
 				global.IP_CAMERA = config.camera.camera_ip;
@@ -40,6 +36,8 @@ function __init(){
 			let socket = io.connect(global.BASE_PATH,{'forceNew':true});
 			//#Variable Global para uso del Lado Cliente que administra la comunicación con el Serividor Socket.
 		    global.socket = socket;
+
+		    console.log("config: ",global.config);
 			socket.on("mongo-connected",function(err){
 				console.log("mongo-connected",err)
 			});
@@ -109,6 +107,9 @@ function __init(){
 				Msg.info(msg);
 			});
 			console.log("FalconSystem",global.instaled);
+		},function(err){
+			global.instaled = false;
+			localStorage.clear();
 		});
 	}else{
 		global.ERROR={

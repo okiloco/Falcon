@@ -352,6 +352,7 @@ Ext.define('Admin.view.main.MainController', {
             });
 
             vm.set("username",user.username);
+            vm.set("organismo",global.config.organismo+"-"+global.config.camera_id);
         }
     },
     getTotal:function(self){

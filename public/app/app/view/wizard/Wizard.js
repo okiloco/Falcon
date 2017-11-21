@@ -4,7 +4,8 @@ Ext.define('Admin.view.wizard.Wizard', {
 
     requires: [
         'Admin.view.wizard.WizardFormModel',
-        'Admin.view.wizard.WizardFormController'
+        'Admin.view.wizard.WizardFormController',
+        'Ext.form.ComboBox'
     ],
     layout: 'card',
 
@@ -57,6 +58,7 @@ Ext.define('Admin.view.wizard.Wizard', {
                     queryMode: 'local',
                     displayField: 'name',
                     valueField: 'codigo',
+                    maskElement:"el",
                     listeners:{
                         select:function(self, record, eOpts){
                             var form = self.up("form");
@@ -64,6 +66,18 @@ Ext.define('Admin.view.wizard.Wizard', {
                             camara.reset();
                             camara.getStore().getProxy().extraParams = record.getData();
                             camara.getStore().load();
+                        },
+                        expand:function( field, eOpts ){
+                            console.log(field.getMaskTarget()); 
+                            var store = field.getStore();
+
+
+                        
+
+                            //if(store.getCount()==0){
+                                store.load();
+
+                            //}
                         }
                     }
                 },
@@ -150,12 +164,10 @@ Ext.define('Admin.view.wizard.Wizard', {
                 {
                     emptyText : 'Placa vehiculo',
                     name:'movil_plate',
-                    allowBlank : false,
                 },
                 {
                     emptyText : 'Nombre vehiculo',
                     name:'movil_name',
-                    allowBlank : false,
                 }
             ]
         },

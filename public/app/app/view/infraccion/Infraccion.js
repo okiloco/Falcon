@@ -67,7 +67,7 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                     editor: Ext.create('Ext.form.field.Text',{
                         emptyText:'Dirección',
                         name:'direccion',
-                        regex: /^((VIA)|(TRV)|(AV)|(CL)|(KR)|(KM)){1}(\s)((\d)+[A-Z]?)+(-)((\d)+[A-Z]?)+$/,
+                        regex: /^((AU){1}|((VIA)|(TRV)|(AV)|(CL)|(KR)|(KM)){1}(\s)((\d)+[A-Z]?)+(-)((\d)+[A-Z]?))+$/,
                         regexText: 'Debe ser una dirección Válida.',
                         selectOnFocus: true,
                         listeners: {

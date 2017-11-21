@@ -46,6 +46,12 @@ Ext.define('Admin.view.preferences.Preferences',{
                                     camara.reset();
                                     camara.getStore().getProxy().extraParams = record.getData();
                                     camara.getStore().load();
+                                },
+                                expand:function( field, eOpts ){
+                                    var store = field.getStore();
+                                    if(store.getCount()==0){
+                                        store.load();
+                                    }
                                 }
                             }
                         },

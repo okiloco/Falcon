@@ -47,7 +47,7 @@ Ext.define('Admin.view.ptz.InfraccionForm',{
                     xtype: 'textfield',
                     name: 'direccion',
                     emptyText: 'Dirección',
-                    regex: /^((VIA)|(TRV)|(AV)|(CL)|(KR)|(KM)){1}(\s)((\d)+[A-Z]?)+(-)((\d)+[A-Z]?)+$/,
+                    regex: /^((AU){1}|((VIA)|(TRV)|(AV)|(CL)|(KR)|(KM)){1}(\s)((\d)+[A-Z]?)+(-)((\d)+[A-Z]?))+$/,
                     regexText: 'Debe ser una dirección Válida.',
                     allowBlank:false,
                     listeners: {

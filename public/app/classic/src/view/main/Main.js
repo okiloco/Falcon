@@ -43,6 +43,14 @@ Ext.define('Admin.view.main.Main', {
                      id: 'main-navigation-btn',
                      handler: 'onToggleNavigationSize'
                  },
+                 {
+                    xtype:'box',
+                    ui: 'header',
+                    cls:'organismo',
+                    bind:{
+                        html:'{organismo}'
+                    }
+                 },
                  '->',
                  /*{
                     xtype: 'button',

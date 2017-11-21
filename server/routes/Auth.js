@@ -137,7 +137,7 @@ module.exports = function(app,io,db){
 									}
 									Helper.writeFile(app_config,obj)
 									.then(function(){
-										console.log("Archivo de configuración creado.",err)
+										console.log("Archivo de configuración creado.",obj);
 										resolve(obj);
 									},function(err){
 										reject("No se pudo crear el archivo de configuración.");
@@ -161,7 +161,8 @@ module.exports = function(app,io,db){
 
 		install(params)
 		.then(function(obj){
-			// global.Msg("Atención","Archivo de configuración creado.");
+			//Actualizar variables Globales
+			global.config = obj;
 			res.send(JSON.stringify({
 				"success":true,
 				"msg":"Archivo de configuración creado.",

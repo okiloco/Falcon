@@ -37,6 +37,7 @@ module.exports = {
 			var app_config = jsonfile.readFile(file,function(err,obj){
 				if(err){ 
 					//global.Msg("Error", "Error al cargar Archvo."+file);
+					console.log("Error", "Error al cargar Archvo."+file);
 					reject(err); 
 					return; 
 				}
@@ -51,7 +52,7 @@ module.exports = {
 			var app_config = jsonfile.writeFile(file,obj,function(err){
 				console.log("writeFile",file)
 				if(err){ 
-					//global.Msg("Error", "Error al escribir Archvo."+file);
+					console.log("Error", "Error al escribir Archvo."+file);
 					reject(err); 
 					return;
 				}

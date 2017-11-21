@@ -1,1 +1,349 @@
-html,body{cursor:default}iframe img{height:400px;width:400px}.viewer{background-color:#212121}.viewer img{width:100%;height:100%}.viewer-tools{background:rgba(20,0,0,0.1);position:absolute;top:0;width:100%;padding:5px;height:25px}.viewer-tools span.text{color:#fff}div.viewer-tools .item{cursor:default}.viewer-tools span,.viewer-tools div{float:right;margin:0 5px 0 5px;display:block;color:#fff}.viewer-footer{display:block;height:30px;width:100%}.viewer-footer span{color:#fff;padding:5px}.thumb-wrap{margin:5px;border:1px solid #ccc;width:45%;height:auto;float:left;background:#cfd8dc;overflow:hidden;position:relative;display:block}.thumb-wrap img.image{width:100%;height:auto;cursor:pointer}.thumb-wrap img.image.empty{padding:20px}.thumb-wrap span.name{top:-28px;position:relative;left:2px}.preview{margin-left:0;padding-left:0}.preview h2{padding-left:10px;font-size:14px;line-height:0}.thumb-wrap input.check.x-form-type-checkbox{position:relative;left:2px;top:2px}.rec{display:block}.recIndicator-hidden{display:none!important}.x-mask.x-border-box{left:0!important;top:0!important}#recIndicator span.circle{top:16px;display:block;-webkit-animation-name:recIndicator;-webkit-animation-duration:.5s;-webkit-animation-iteration-count:infinite;-webkit-animation-direction:linear}#recIndicator .sign span{float:left}span#timer{font-size:14px}#recIndicator span.circle{background:red;height:15px;width:15px;border-radius:50%}@-webkit-keyframes recIndicator{0%{opacity:.8}50%{opacity:0}100%{opacity:.8}}.auth-locked-window .image{background:red}.x-form-add-trigger-default:before{content:"\f0fe"!important}.action-tools .x-menu-item-icon-default{padding-top:5px}.video_viewer .container{background-color:transparent;height:100px;position:relative;width:100%}.container-hidden .item{display:none}.video_viewer{position:relative!important;background:rgba(33,33,33,0.15);margin:0 auto;display:block}.video_viewer .item{width:150px;height:80px;margin:5px;float:left;display:inline-block;position:relative;margin:5px 5px;overflow:hidden;padding:0;box-shadow:2px 2px 2px 2px rgba(64,64,64,0.17);background:rgba(25,23,23,0.78)}.video-player{border:1px solid #000;padding:0;box-shadow:2px 5px 5px 2px rgba(43,42,42,0.15)}#play{height:50px;width:50px;position:absolute;top:20%;left:35%}#play i{cursor:pointer;font-size:50px!important;color:white!important;margin:0 5px}#closevideo i{color:#fff;font-size:30px;margin:0 5px;cursor:pointer}#closevideo{color:white;width:30px;height:30px;z-index:999999999;float:right;position:absolute;right:5px;top:0}.imgpreview{display:block}.videopreview{display:block;background:#f6f6f6}.videopreview-hidden{display:none}.imgpreview-hidden{display:none}.video-not-found i{-webkit-animation-name:appLoadingIndicator;-webkit-animation-iteration-count:infinite;-webkit-animation:rotating 2s linear infinite;-moz-animation:rotating 2s linear infinite;-ms-animation:rotating 2s linear infinite;-o-animation:rotating 2s linear infinite}.video-not-found #play{font-size:40px!important;opacity:.5}.video-not-found #play i::before{content:"\f110"!important}.campreview:focus{border:1px solid red}
+html, body {cursor: default;}
+
+iframe img{
+  height: 400px;
+  width: 400px;
+}
+.iframewin{
+
+}
+/*PTZ*/
+.viewer{
+	background-color: #212121;	
+}
+.viewer img{
+    width: 100%;
+    height: 100%;
+}
+.viewer-tools{
+	background: rgba(20, 0, 0, 0.1);
+	position: absolute;
+	top: 0px;
+	width: 100%;
+	padding: 5px;
+	height: 25px;
+}
+.viewer-tools span.text{
+	color: #fff;
+}
+div.viewer-tools .item{
+	cursor: default;
+}
+.viewer-tools span, .viewer-tools div{
+   float: right;
+   margin: 0px 5px 0px 5px;
+   display: block;
+   color: #fff;
+}
+
+.viewer-footer{
+    display: block;
+    height: 30px;
+    width: 100%;
+}
+.viewer-footer span{
+    color:#fff;
+    padding: 5px;
+}
+
+.thumb-wrap{
+	margin: 5px;
+  border: 1px solid #ccc;
+  width: 45%;
+  height: auto;
+  float: left;
+  background: #CFD8DC;
+  overflow: hidden;
+  position: relative;
+  display: block;
+}
+.thumb-wrap img.image{
+	width: 100%;
+  height: auto;
+  cursor: pointer;
+}
+.thumb-wrap img.image.empty {
+    padding: 20px;
+}
+
+.thumb-wrap span.name {
+    top: -28px;
+    position: relative;
+    left: 2px;
+}
+
+
+.preview{
+	/*background: #CFD8DC;*/
+	margin-left: 0px;
+	padding-left: 0px;
+}
+.preview h2{
+	padding-left: 10px;
+	font-size: 14px;
+  line-height: 0;
+}
+.thumb-wrap input.check.x-form-type-checkbox {
+    position: relative;
+    /* display: inline-block; */
+    left: 2px;
+    top: 2px;
+}
+
+.rec{
+	display: block;
+}
+.recIndicator-hidden {
+    display: none!important;
+}
+.x-mask.x-border-box{
+    left: 0px!important; 
+    top: 0px!important; 
+}
+
+#recIndicator span.circle{
+   top: 16px;
+   display: block;
+   -webkit-animation-name: recIndicator;
+   -webkit-animation-duration: 0.5s;
+   -webkit-animation-iteration-count: infinite;
+   -webkit-animation-direction: linear;
+}
+
+#recIndicator .sign span{
+    float: left;
+}
+#recIndicator span{
+
+}
+span#timer{
+    font-size: 14px;
+}
+
+
+#recIndicator span.circle{
+    background: red;
+    height: 15px;
+    width: 15px;
+    border-radius: 50%;
+}
+
+@-webkit-keyframes recIndicator{
+    0% {
+        opacity: 0.8
+    }
+    50% {
+        opacity: 0
+    }
+    100% {
+        opacity: 0.8
+    }
+}
+
+
+.auth-locked-window .image{
+  background: red;
+}
+
+/*Form Icons*/
+
+.x-form-add-trigger-default:before{
+    content: "\f0fe"!important;
+}
+.action-tools .x-menu-item-icon-default{
+  padding-top: 5px;
+}
+
+/*Video*/
+
+.video_viewer .container{
+  background-color: transparent;
+  height: 100px;
+  position: relative;
+  width: 100%;
+}
+.container-hidden .item{
+  display: none;
+}
+.video_viewer{
+  position: relative!important;
+  background: rgba(33, 33, 33, 0.15);
+  margin: 0px auto;
+  display: block;
+}
+.video_viewer .item{
+  width: 150px;
+  height: 80px; 
+  /* background: black; */
+  margin: 5px;
+  float: left;
+  display: inline-block;
+  position: relative;
+  /* border: 1px solid #bbb; */
+  margin: 5px 5px;
+  overflow: hidden;
+  padding: 0px;
+  box-shadow: 2px 2px 2px 2px rgba(64, 64, 64, 0.17);
+  background: rgba(25, 23, 23, 0.78);
+}
+
+/*Video Player*/
+.video-player{
+  border: 1px solid #000;
+  padding: 0px;
+  box-shadow: 2px 5px 5px 2px rgba(43, 42, 42, 0.15);  
+}
+#play{
+  height: 50px;
+  width: 50px;
+  position: absolute;
+  top: 20%;
+  left: 35%;
+}
+#play i{
+  cursor:pointer;
+  font-size: 50px!important;
+  color: white!important;
+  margin: 0px 5px;
+}
+#closevideo i{
+ color:  #fff;
+ font-size: 30px;
+ margin: 0px 5px;
+ cursor:pointer;
+}
+#closevideo{
+  color: white;
+  width: 30px;
+  height: 30px;
+  z-index: 999999999;
+  float: right;
+  position: absolute;
+  right: 5px;
+  top: 0px;
+}
+
+.imgpreview{
+  display: block;
+}
+.videopreview{
+  display: block;
+  background: #f6f6f6;
+}
+
+.videopreview video{
+ 
+}
+.videopreview-hidden{
+  display: none;
+}
+
+.imgpreview-hidden{
+  display: none;
+}
+
+.video-not-found i{
+   -webkit-animation-name: appLoadingIndicator;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation: rotating 2s linear infinite;
+  -moz-animation: rotating 2s linear infinite;
+  -ms-animation: rotating 2s linear infinite;
+  -o-animation: rotating 2s linear infinite;
+}
+.video-not-found #play{
+  font-size: 40px!important;
+  opacity: .5;
+}
+
+.video-not-found #play i::before{
+  content: "\f110" !important; 
+  
+}
+.campreview{
+  
+}
+.campreview:focus{
+  border: 1px solid red;
+}
+
+/*Image viewwer*/
+
+.image-viewwer div{
+  display: block;
+}
+.image-viewwer{
+
+}
+.image-items{
+  background: #ececec;
+  min-height: 20%;
+  margin: 5px;
+  overflow: hidden;
+  height: 80px;
+}
+.image-items div{
+  float: left;
+  margin-left: 10px;
+  margin-top: 5px;
+  display: inline-block;
+}
+.image-items .item{
+  border:1px solid #ccc;
+  max-height: 90px;
+  cursor: pointer;
+  z-index: 999999;
+  background: #ccc;
+  position: relative;
+}
+.image-preview{
+  height: 400px;
+  background: #000;
+  margin: 5px;
+}
+.video{
+  display: block;
+}
+.hit-area{
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 999999;
+  position: absolute!important;
+  left: -10px;
+  top: -5px;
+  height: 100%;
+  width: 100%;
+}
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+}
+
+iframe {
+    width: 960px;
+    height: 100%;
+    overflow: hidden;
+    border: none;
+}
+.bell{
+  width: 50px;
+}
+
+.bell span.x-btn-inner.x-btn-inner-header-small{
+  background: red;
+  border-radius: 50%;
+  color: white;
+  font-weight: 600;
+  border: 1px solid red;
+  position: absolute;
+  left: 23px;
+  top: -6px;
+  padding: 0px 1px;
+  width: 20px;
+}

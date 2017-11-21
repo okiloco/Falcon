@@ -22,7 +22,8 @@ let win_tmp;
 function isDev() {
   return process.mainModule.filename.indexOf('app.asar') === -1;
 }
-dialog.showErrorBox("Atención",global.USER_DATA);
+//dialog.showErrorBox("Atención",global.USER_DATA);
+console.log("USER_DATA: ",global.USER_DATA);
 
 function loadConfig(callback){
 
@@ -78,7 +79,7 @@ function createWindow(options,callback){
 	return new Promise(function(resolve,reject){
 		win.loadURL(Constants.URL_BASE+(options.url || ''));
 		//Abrir inspector de elementos
-		win.webContents.openDevTools();
+		//win.webContents.openDevTools();
 
 		win.on("closed",()=>{
 			win = null;
@@ -163,6 +164,11 @@ app.on("ready",function(_win){
 	SplashScreen({"url":"public/app/splashscreen.html"});
 	loadConfig((err,config) => {
 
+		if(err){
+			dialog.showErrorBox("Error",err);
+			return;
+		}
+
 		server(config)
 		.then(function(msg){
 			init();
@@ -195,7 +201,13 @@ app.on("active",()=>{
 */
 
 
-global.Msg = dialog.showErrorBox;
+global.Msg = (title,message) => {
+	try{
+		dialog.showErrorBox(title,message);
+	}catch(err){
+		console.log(err);		
+	}
+}
 exports.USER_DATA = process.env['USER_DATA'];
 exports.APP_PATH  = global.APP_PATH;
 exports.Msg = global.Msg;

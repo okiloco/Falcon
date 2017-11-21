@@ -35,6 +35,7 @@ app.use(function(req, res, next) {
 module.exports = function(config){
 	
 	global.config = config;
+	
 	io.on("connect",function(socket){
 		if(!initialized){
 			
