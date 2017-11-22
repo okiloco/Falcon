@@ -1,5 +1,5 @@
 {
-	"active_group":"default",
+	"active_group":"debug",
 	"default":{
 		"dbname":"falcon-db",
 		"host":"localhost",

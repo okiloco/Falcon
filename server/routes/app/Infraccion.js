@@ -446,8 +446,6 @@ module.exports = function(app,io,router,db,schema){
 			});
 		});
 	}
-	
-	
 
 	router.route("/infracciones")
 	.get(function(req,res){

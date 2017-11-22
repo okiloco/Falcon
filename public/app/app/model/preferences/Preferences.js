@@ -40,8 +40,8 @@ Ext.define('Admin.model.preferences.Preferences', {
         'movil_name',
         'movil_plate',
         'movement_dead_zone',
-        'movement_sensibility',
         'zoom_dead_zone',
-        'zoom_sensibility'
+        {name:'movement_sensibility',defaultValue:80},
+        {name:'zoom_sensibility',defaultValue:100}
     ]
 });

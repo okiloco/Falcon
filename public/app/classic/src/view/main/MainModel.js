@@ -11,7 +11,7 @@ Ext.define('Admin.view.main.MainModel', {
         picture:'resources/images/user-profile/2.png',
         user:localStorage.user,
         username:localStorage.getItem("username"),
-        organismo:global.config.organismo+"-"+global.config.camera_id,
+        organismo:'',
         config:{}
     }
 });

@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-{"user":{"username":"fvargas","email":"f@g.co"},"camera":{"camera_ip":"192.168.1.155","camera_user":"root","camera_password":"root"},"movil":{"movil_plate":"a","movil_name":"sd"},"organismo":"BQA","camera_id":"CZBQ2","camera_ip":"192.168.1.155","camera_user":"root","camera_password":"root","movil_plate":"a","movil_name":"sd","username":"fvargas","email":"f@g.co","zoom_sensibility":"100","movement_sensibility":"28","movement_dead_zone":"6","zoom_dead_zone":"1"}
-=======
-{"user":{"username":"fvargas","email":"fvargas@gmail.com"},"camera":{"camera_ip":"192.168.0.100","camera_user":"root","camera_password":"admin"},"movil":{"movil_plate":"aaa","movil_name":"v1"},"organismo":"BQA","camera_id":"CZBQ3","camera_ip":"192.168.0.100","camera_user":"root","camera_password":"admin","movil_plate":"aaa","movil_name":"v1","username":"fvargas","email":"fvargas@gmail.com","movement_dead_zone":"1","movement_sensibility":"73","zoom_dead_zone":"1","zoom_sensibility":"100"}
->>>>>>> 545639ec9e854f44e67fb111197914f367593f6c
+{}

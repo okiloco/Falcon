@@ -119,7 +119,7 @@
                             $.get(BASE_PATH+"app/stream?camera=1&continuouspantiltmove=0,"+pan_continous);
                             once.done = false;
                         }
-                    if (Math.round(gp.axes[i])===0 && Math.round(gp.axes[i+1])===0) {
+                    if (gp.axes[i]===0 && gp.axes[i+1]===0) {
                         once();
                     }
                  i=2;

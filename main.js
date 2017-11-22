@@ -32,7 +32,6 @@ function loadConfig(callback){
 	}
 
 	if (!fs.existsSync(Constants.URL_APP_SETTINGS)) {
-		dialog.showErrorBox("Atención",Constants.URL_APP_SETTINGS);
 		try{
       		fs.mkdirSync(Constants.URL_APP_SETTINGS);
       		
