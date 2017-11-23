@@ -120,11 +120,12 @@ Recorder.prototype.record = function(options,callback){
 	
 	this.lote = dateFormat(new Date(),"yyyymmdd");
 
-	//
-
+	//hMMss
+	var date = dateFormat(new Date(),"yyyymmddHHMMss");
+	
 	//CZBQ2_20171012_90 - IDDISPOSITIVO_LOTE_CONSECUTIVO
-	this.filename = this.prefix+'_'+this.lote+'_'+options.count+'.mp4';
-	this.filename_tmp = this.prefix+'_'+this.lote+'_'+options.count+'_temp.mp4';
+	this.filename = this.prefix+'_'+date+'_'+options.count+'.mp4';
+	this.filename_tmp = this.prefix+'_'+date+'_'+options.count+'_temp.mp4';
 	
 	this.path_video_tmp = path.join(basepath,this.filename_tmp);
 	this.path_video = path.join(basepath,this.filename);
@@ -271,8 +272,12 @@ Recorder.prototype.recordVideo = function(options) {
 		var output_path = path.join(basepath,"prueba.mp4");
 		
 
-		this.filename = this.prefix+'_'+this.lote+'_'+options.count+'.mp4';
-		this.filename_tmp = this.prefix+'_'+this.lote+'_'+options.count+'_temp.mp4';
+		var date = dateFormat(new Date(),"yyyymmddHHMMss");
+			
+		//CZBQ2_20171012_90 - IDDISPOSITIVO_LOTE_CONSECUTIVO
+		this.filename = this.prefix+'_'+date+'_'+options.count+'.mp4';
+		this.filename_tmp = this.prefix+'_'+date+'_'+options.count+'_temp.mp4';
+		
 		this.path_video_tmp = path.join(basepath,this.filename_tmp);
 		this.path_video = path.join(basepath,this.filename);
 

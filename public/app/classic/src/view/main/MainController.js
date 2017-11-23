@@ -99,6 +99,7 @@ Ext.define('Admin.view.main.MainController', {
             ]
         }).show();*/
     },
+    
     onProfile:function(self){
 
         Ext.create('Ext.menu.Menu', {

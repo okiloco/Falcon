@@ -54,5 +54,53 @@ Ext.define('Admin.view.authentication.AuthenticationController', {
 
     onResetClick:  function() {
         this.redirectTo(((!localStorage.user_id)?'login':'ptz'), true);
+    },
+    changePassword:function(self){
+        var me=this,
+        form=self.up('form');
+        if(form.getForm().isValid()){
+            form.getForm().submit({
+                scope: this,
+                url:Constants.PASSWORD_CHANGE,
+                submitEmptyText : false,        
+                success: function(f, action) {
+
+                   if(action.result.success){
+                        Ext.Msg.show({
+                            title: 'Atención',
+                            msg: action.result.msg,
+                            buttons: Ext.Msg.OK,
+                            icon: Ext.Msg.INFO,
+                            fn:function(){
+                                localStorage.clear();
+                                location.reload();
+                            }                    
+                        }); 
+                   }else{
+                        Ext.Msg.show({
+                            title: 'Error',
+                            msg: action.result.msg,
+                            buttons: Ext.Msg.OK,
+                            icon: Ext.Msg.ERROR                    
+                        }); 
+                   }
+                },
+                failure: function(f, action) {
+                    Ext.Msg.show({
+                        title: 'Error',
+                        msg: action.result.msg,
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.Msg.ERROR                    
+                    });
+                }
+            });
+        }else{
+            Ext.Msg.show({
+                title: 'Atención',
+                msg: 'Algunos datos son requeridos',
+                buttons: Ext.Msg.OK,
+                icon: Ext.Msg.ERROR                    
+            });
+        }
     }
 });

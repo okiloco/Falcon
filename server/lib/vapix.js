@@ -153,7 +153,9 @@ Camera.prototype.captureImage = function(options,callback){
       if(!fs.existsSync(basepath)) {
         fs.mkdirSync(basepath);
       }
-      self.filename = self.prefix+'_'+self.lote+'_'+options.count+'.jpg';
+
+      var date = dateFormat(new Date(),"yyyymmddHHMMss");
+      self.filename = self.prefix+'_'+date+'_'+options.count+'.jpg';
       self.url_image = path.join("images",self.lote,self.filename);
 
       console.log(self.url_image);

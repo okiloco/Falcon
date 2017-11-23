@@ -4,11 +4,13 @@ Ext.define('Admin.helpers.Constants', {
 	//App
 	URL_CONFIG_APP:BASE_PATH+'config/',
 	URL_WIZARD:BASE_PATH+'install',
+	PASSWORD_CHANGE:BASE_PATH+'change_password',
 	
 	//Login
 	URL_LOGIN:BASE_PATH+'login',
 	URL_LOGOUT_APP:BASE_PATH+'logout',
 	URL_VIEWER:"http://"+global.IP_CAMERA+'/mjpg/video.mjpg',
+
 
 	//Iconos
 	URL_ICON_IMAGEN_EMPTY:'public/app/resources/images/icons/64/camera.png',

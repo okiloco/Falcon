@@ -126,6 +126,8 @@ module.exports = function(app,io,router,db,schema){
 
 			formData["userfile[]"] = userfiles;
 			formData["fecha"] = moment().tz(params.fecha.toString(),"America/Bogota").format('YYYY-MM-DD HH:mm:ss');
+				
+			console.log("request: ",Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE);
 			request.post({
 			"url":Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE, 
 			"formData": formData},
@@ -479,11 +481,13 @@ module.exports = function(app,io,router,db,schema){
 		var params = req.body;
 		var lote = dateFormat(new Date(),"yyyymmdd");
 		var config = global.config;
+
+		var date = dateFormat(new Date(),"yyyymmddHHMMss");
 		
 		db.infraccion.find({"lote":lote})
 		.then(function(results){
 			var count = (results.length + 1);
-			params["codigo"] = config.camera_id+"_"+lote+"_"+count;
+			params["codigo"] = config.camera_id+"_"+date+"_"+count;
 			params["dispositivo"] = config.camera_id;
 			params["lote"] = lote;
 			params["confirm"]=(params.estado==1);

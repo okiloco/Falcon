@@ -1,6 +1,8 @@
-const path = require('path')
-const url = require('url')
+const path = require('path');
+const url = require('url');
 var fs = require('fs');
+var dateFormat = require('dateformat');
+var date = dateFormat(new Date(),"yyyymmddHHMMss");
 
 const {app, BrowserWindow, dialog} = require('electron')
 
@@ -27,6 +29,7 @@ console.log("USER_DATA: ",global.USER_DATA);
 
 function loadConfig(callback){
 
+	console.log(date);
 	if (!fs.existsSync(Constants.URL_APP_RESOURCES)) {
 		fs.mkdirSync(Constants.URL_APP_RESOURCES);
 	}

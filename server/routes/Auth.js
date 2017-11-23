@@ -38,7 +38,7 @@ module.exports = function(app,io,db){
 			app.get("/logout",function(req,res){
 				if(req.session.user_id){
 					req.session.destroy(function(err){
-						if(err) res.send(err);
+						if(err) { res.send(err); return; }
 						res.send(JSON.stringify({
 							success:true,
 							msg:"Session finalizada."
@@ -220,6 +220,37 @@ module.exports = function(app,io,db){
 		},function(err){
 			res.send({
 				"success":false
+			});
+		});
+	});
+	app.post("/change_password",function(req,res){
+		var params = req.body;
+
+		console.log(params);
+		db.user.findById(req.session.user_id,function(err,doc){
+			if(err){
+				res.send({
+					"success":false,
+					"msg":"No exite usuario en la sesión."
+				});
+				return;
+			}
+			if(doc.password!=md5(params.current_password)){
+				res.send({
+					"success":false,
+					"msg":"Contraseña actual invalida."
+				});
+				return;
+			}
+			doc.password = md5(params.password);
+			doc.save(function(err,doc){
+				req.session.destroy(function(err){
+					if(err) { res.send(err); return; }
+					res.send({
+						"success":(!err),
+						"msg":"Contraseña Actualizada."
+					});
+				});
 			});
 		});
 	});
