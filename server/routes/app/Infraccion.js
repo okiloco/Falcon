@@ -128,6 +128,10 @@ module.exports = function(app,io,router,db,schema){
 			formData["fecha"] = moment().tz(params.fecha.toString(),"America/Bogota").format('YYYY-MM-DD HH:mm:ss');
 				
 			console.log("request: ",Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE);
+
+
+			
+
 			request.post({
 			"url":Constants.URL_SUBIR_ARCHIVOS_BACKOFFICE, 
 			"formData": formData},
@@ -170,6 +174,9 @@ module.exports = function(app,io,router,db,schema){
 
 		console.log("\t->transfer ",total);
 		return new Promise(function(resolve,reject){
+
+
+
 			if(total>0){
 				db.infraccion.listar({"estado":estado},function(infracciones){
 					total=infracciones.length;
@@ -328,7 +335,7 @@ module.exports = function(app,io,router,db,schema){
 			});
 		});
 		socket.on("onsync",function(sync){
-			console.log("Sync: ",sync);
+			console.log("\t->Sync: ",sync);
 			global.sync = sync;
 			if(sync){
 				db.infraccion.find({"estado":0},function(err,docs){

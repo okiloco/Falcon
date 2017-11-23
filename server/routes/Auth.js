@@ -186,15 +186,22 @@ module.exports = function(app,io,db){
 			for(var key in config){
 				if(typeof(config[key])=='object'){
 					for(var s in config[key]){
-						config[key][s] = params[s];
+						if(params[s]!=null){
+							config[key][s] = params[s];
+						}
 					}
 				}else{
-					config[key]=params[key];
+					if(params[s]!=null){
+						config[key]=params[key];
+					}
 				}
 			}
 			for(var key in params){
-				config[key] = params[key];
+				if(params[s]!=null){
+					config[key] = params[key];
+				}
 			}
+			console.log(config);
 			Helper.writeFile(app_config,config).
 			then(function(){
 				res.send({

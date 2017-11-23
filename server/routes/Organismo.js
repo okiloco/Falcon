@@ -25,7 +25,11 @@ module.exports = function(app,io,db,schema){
 		request(options,function(err,response,body){
 			var result = response;
 			if (err) {
-				console.log("[Error al enviar archivos]",err);
+				// console.log("[Error en la petición]",err);
+				res.send(JSON.stringify({
+					"data":[],
+					"success":false
+				}));
 			   	return;
 			}
 			res.send(JSON.stringify({
@@ -43,9 +47,13 @@ module.exports = function(app,io,db,schema){
 		};
 		request(options,function(err,response,body){
 			var result = response;
-			console.log("GET BODY:::",body);
+			// console.log("GET BODY:::",body);
 			if (err) {
-				console.log("[Error al enviar archivos]",err);
+				// console.log("[Error en la petición]",err);
+				res.send(JSON.stringify({
+					"data":[],
+					"success":false
+				}));
 			   	return;
 			}
 			res.send(JSON.stringify({
