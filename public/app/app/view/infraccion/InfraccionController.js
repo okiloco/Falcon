@@ -14,6 +14,9 @@ Ext.define('Admin.view.infraccion.InfraccionController', {
           console.log(item.getSubmitValue())
            params[item.name]=(item.getValue())?1:0;
         }
+        if(!item.isValid()){
+          valid=false;
+        }
     	});
 
       console.log(params);

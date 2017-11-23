@@ -230,7 +230,6 @@ Ext.define('Admin.view.preferences.Preferences',{
                         //Actualizar configuración
                         global.config = params;
                         console.log(global.config);
-                        debugger;
                         var preferences = Ext.create('Admin.model.preferences.Preferences',params);
                         self.loadRecord(preferences);
                     }       

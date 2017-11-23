@@ -3,6 +3,7 @@ Ext.define('Admin.view.infraccion.Infraccion',{
     extend: 'Ext.panel.Panel',
     xtype:'infraccion',
     requires: [
+        'Ext.form.field.Date',
         'Admin.view.infraccion.InfraccionController',
         'Admin.view.infraccion.InfraccionModel'
     ],
@@ -133,37 +134,14 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                      xtype:"toolbar",
                      items:[
                         {
-                            xtype: 'combo',
+                            xtype: 'hiddenfield',
                             name: 'organismo',
-                            bind:{
-                                store:'{organismostore}'
-                            },
-                            allowBlank : false,
-                            queryMode: 'local',
-                            displayField: 'name',
-                            valueField: 'codigo',
-                            emptyText:'Organismo',
-                            listeners:{
-                                select:function(self, record, eOpts){
-                                    var toolbar = self.up("toolbar");
-                                    var camara = toolbar.down("[name=dispositivo]");
-                                    camara.reset();
-                                    camara.getStore().getProxy().extraParams = record.getData();
-                                    camara.getStore().load();
-                                }
-                            }
+                            value:global.config.organismo
                         },
                         {
-                            xtype: 'combo',
+                            xtype: 'hiddenfield',
                             name: 'dispositivo',
-                            emptyText:'Dispositivo',
-                            bind:{
-                                store:'{dispositivostore}'
-                            },
-                            queryMode: 'local',
-                            displayField: 'name',
-                            valueField: 'codigo',
-                            allowBlank : false
+                            value:global.config.camera_id
                         },
                         {
                             xtype: 'textfield',
@@ -171,9 +149,14 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                             emptyText: 'Placa'
                         },
                         {
-                            xtype: 'textfield',
-                            name:"lote",
-                            emptyText:"Lote"
+                            xtype: 'datefield',
+                            name: 'lote',
+                            allowBlank : false,
+                            format:'Ymd',
+                            dateFormat:'Ymd',
+                            submitFormat:'Ymd',
+                            emptyText: 'Lote',
+                            value:new Date()
                         },
                         {
                             xtype:'checkboxfield',
@@ -208,11 +191,18 @@ Ext.define('Admin.view.infraccion.Infraccion',{
                  }
             ],
             listeners:{
-                scope:this,
                 cellkeydown:function( self, td, cellIndex, record, tr, rowIndex, e, eOpts ){
                     var grid = self.up("grid");
-                    record.set("changed",(!(record.get("changed"))));
+                    record.set("changed",!record.get("changed"));
                     console.log(record.get("changed"));
+                },
+                afterrender:function(self){
+                    var toolbar = self.down("toolbar[dock=top]");
+                    var organismo = toolbar.down("[name=organismo]");
+                    var dispositivo = toolbar.down("[name=dispositivo]");
+                    
+                    organismo.setValue(global.config.organismo);
+                    dispositivo.setValue(global.config.camera_id);
                 }
             }             
         }

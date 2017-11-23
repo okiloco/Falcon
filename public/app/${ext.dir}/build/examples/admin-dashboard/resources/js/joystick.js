@@ -51,8 +51,8 @@
                 movement_sensibility,
                 movement_dead_zone,
                 zoom_sensibility,
-                zoom_dead_zone,
-                )
+                zoom_dead_zone
+                );
                 // var movement_dead_zone=0.02;
                 // var movement_sensibility = 80;
                 // var zoom_dead_zone = 0.4;

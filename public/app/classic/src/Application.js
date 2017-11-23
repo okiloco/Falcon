@@ -2,7 +2,7 @@
 
 Ext.define('Admin.Application', {
     extend: 'Ext.app.Application',
-    
+        
     name: 'Admin',
 
     stores: [
@@ -15,7 +15,9 @@ Ext.define('Admin.Application', {
     // if it does not extend Ext.Viewport.
     //
     mainView: 'Admin.view.main.Main',
-
+    requires: [
+            'Ext.view.View',
+    ],
     onAppUpdate: function () {
         Ext.Msg.confirm('Application Update', 'This application has an update, reload?',
             function (choice) {

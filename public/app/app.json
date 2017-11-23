@@ -254,14 +254,6 @@
             "path": "${build.out.css.path}",
             "bundle": true,
             "exclude": ["fashion"]
-        },
-        {
-            //Archivo para Estilos Personalizados
-            "path": "resources/css/custom.css"
-        },
-        {
-            //Archivo para Estilos Personalizados
-            "path": "resources/css/mensaje.css"
         }
     ],
 
@@ -566,12 +558,12 @@
         "classic": {
             "toolkit": "classic",
             "theme": "theme-triton"
-        },
+        }/*,
 
         "modern": {
             "toolkit": "modern",
             "theme": "theme-triton"
-        }
+        }*/
     },
 
     /**

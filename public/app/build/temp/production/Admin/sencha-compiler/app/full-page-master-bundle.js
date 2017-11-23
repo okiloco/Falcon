@@ -1,2 +1,2 @@
 // @tag full-page
-// @require /home/movil/projects/Falcon/public/app/app.js
+// @require /home/fvargas/Documentos/Falcon/public/app/app.js

@@ -96,10 +96,7 @@ div.viewer-tools .item{
 .recIndicator-hidden {
     display: none!important;
 }
-.x-mask.x-border-box{
-    left: 0px!important; 
-    top: 0px!important; 
-}
+
 
 #recIndicator span.circle{
    top: 16px;
@@ -346,4 +343,9 @@ iframe {
   top: -6px;
   padding: 0px 1px;
   width: 20px;
+}
+.organismo{
+  font-weight: 600;
+  color: #293f54;
+  font-family: Roboto;
 }
